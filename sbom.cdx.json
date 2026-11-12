@@ -1,0 +1,5022 @@
+{
+  "bomFormat": "CycloneDX",
+  "specVersion": "1.6",
+  "version": 1,
+  "metadata": {
+    "component": {
+      "type": "application",
+      "name": "beebo-board",
+      "version": "0.1.0",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ]
+    },
+    "properties": [
+      {
+        "name": "beebo:lockfile-sha256",
+        "value": "232d538308c92449b040591c66bf1b694aae6923c097d89d3bdb45bf7ec798d7"
+      }
+    ]
+  },
+  "components": [
+    {
+      "type": "library",
+      "bom-ref": "node_modules/@esbuild/aix-ppc64",
+      "name": "@esbuild/aix-ppc64",
+      "version": "0.28.2",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@esbuild/aix-ppc64/-/aix-ppc64-0.28.2.tgz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "beebo:npm-lock-path",
+          "value": "node_modules/@esbuild/aix-ppc64"
+        },
+        {
+          "name": "beebo:development",
+          "value": "true"
+        },
+        {
+          "name": "beebo:optional",
+          "value": "true"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "5c4c5c3be76f2cabd5b4d4e26d24c17a3d4d0806da1a15a7f56c3564fc7cd2ab1a8613c57bff238163f421c84d7b41771f0914ee7f1e8e11fc6e3a27aa1b7c99"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "node_modules/@esbuild/android-arm",
+      "name": "@esbuild/android-arm",
+      "version": "0.28.2",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@esbuild/android-arm/-/android-arm-0.28.2.tgz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "beebo:npm-lock-path",
+          "value": "node_modules/@esbuild/android-arm"
+        },
+        {
+          "name": "beebo:development",
+          "value": "true"
+        },
+        {
+          "name": "beebo:optional",
+          "value": "true"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "9175e888f55519072721818e79aa2fc0e511a678830694aae00d37aa443e04c42ab461ba1d86a9df19def42d4ed72a384d1deac65097e48aaa997e9f168d8baa"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "node_modules/@esbuild/android-arm64",
+      "name": "@esbuild/android-arm64",
+      "version": "0.28.2",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@esbuild/android-arm64/-/android-arm64-0.28.2.tgz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "beebo:npm-lock-path",
+          "value": "node_modules/@esbuild/android-arm64"
+        },
+        {
+          "name": "beebo:development",
+          "value": "true"
+        },
+        {
+          "name": "beebo:optional",
+          "value": "true"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "e587ca79e23ca967c16485febb6c590b76656f73acfe02d2dac6c428cf88e1939cb169874b658bcac09c4190c0151b250d45393a2ab8e207fa3d8375bc6c06e4"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "node_modules/@esbuild/android-x64",
+      "name": "@esbuild/android-x64",
+      "version": "0.28.2",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@esbuild/android-x64/-/android-x64-0.28.2.tgz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "beebo:npm-lock-path",
+          "value": "node_modules/@esbuild/android-x64"
+        },
+        {
+          "name": "beebo:development",
+          "value": "true"
+        },
+        {
+          "name": "beebo:optional",
+          "value": "true"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "3b7f3b8ad7bb4b353209ccb72505f83f86cbb4403b6cb2e4c7e7acbdee491e7c987cd4f1715a57668f6385d07495328de38833b442d3754ee74bc36bd7a16cd5"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "node_modules/@esbuild/darwin-arm64",
+      "name": "@esbuild/darwin-arm64",
+      "version": "0.28.2",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@esbuild/darwin-arm64/-/darwin-arm64-0.28.2.tgz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "beebo:npm-lock-path",
+          "value": "node_modules/@esbuild/darwin-arm64"
+        },
+        {
+          "name": "beebo:development",
+          "value": "true"
+        },
+        {
+          "name": "beebo:optional",
+          "value": "true"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "9f82aa90e42badac4725c82333546fc1b8a07d028828956933bc69f8ab318b2512ad17485e7b7bdd586b3c0c747d5e388607e62152a3c4c37d275b798f249593"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "node_modules/@esbuild/darwin-x64",
+      "name": "@esbuild/darwin-x64",
+      "version": "0.28.2",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@esbuild/darwin-x64/-/darwin-x64-0.28.2.tgz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "beebo:npm-lock-path",
+          "value": "node_modules/@esbuild/darwin-x64"
+        },
+        {
+          "name": "beebo:development",
+          "value": "true"
+        },
+        {
+          "name": "beebo:optional",
+          "value": "true"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "baaeacb885983f7eeacc675d04a3f0e501103e2e8788b1ac3bb5269297f2698350dc3fab37ac3a59fc07fa7baa7065d6bdac06c31384ae83b86069c587de5acf"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "node_modules/@esbuild/freebsd-arm64",
+      "name": "@esbuild/freebsd-arm64",
+      "version": "0.28.2",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@esbuild/freebsd-arm64/-/freebsd-arm64-0.28.2.tgz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "beebo:npm-lock-path",
+          "value": "node_modules/@esbuild/freebsd-arm64"
+        },
+        {
+          "name": "beebo:development",
+          "value": "true"
+        },
+        {
+          "name": "beebo:optional",
+          "value": "true"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "9fe234053491228cbe77a44f2a7115c2a979530049a25cadbd8e2600e204268aca96a80f208f22c7ab25555adf6794e78fb825219be5a3295b07f1093cc5845f"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "node_modules/@esbuild/freebsd-x64",
+      "name": "@esbuild/freebsd-x64",
+      "version": "0.28.2",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@esbuild/freebsd-x64/-/freebsd-x64-0.28.2.tgz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "beebo:npm-lock-path",
+          "value": "node_modules/@esbuild/freebsd-x64"
+        },
+        {
+          "name": "beebo:development",
+          "value": "true"
+        },
+        {
+          "name": "beebo:optional",
+          "value": "true"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "efc5c94c992f3ecd24cf6c3ad77d353c98d797883bab726a898319fccff2548ef710706b0914e0921bbda2a1bbbcfaaaf9aff269d116f1a0fe6a02a5939c6b9a"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "node_modules/@esbuild/linux-arm",
+      "name": "@esbuild/linux-arm",
+      "version": "0.28.2",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@esbuild/linux-arm/-/linux-arm-0.28.2.tgz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "beebo:npm-lock-path",
+          "value": "node_modules/@esbuild/linux-arm"
+        },
+        {
+          "name": "beebo:development",
+          "value": "true"
+        },
+        {
+          "name": "beebo:optional",
+          "value": "true"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "5e50e7bb6ab9ca8a9e9acfb16b2eb0480720f430c3ecaf512ca64404e3199b7724369241bce5f6d2d49f6f2f0a7ebae120d0f2bfd57661564a63f4a9a06248f3"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "node_modules/@esbuild/linux-arm64",
+      "name": "@esbuild/linux-arm64",
+      "version": "0.28.2",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@esbuild/linux-arm64/-/linux-arm64-0.28.2.tgz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "beebo:npm-lock-path",
+          "value": "node_modules/@esbuild/linux-arm64"
+        },
+        {
+          "name": "beebo:development",
+          "value": "true"
+        },
+        {
+          "name": "beebo:optional",
+          "value": "true"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "a56e000b43f78adf1cedda3d315338a79d45cc7cdd33f4d9adeaeeae045c1c9d964dad55435088ab5f319dc7e9049c38a23922659aca5b6c8805604ff768fa52"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "node_modules/@esbuild/linux-ia32",
+      "name": "@esbuild/linux-ia32",
+      "version": "0.28.2",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@esbuild/linux-ia32/-/linux-ia32-0.28.2.tgz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "beebo:npm-lock-path",
+          "value": "node_modules/@esbuild/linux-ia32"
+        },
+        {
+          "name": "beebo:development",
+          "value": "true"
+        },
+        {
+          "name": "beebo:optional",
+          "value": "true"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "0986e78fbf07b08780f8386050a80509fbcdb131c584c32b8a752b319a435c95ca37c4f75d589367ffb0b47795c44598f1ec12cd314dfa74664b03b6b5968b51"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "node_modules/@esbuild/linux-loong64",
+      "name": "@esbuild/linux-loong64",
+      "version": "0.28.2",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@esbuild/linux-loong64/-/linux-loong64-0.28.2.tgz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "beebo:npm-lock-path",
+          "value": "node_modules/@esbuild/linux-loong64"
+        },
+        {
+          "name": "beebo:development",
+          "value": "true"
+        },
+        {
+          "name": "beebo:optional",
+          "value": "true"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "6eec2477c9eca61e11f9a8d1bf0d2a3391e36bf4d7428c37a6dcd63b611b1bf72a70890796846b76506d425b21c98193345bdf91f279b693cb5646380edb0f7d"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "node_modules/@esbuild/linux-mips64el",
+      "name": "@esbuild/linux-mips64el",
+      "version": "0.28.2",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@esbuild/linux-mips64el/-/linux-mips64el-0.28.2.tgz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "beebo:npm-lock-path",
+          "value": "node_modules/@esbuild/linux-mips64el"
+        },
+        {
+          "name": "beebo:development",
+          "value": "true"
+        },
+        {
+          "name": "beebo:optional",
+          "value": "true"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "655ca46c3ca4ef9d7d57088d6fd2dc8fd9bc5cceafe55f6e28fbeb10c92411e7557b07fed22b6485a869e070e98044578702d1a56172a6c19b1bf27cb3442324"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "node_modules/@esbuild/linux-ppc64",
+      "name": "@esbuild/linux-ppc64",
+      "version": "0.28.2",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@esbuild/linux-ppc64/-/linux-ppc64-0.28.2.tgz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "beebo:npm-lock-path",
+          "value": "node_modules/@esbuild/linux-ppc64"
+        },
+        {
+          "name": "beebo:development",
+          "value": "true"
+        },
+        {
+          "name": "beebo:optional",
+          "value": "true"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "0805e5f83b5df5452e25df2928a77087a30b9b7314322a8c3e6859ded4d25cfa9fc90def0e5e91e6165d67f918a232b8a1f5ed75f4afd6d16af17cd6c7785e35"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "node_modules/@esbuild/linux-riscv64",
+      "name": "@esbuild/linux-riscv64",
+      "version": "0.28.2",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@esbuild/linux-riscv64/-/linux-riscv64-0.28.2.tgz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "beebo:npm-lock-path",
+          "value": "node_modules/@esbuild/linux-riscv64"
+        },
+        {
+          "name": "beebo:development",
+          "value": "true"
+        },
+        {
+          "name": "beebo:optional",
+          "value": "true"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "19e5c27a3e0842d53507e4250d5f16fd146f6f32373bf4adb2cfbf6c25efe25665b3958646dbb66bedc9900de2e2a21494c5e970779b5a917c024261013a30b8"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "node_modules/@esbuild/linux-s390x",
+      "name": "@esbuild/linux-s390x",
+      "version": "0.28.2",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@esbuild/linux-s390x/-/linux-s390x-0.28.2.tgz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "beebo:npm-lock-path",
+          "value": "node_modules/@esbuild/linux-s390x"
+        },
+        {
+          "name": "beebo:development",
+          "value": "true"
+        },
+        {
+          "name": "beebo:optional",
+          "value": "true"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "dc7d707936193f1b7f58e841caccd06726d2f70e652b3527d450ccb2010285b1d64301d841045f071802719bcf8631df2b22632227afbcc98451ac09add63d0e"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "node_modules/@esbuild/linux-x64",
+      "name": "@esbuild/linux-x64",
+      "version": "0.28.2",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@esbuild/linux-x64/-/linux-x64-0.28.2.tgz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "beebo:npm-lock-path",
+          "value": "node_modules/@esbuild/linux-x64"
+        },
+        {
+          "name": "beebo:development",
+          "value": "true"
+        },
+        {
+          "name": "beebo:optional",
+          "value": "true"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "e314d9af5154992a105b85c85a68addedcd0ad44d933e3773f45d5f3144e298179d177c8ef178ef74fb56d9bcdc3122e7d0f610d0551247e588603d517c03f1d"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "node_modules/@esbuild/netbsd-arm64",
+      "name": "@esbuild/netbsd-arm64",
+      "version": "0.28.2",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@esbuild/netbsd-arm64/-/netbsd-arm64-0.28.2.tgz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "beebo:npm-lock-path",
+          "value": "node_modules/@esbuild/netbsd-arm64"
+        },
+        {
+          "name": "beebo:development",
+          "value": "true"
+        },
+        {
+          "name": "beebo:optional",
+          "value": "true"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "b120134633de0c1837a5d807a107e8601a1bd752a4d4519af65ba2e51207642a029096bd40a96f977fef2b3daeb02998623b3bca6251ff6367b2a7be1e3b799f"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "node_modules/@esbuild/netbsd-x64",
+      "name": "@esbuild/netbsd-x64",
+      "version": "0.28.2",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@esbuild/netbsd-x64/-/netbsd-x64-0.28.2.tgz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "beebo:npm-lock-path",
+          "value": "node_modules/@esbuild/netbsd-x64"
+        },
+        {
+          "name": "beebo:development",
+          "value": "true"
+        },
+        {
+          "name": "beebo:optional",
+          "value": "true"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "96a9f3095fa633480800368a8a188283a89f81f5362f7879137deb35004dd58e0c6951a7cebcb39afbdfed41f1a6ba50744f21a6a2e8949f5197e4a42110e9cb"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "node_modules/@esbuild/openbsd-arm64",
+      "name": "@esbuild/openbsd-arm64",
+      "version": "0.28.2",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@esbuild/openbsd-arm64/-/openbsd-arm64-0.28.2.tgz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "beebo:npm-lock-path",
+          "value": "node_modules/@esbuild/openbsd-arm64"
+        },
+        {
+          "name": "beebo:development",
+          "value": "true"
+        },
+        {
+          "name": "beebo:optional",
+          "value": "true"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "00bdaa2482c7ee5363ac3982403bddc4c7c0508bfc28c3593afaf0010f22f3ffe7b4bf457e584ec8c27c39948c05bf3f0165dedffe6fe52db4cb7cc2a1958aa1"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "node_modules/@esbuild/openbsd-x64",
+      "name": "@esbuild/openbsd-x64",
+      "version": "0.28.2",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@esbuild/openbsd-x64/-/openbsd-x64-0.28.2.tgz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "beebo:npm-lock-path",
+          "value": "node_modules/@esbuild/openbsd-x64"
+        },
+        {
+          "name": "beebo:development",
+          "value": "true"
+        },
+        {
+          "name": "beebo:optional",
+          "value": "true"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "42d8ae3f2b5c851c82e2bc142a17b125d40abc3b99ea15a5a22de282a3d03542424b5feff4488edd44ce5d1e80dc5a0ca387e700a6d625da9a23084ece1f2a13"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "node_modules/@esbuild/openharmony-arm64",
+      "name": "@esbuild/openharmony-arm64",
+      "version": "0.28.2",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@esbuild/openharmony-arm64/-/openharmony-arm64-0.28.2.tgz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "beebo:npm-lock-path",
+          "value": "node_modules/@esbuild/openharmony-arm64"
+        },
+        {
+          "name": "beebo:development",
+          "value": "true"
+        },
+        {
+          "name": "beebo:optional",
+          "value": "true"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "5a48580e6a538cbbc6952700d6bc234549a197893ca174777086eda969842e053f7457871e51259710ef75670d255f6b6f309ec41e6fcfc82d35ec162e0093ed"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "node_modules/@esbuild/sunos-x64",
+      "name": "@esbuild/sunos-x64",
+      "version": "0.28.2",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@esbuild/sunos-x64/-/sunos-x64-0.28.2.tgz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "beebo:npm-lock-path",
+          "value": "node_modules/@esbuild/sunos-x64"
+        },
+        {
+          "name": "beebo:development",
+          "value": "true"
+        },
+        {
+          "name": "beebo:optional",
+          "value": "true"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "18f3129133ad327bf653617c8317b8228eaa995b3e60aca9f37d84b6aab1af48459e0997437af3c32b5e966dc6227ed3e15be245495fdec3a004e89376f69fee"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "node_modules/@esbuild/win32-arm64",
+      "name": "@esbuild/win32-arm64",
+      "version": "0.28.2",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@esbuild/win32-arm64/-/win32-arm64-0.28.2.tgz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "beebo:npm-lock-path",
+          "value": "node_modules/@esbuild/win32-arm64"
+        },
+        {
+          "name": "beebo:development",
+          "value": "true"
+        },
+        {
+          "name": "beebo:optional",
+          "value": "true"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "3c886112413db8f06579106b404269527ecc06789b6736c6cd858f998df1f98a1583ff79cdb8c1e02c4f3ce43c979b5860ce2631a0ad845f3fd4321f05043259"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "node_modules/@esbuild/win32-ia32",
+      "name": "@esbuild/win32-ia32",
+      "version": "0.28.2",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@esbuild/win32-ia32/-/win32-ia32-0.28.2.tgz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "beebo:npm-lock-path",
+          "value": "node_modules/@esbuild/win32-ia32"
+        },
+        {
+          "name": "beebo:development",
+          "value": "true"
+        },
+        {
+          "name": "beebo:optional",
+          "value": "true"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "62625b7d396f53b49d9fd041fb83d1112e2807aa71812dfb30038d8fe841aff7295d2d5a04f297c4d9c36eef900963e3d28f5d832c5eabbf60e9ce4ff0a7ae60"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "node_modules/@esbuild/win32-x64",
+      "name": "@esbuild/win32-x64",
+      "version": "0.28.2",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@esbuild/win32-x64/-/win32-x64-0.28.2.tgz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "beebo:npm-lock-path",
+          "value": "node_modules/@esbuild/win32-x64"
+        },
+        {
+          "name": "beebo:development",
+          "value": "true"
+        },
+        {
+          "name": "beebo:optional",
+          "value": "true"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "e5e6e9c6bde758cceb2ffae7508ef9e4992e79ed1b1cbfc6ab459317d96f729bfbdf0029e5ebbc31f0548162bd6e15af6638fbc97f1eb5fffcb48f0d7b2ebde6"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "node_modules/@fastify/ajv-compiler",
+      "name": "@fastify/ajv-compiler",
+      "version": "4.0.7",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@fastify/ajv-compiler/-/ajv-compiler-4.0.7.tgz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "beebo:npm-lock-path",
+          "value": "node_modules/@fastify/ajv-compiler"
+        },
+        {
+          "name": "beebo:development",
+          "value": "false"
+        },
+        {
+          "name": "beebo:optional",
+          "value": "false"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "54fd3221fc25735a218fbdf791e603ab21e6d5559e3fd550c58a26ba786bf748e40b868d3626db92b46268d80f82a8f5391c547a720b478ab303fa69601340b5"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "node_modules/@fastify/deepmerge",
+      "name": "@fastify/deepmerge",
+      "version": "3.2.4",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@fastify/deepmerge/-/deepmerge-3.2.4.tgz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "beebo:npm-lock-path",
+          "value": "node_modules/@fastify/deepmerge"
+        },
+        {
+          "name": "beebo:development",
+          "value": "false"
+        },
+        {
+          "name": "beebo:optional",
+          "value": "false"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "91cf0642ae605fd451870d2ba2fdc332b37cc12f32465c4945d0f3b18c3074157fc1acee56073fd4aec228bf74b65beedd19476a7e98d11d1a1379c9b41cf679"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "node_modules/@fastify/error",
+      "name": "@fastify/error",
+      "version": "4.2.1",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@fastify/error/-/error-4.2.1.tgz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "beebo:npm-lock-path",
+          "value": "node_modules/@fastify/error"
+        },
+        {
+          "name": "beebo:development",
+          "value": "false"
+        },
+        {
+          "name": "beebo:optional",
+          "value": "false"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "31806e9ae2303fee4c2295d2c8a9bafe8d448a07288a3d7cea5594b2c5f72c7e54f0a5aa53492d661cc2e0212b217f4425e41e44623ecc965059a9019456d472"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "node_modules/@fastify/fast-json-stringify-compiler",
+      "name": "@fastify/fast-json-stringify-compiler",
+      "version": "5.2.0",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@fastify/fast-json-stringify-compiler/-/fast-json-stringify-compiler-5.2.0.tgz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "beebo:npm-lock-path",
+          "value": "node_modules/@fastify/fast-json-stringify-compiler"
+        },
+        {
+          "name": "beebo:development",
+          "value": "false"
+        },
+        {
+          "name": "beebo:optional",
+          "value": "false"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "2cf4d5034c38a0f21358702fa31f4d808d6b0d2ae35278f15fa40de4c09bf4563e1eabc3b149a02ee71b8fd7906a4a82f256303bb5209033c71102c9365f6fb6"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "node_modules/@fastify/forwarded",
+      "name": "@fastify/forwarded",
+      "version": "3.1.2",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@fastify/forwarded/-/forwarded-3.1.2.tgz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "beebo:npm-lock-path",
+          "value": "node_modules/@fastify/forwarded"
+        },
+        {
+          "name": "beebo:development",
+          "value": "false"
+        },
+        {
+          "name": "beebo:optional",
+          "value": "false"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "f3d5a2446fa15b755049f0b08381dbf1be373dec845f5e4ae7e9447ec678114b61fc5c8e8d2fe5bfc1ec56eb3050d5d68929f1306368b84fdfabfd30dd5ba61d"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "node_modules/@fastify/merge-json-schemas",
+      "name": "@fastify/merge-json-schemas",
+      "version": "0.2.2",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@fastify/merge-json-schemas/-/merge-json-schemas-0.2.2.tgz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "beebo:npm-lock-path",
+          "value": "node_modules/@fastify/merge-json-schemas"
+        },
+        {
+          "name": "beebo:development",
+          "value": "false"
+        },
+        {
+          "name": "beebo:optional",
+          "value": "false"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "77f831f6c45b5025601911b399ae3ac0b730898f27a13a8ed8d9a383fbdb4c04711d11396dd8793c82fcb3decbb755fb49c456456e76795631c08a0fc0875550"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "node_modules/@fastify/proxy-addr",
+      "name": "@fastify/proxy-addr",
+      "version": "5.1.2",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@fastify/proxy-addr/-/proxy-addr-5.1.2.tgz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "beebo:npm-lock-path",
+          "value": "node_modules/@fastify/proxy-addr"
+        },
+        {
+          "name": "beebo:development",
+          "value": "false"
+        },
+        {
+          "name": "beebo:optional",
+          "value": "false"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "baa07842c815a2ba345c30be0c87ed20c1971dd04f9fe94ae84937c57008c4f30225fab19dbb721283029b628f5153ae228b1dec2cb0f476b012a30533f500fa"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "node_modules/@pinojs/redact",
+      "name": "@pinojs/redact",
+      "version": "0.4.0",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@pinojs/redact/-/redact-0.4.0.tgz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "beebo:npm-lock-path",
+          "value": "node_modules/@pinojs/redact"
+        },
+        {
+          "name": "beebo:development",
+          "value": "false"
+        },
+        {
+          "name": "beebo:optional",
+          "value": "false"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "93610d9e606e804febcd07c471d58770263efc533754bcc7f5c604b1b76ca2aaefcc029185465e44d84066f07c3a2b502754c179ddf2a96b5d8f34bac09281c2"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "node_modules/@rollup/rollup-android-arm-eabi",
+      "name": "@rollup/rollup-android-arm-eabi",
+      "version": "4.68.2",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@rollup/rollup-android-arm-eabi/-/rollup-android-arm-eabi-4.68.2.tgz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "beebo:npm-lock-path",
+          "value": "node_modules/@rollup/rollup-android-arm-eabi"
+        },
+        {
+          "name": "beebo:development",
+          "value": "true"
+        },
+        {
+          "name": "beebo:optional",
+          "value": "true"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "22d2ab34c9042f7872f3990b057c01d3e33a09659523cbebed157e11bee80e54083172da8848467dd6a3e6301469d627dafde7c3302121197f9cbca302a57dbd"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "node_modules/@rollup/rollup-android-arm64",
+      "name": "@rollup/rollup-android-arm64",
+      "version": "4.68.2",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@rollup/rollup-android-arm64/-/rollup-android-arm64-4.68.2.tgz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "beebo:npm-lock-path",
+          "value": "node_modules/@rollup/rollup-android-arm64"
+        },
+        {
+          "name": "beebo:development",
+          "value": "true"
+        },
+        {
+          "name": "beebo:optional",
+          "value": "true"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "742913f0130f2e8e97e8608556dbb3ae7afdf353e925278ae193bf77f999749fdaa3ad506b552c77f387210ebd310830e2a41c951fd7eae45150e3625b00fc73"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "node_modules/@rollup/rollup-android-x64",
+      "name": "@rollup/rollup-android-x64",
+      "version": "4.68.2",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@rollup/rollup-android-x64/-/rollup-android-x64-4.68.2.tgz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "beebo:npm-lock-path",
+          "value": "node_modules/@rollup/rollup-android-x64"
+        },
+        {
+          "name": "beebo:development",
+          "value": "true"
+        },
+        {
+          "name": "beebo:optional",
+          "value": "true"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "a768e42a2b1ca903869b22faaaef8abc972dbc17374904ddf978b6950627e50bc52c45b3f9023c67d888fb17088decfabca46c4a758fe7a637129ee0dd2b62ba"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "node_modules/@rollup/rollup-darwin-arm64",
+      "name": "@rollup/rollup-darwin-arm64",
+      "version": "4.68.2",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@rollup/rollup-darwin-arm64/-/rollup-darwin-arm64-4.68.2.tgz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "beebo:npm-lock-path",
+          "value": "node_modules/@rollup/rollup-darwin-arm64"
+        },
+        {
+          "name": "beebo:development",
+          "value": "true"
+        },
+        {
+          "name": "beebo:optional",
+          "value": "true"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "69521f3ad7a8e73a17f1a2fbe361ff4b742cc8de9aa243588ddceb2e74012b18115688787226d312ba62eb54734a6aefda10730c1d62ef9d61c3075cf102b4bd"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "node_modules/@rollup/rollup-darwin-x64",
+      "name": "@rollup/rollup-darwin-x64",
+      "version": "4.68.2",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@rollup/rollup-darwin-x64/-/rollup-darwin-x64-4.68.2.tgz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "beebo:npm-lock-path",
+          "value": "node_modules/@rollup/rollup-darwin-x64"
+        },
+        {
+          "name": "beebo:development",
+          "value": "true"
+        },
+        {
+          "name": "beebo:optional",
+          "value": "true"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "f96b9fe131531e213f5a78ca807d5290d7fff43e5d76879dd54474a778f18cd0067a675e79044bfabd5b2752e567285ad152830582c1d94fdaf5af4a952c382b"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "node_modules/@rollup/rollup-freebsd-arm64",
+      "name": "@rollup/rollup-freebsd-arm64",
+      "version": "4.68.2",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@rollup/rollup-freebsd-arm64/-/rollup-freebsd-arm64-4.68.2.tgz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "beebo:npm-lock-path",
+          "value": "node_modules/@rollup/rollup-freebsd-arm64"
+        },
+        {
+          "name": "beebo:development",
+          "value": "true"
+        },
+        {
+          "name": "beebo:optional",
+          "value": "true"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "7de28ad9d735de3ffa0fd980a7b5ca84133f554aa7d0dff14603faad3eff99d45554951a799e25b09f6137dd1a4e2d24dce0fe9a48e570dd35bd0f7a01cf55cd"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "node_modules/@rollup/rollup-freebsd-x64",
+      "name": "@rollup/rollup-freebsd-x64",
+      "version": "4.68.2",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@rollup/rollup-freebsd-x64/-/rollup-freebsd-x64-4.68.2.tgz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "beebo:npm-lock-path",
+          "value": "node_modules/@rollup/rollup-freebsd-x64"
+        },
+        {
+          "name": "beebo:development",
+          "value": "true"
+        },
+        {
+          "name": "beebo:optional",
+          "value": "true"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "b35a065cf197d4f36a762f532d60fe470b4f1187ff04e4db09cab86a7241a8d6f3ca3b9cb62f3a95d607dfb78abecc933fb065e7f1dff1799b2310b3fe269f4c"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "node_modules/@rollup/rollup-linux-arm-gnueabihf",
+      "name": "@rollup/rollup-linux-arm-gnueabihf",
+      "version": "4.68.2",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@rollup/rollup-linux-arm-gnueabihf/-/rollup-linux-arm-gnueabihf-4.68.2.tgz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "beebo:npm-lock-path",
+          "value": "node_modules/@rollup/rollup-linux-arm-gnueabihf"
+        },
+        {
+          "name": "beebo:development",
+          "value": "true"
+        },
+        {
+          "name": "beebo:optional",
+          "value": "true"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "92c477666cc7ae6e873943fc5250c1cb984d4dc1bd70421adc4c869f19f9063a2b2d18c1878b9cc61c23c305449b476a70837812073f5e30d488f43037589cf4"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "node_modules/@rollup/rollup-linux-arm-musleabihf",
+      "name": "@rollup/rollup-linux-arm-musleabihf",
+      "version": "4.68.2",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@rollup/rollup-linux-arm-musleabihf/-/rollup-linux-arm-musleabihf-4.68.2.tgz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "beebo:npm-lock-path",
+          "value": "node_modules/@rollup/rollup-linux-arm-musleabihf"
+        },
+        {
+          "name": "beebo:development",
+          "value": "true"
+        },
+        {
+          "name": "beebo:optional",
+          "value": "true"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "493655541337e7050b56c41a874c4a7c205030fa4796239f8e745a50d4f7e63adba5f6a952b0fc8b1e98865eed2c75b4c50496a2d5d24a0863522fc3725c114b"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "node_modules/@rollup/rollup-linux-arm64-gnu",
+      "name": "@rollup/rollup-linux-arm64-gnu",
+      "version": "4.68.2",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@rollup/rollup-linux-arm64-gnu/-/rollup-linux-arm64-gnu-4.68.2.tgz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "beebo:npm-lock-path",
+          "value": "node_modules/@rollup/rollup-linux-arm64-gnu"
+        },
+        {
+          "name": "beebo:development",
+          "value": "true"
+        },
+        {
+          "name": "beebo:optional",
+          "value": "true"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "166fc63c2d91d33949610229f5a63d2f594edb3f8ff94adcbd71ba7e1b9b7e8fc16cc38b6652d7b219db102393aabde9c5f6456fa9cd9f44200c44c3b6b5fb4d"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "node_modules/@rollup/rollup-linux-arm64-musl",
+      "name": "@rollup/rollup-linux-arm64-musl",
+      "version": "4.68.2",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@rollup/rollup-linux-arm64-musl/-/rollup-linux-arm64-musl-4.68.2.tgz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "beebo:npm-lock-path",
+          "value": "node_modules/@rollup/rollup-linux-arm64-musl"
+        },
+        {
+          "name": "beebo:development",
+          "value": "true"
+        },
+        {
+          "name": "beebo:optional",
+          "value": "true"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "568aa572459cc0d1775aab1490b660f75cd816006fac2dfb2dce5ef0053e04a7425050cc3e837446c8a7fcbbc5fab055179dbb816a39293d281e468065a2f518"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "node_modules/@rollup/rollup-linux-loong64-gnu",
+      "name": "@rollup/rollup-linux-loong64-gnu",
+      "version": "4.68.2",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@rollup/rollup-linux-loong64-gnu/-/rollup-linux-loong64-gnu-4.68.2.tgz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "beebo:npm-lock-path",
+          "value": "node_modules/@rollup/rollup-linux-loong64-gnu"
+        },
+        {
+          "name": "beebo:development",
+          "value": "true"
+        },
+        {
+          "name": "beebo:optional",
+          "value": "true"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "66bf17fd251fec98f0c6df7d06a3c317f5aafaccf8a140483fa1c1685416c1bf303b59d5e8b048a43ea307d70cc9b2e1a3ddd9f81f2bacdd2e5c42faa0d39425"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "node_modules/@rollup/rollup-linux-loong64-musl",
+      "name": "@rollup/rollup-linux-loong64-musl",
+      "version": "4.68.2",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@rollup/rollup-linux-loong64-musl/-/rollup-linux-loong64-musl-4.68.2.tgz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "beebo:npm-lock-path",
+          "value": "node_modules/@rollup/rollup-linux-loong64-musl"
+        },
+        {
+          "name": "beebo:development",
+          "value": "true"
+        },
+        {
+          "name": "beebo:optional",
+          "value": "true"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "d8486b60424d5c8ca1499112c26fe40a47b5b621fb4003ce537bf732c2ccf49f8d7e7d900837bfa4644e500bd814ad012f63046f33607ebaab6e71390855e42f"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "node_modules/@rollup/rollup-linux-ppc64-gnu",
+      "name": "@rollup/rollup-linux-ppc64-gnu",
+      "version": "4.68.2",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@rollup/rollup-linux-ppc64-gnu/-/rollup-linux-ppc64-gnu-4.68.2.tgz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "beebo:npm-lock-path",
+          "value": "node_modules/@rollup/rollup-linux-ppc64-gnu"
+        },
+        {
+          "name": "beebo:development",
+          "value": "true"
+        },
+        {
+          "name": "beebo:optional",
+          "value": "true"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "202d1d62e110927c349b615804d04a95bae0049047e4e31189a45f09ce02152a589e60e7a93a4d4aff93817fa5a1ecc64dd46304d66e6198b7b7e39ce4dc4d62"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "node_modules/@rollup/rollup-linux-ppc64-musl",
+      "name": "@rollup/rollup-linux-ppc64-musl",
+      "version": "4.68.2",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@rollup/rollup-linux-ppc64-musl/-/rollup-linux-ppc64-musl-4.68.2.tgz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "beebo:npm-lock-path",
+          "value": "node_modules/@rollup/rollup-linux-ppc64-musl"
+        },
+        {
+          "name": "beebo:development",
+          "value": "true"
+        },
+        {
+          "name": "beebo:optional",
+          "value": "true"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "665ce6e9f1ae0efb40a8c125d3bd7f835eefc6aeaed98daffeb38dfe00d8e0dbf358b278d41180970845dd0b80cf0ab4e7320fa382d8cddab0871de88ac60253"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "node_modules/@rollup/rollup-linux-riscv64-gnu",
+      "name": "@rollup/rollup-linux-riscv64-gnu",
+      "version": "4.68.2",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@rollup/rollup-linux-riscv64-gnu/-/rollup-linux-riscv64-gnu-4.68.2.tgz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "beebo:npm-lock-path",
+          "value": "node_modules/@rollup/rollup-linux-riscv64-gnu"
+        },
+        {
+          "name": "beebo:development",
+          "value": "true"
+        },
+        {
+          "name": "beebo:optional",
+          "value": "true"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "2a1129611b476772a3e2c85abe35de1fe2b56d0940e946cfe8c278e6b30f17fd7526565bd5244d2deb9609d8a0504a0c31a14ee3e2f0c1c4be7b0d52a0b26efe"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "node_modules/@rollup/rollup-linux-riscv64-musl",
+      "name": "@rollup/rollup-linux-riscv64-musl",
+      "version": "4.68.2",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@rollup/rollup-linux-riscv64-musl/-/rollup-linux-riscv64-musl-4.68.2.tgz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "beebo:npm-lock-path",
+          "value": "node_modules/@rollup/rollup-linux-riscv64-musl"
+        },
+        {
+          "name": "beebo:development",
+          "value": "true"
+        },
+        {
+          "name": "beebo:optional",
+          "value": "true"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "2cf9fdaaf3ec33f39f77a124ab78a6ea707c4e4d6bb89853777c7fd9b2644d1f26fd74ec7f103e114d11276dd626a809835db7922b4702a6c42bb07870bd6e3e"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "node_modules/@rollup/rollup-linux-s390x-gnu",
+      "name": "@rollup/rollup-linux-s390x-gnu",
+      "version": "4.68.2",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@rollup/rollup-linux-s390x-gnu/-/rollup-linux-s390x-gnu-4.68.2.tgz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "beebo:npm-lock-path",
+          "value": "node_modules/@rollup/rollup-linux-s390x-gnu"
+        },
+        {
+          "name": "beebo:development",
+          "value": "true"
+        },
+        {
+          "name": "beebo:optional",
+          "value": "true"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "435f84fa9cd23fe1625ee219b71291fa92bb976290f60b0cf956853efd4b476efb929ee5eb572b1b8e9618b28b2dacb726ce5cbf253d29ea9dcf16b511c14efa"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "node_modules/@rollup/rollup-linux-x64-gnu",
+      "name": "@rollup/rollup-linux-x64-gnu",
+      "version": "4.68.2",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@rollup/rollup-linux-x64-gnu/-/rollup-linux-x64-gnu-4.68.2.tgz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "beebo:npm-lock-path",
+          "value": "node_modules/@rollup/rollup-linux-x64-gnu"
+        },
+        {
+          "name": "beebo:development",
+          "value": "true"
+        },
+        {
+          "name": "beebo:optional",
+          "value": "true"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "dc1b69e0b71afd6cec99b68abbd2e1f5dfd7c3244321e81dff9921441bac1c6c3f2e5e92a05e52867eb73ab8cf7642dca4d8b63c60c0a57ccd9b1ae24711988c"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "node_modules/@rollup/rollup-linux-x64-musl",
+      "name": "@rollup/rollup-linux-x64-musl",
+      "version": "4.68.2",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@rollup/rollup-linux-x64-musl/-/rollup-linux-x64-musl-4.68.2.tgz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "beebo:npm-lock-path",
+          "value": "node_modules/@rollup/rollup-linux-x64-musl"
+        },
+        {
+          "name": "beebo:development",
+          "value": "true"
+        },
+        {
+          "name": "beebo:optional",
+          "value": "true"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "e52295694895b35f3e0c6067a60d263911b182aff4b9d7339e01b157fbdfda7bcad5d8eaa4e288c58ffef2b056c406d61911384679f0c5669b0f024dde90b021"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "node_modules/@rollup/rollup-openbsd-x64",
+      "name": "@rollup/rollup-openbsd-x64",
+      "version": "4.68.2",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@rollup/rollup-openbsd-x64/-/rollup-openbsd-x64-4.68.2.tgz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "beebo:npm-lock-path",
+          "value": "node_modules/@rollup/rollup-openbsd-x64"
+        },
+        {
+          "name": "beebo:development",
+          "value": "true"
+        },
+        {
+          "name": "beebo:optional",
+          "value": "true"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "281a66e3cfe5112b0781677e75195ccb5f003c16215d4e096fa565268a9ba563707e9ced157c0fdb6a95bfd687777935aae4ab98b789c182dceeba50f81159af"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "node_modules/@rollup/rollup-openharmony-arm64",
+      "name": "@rollup/rollup-openharmony-arm64",
+      "version": "4.68.2",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@rollup/rollup-openharmony-arm64/-/rollup-openharmony-arm64-4.68.2.tgz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "beebo:npm-lock-path",
+          "value": "node_modules/@rollup/rollup-openharmony-arm64"
+        },
+        {
+          "name": "beebo:development",
+          "value": "true"
+        },
+        {
+          "name": "beebo:optional",
+          "value": "true"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "a340f46df456f10180d4f87a3b3a951ccab92d1bb5c64af588ceea4085d4485b91eb475d5de0e137d511e1b5013cb62cad3e3ab19c308106b9d535ad055debe6"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "node_modules/@rollup/rollup-win32-arm64-msvc",
+      "name": "@rollup/rollup-win32-arm64-msvc",
+      "version": "4.68.2",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@rollup/rollup-win32-arm64-msvc/-/rollup-win32-arm64-msvc-4.68.2.tgz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "beebo:npm-lock-path",
+          "value": "node_modules/@rollup/rollup-win32-arm64-msvc"
+        },
+        {
+          "name": "beebo:development",
+          "value": "true"
+        },
+        {
+          "name": "beebo:optional",
+          "value": "true"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "af5ee472ee6499de96430a246267c19dfc0cfe272eade09608f8e925500b72b4afe4b7f2e86824f5acf15e8afa8482e10876dcff821f122bfe2f945768e1e29c"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "node_modules/@rollup/rollup-win32-ia32-msvc",
+      "name": "@rollup/rollup-win32-ia32-msvc",
+      "version": "4.68.2",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@rollup/rollup-win32-ia32-msvc/-/rollup-win32-ia32-msvc-4.68.2.tgz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "beebo:npm-lock-path",
+          "value": "node_modules/@rollup/rollup-win32-ia32-msvc"
+        },
+        {
+          "name": "beebo:development",
+          "value": "true"
+        },
+        {
+          "name": "beebo:optional",
+          "value": "true"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "c94b4eaaaed9ad0a19dd6887491e9019374e978620307a97218481614eac888702d18174a44c31eda1ac3d39b6991c2b996e92309931cc47459bac2a5e999b37"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "node_modules/@rollup/rollup-win32-x64-gnu",
+      "name": "@rollup/rollup-win32-x64-gnu",
+      "version": "4.68.2",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@rollup/rollup-win32-x64-gnu/-/rollup-win32-x64-gnu-4.68.2.tgz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "beebo:npm-lock-path",
+          "value": "node_modules/@rollup/rollup-win32-x64-gnu"
+        },
+        {
+          "name": "beebo:development",
+          "value": "true"
+        },
+        {
+          "name": "beebo:optional",
+          "value": "true"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "e486285b1406a3958409b25b22621fdb0df7b821c934bbf8a3f150b52c9e60379dec00bacf1f3836c11c19871ca08da078311892bc545dcb182bfe8487055222"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "node_modules/@rollup/rollup-win32-x64-msvc",
+      "name": "@rollup/rollup-win32-x64-msvc",
+      "version": "4.68.2",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@rollup/rollup-win32-x64-msvc/-/rollup-win32-x64-msvc-4.68.2.tgz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "beebo:npm-lock-path",
+          "value": "node_modules/@rollup/rollup-win32-x64-msvc"
+        },
+        {
+          "name": "beebo:development",
+          "value": "true"
+        },
+        {
+          "name": "beebo:optional",
+          "value": "true"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "79ef9cd7882052233b960e0fb428d205853d3bd747a781457aca519dde728fb4a295404908bdf1dda1e507eb08a9b1a370fa37a44c8e0c04a77ca26e676e9807"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "node_modules/@types/estree",
+      "name": "@types/estree",
+      "version": "1.0.10",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@types/estree/-/estree-1.0.10.tgz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "beebo:npm-lock-path",
+          "value": "node_modules/@types/estree"
+        },
+        {
+          "name": "beebo:development",
+          "value": "true"
+        },
+        {
+          "name": "beebo:optional",
+          "value": "false"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "953c8e32739c991073742bfaff8cd4642ac4855d31aea422519059b5571b98b1c15ca2e737cabcf6fff029117f4341dbc15b2a6c81b7a391c3a0597db1db8cfa"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "node_modules/@types/node",
+      "name": "@types/node",
+      "version": "22.19.0",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@types/node/-/node-22.19.0.tgz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "beebo:npm-lock-path",
+          "value": "node_modules/@types/node"
+        },
+        {
+          "name": "beebo:development",
+          "value": "true"
+        },
+        {
+          "name": "beebo:optional",
+          "value": "false"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "c69aff9662cf4048fe4d49c7991f806fdd7f825849beca9c8c1fb2634231f463bbd07e8b6f81471f919ea9d384e5bb40c7b788330b87929e07d8c4a42dca966c"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "node_modules/@types/react",
+      "name": "@types/react",
+      "version": "19.3.0",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@types/react/-/react-19.3.0.tgz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "beebo:npm-lock-path",
+          "value": "node_modules/@types/react"
+        },
+        {
+          "name": "beebo:development",
+          "value": "false"
+        },
+        {
+          "name": "beebo:optional",
+          "value": "false"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "374ac50ae1fd628c46f7f9bad65f4c7e924a7e62ce554d1e9bb8a9233e9346049292f45e2c1f6f2fce4607ecabf01b3995eaa9be0f7a252c05e194b5b38be242"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "node_modules/@types/react-dom",
+      "name": "@types/react-dom",
+      "version": "19.3.0",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@types/react-dom/-/react-dom-19.3.0.tgz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "beebo:npm-lock-path",
+          "value": "node_modules/@types/react-dom"
+        },
+        {
+          "name": "beebo:development",
+          "value": "true"
+        },
+        {
+          "name": "beebo:optional",
+          "value": "false"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "648edb538da66575ca1e7fea34b130d88adb888354ed7e7ebdf81d8b10479023696165e32a07d0fcffaec866f90a338b07d51c9d37a0debca542d5768729b8e1"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "node_modules/@types/react-reconciler",
+      "name": "@types/react-reconciler",
+      "version": "0.34.0",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@types/react-reconciler/-/react-reconciler-0.34.0.tgz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "beebo:npm-lock-path",
+          "value": "node_modules/@types/react-reconciler"
+        },
+        {
+          "name": "beebo:development",
+          "value": "false"
+        },
+        {
+          "name": "beebo:optional",
+          "value": "false"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "cd50f35f4164d578033f622eb53a52af1779ee3c0e1e55f7ae53eb173ebc49cfb4eada60385465a9250ad998aa41e417aa721f51bd9c7c9414ba95c12b2e3df3"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "node_modules/@types/ws",
+      "name": "@types/ws",
+      "version": "8.18.2",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@types/ws/-/ws-8.18.2.tgz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "beebo:npm-lock-path",
+          "value": "node_modules/@types/ws"
+        },
+        {
+          "name": "beebo:development",
+          "value": "true"
+        },
+        {
+          "name": "beebo:optional",
+          "value": "false"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "ebb31097e7e958a5534f53587679a8dd4e2c73fc4fa3fcd00677159c8ef8aa641ad33fdbfb583a898a8d98608f6f13becf3d9a9256f4f1ad281df7a0895774ff"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "node_modules/abstract-logging",
+      "name": "abstract-logging",
+      "version": "2.0.1",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/abstract-logging/-/abstract-logging-2.0.1.tgz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "beebo:npm-lock-path",
+          "value": "node_modules/abstract-logging"
+        },
+        {
+          "name": "beebo:development",
+          "value": "false"
+        },
+        {
+          "name": "beebo:optional",
+          "value": "false"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "d818d14d9c533ef85e3af19b06c94549839492bf928cfb4e9eb2cfdf77fe54858bcdecd0a5972a560ee36b72f87415e6cf38304fe6b4dbd8d1c793c28b726e88"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "node_modules/ajv",
+      "name": "ajv",
+      "version": "8.20.0",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/ajv/-/ajv-8.20.0.tgz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "beebo:npm-lock-path",
+          "value": "node_modules/ajv"
+        },
+        {
+          "name": "beebo:development",
+          "value": "false"
+        },
+        {
+          "name": "beebo:optional",
+          "value": "false"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "4e16e58be3a53a3fa230f60505505f2773a60809da4b2367e0cd6fcfd4fa1a46b926df5b6bf1c8479ea3a32eb9b58ea4c7f142179557341f35f58eff194ac118"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "node_modules/ajv-formats",
+      "name": "ajv-formats",
+      "version": "3.0.1",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/ajv-formats/-/ajv-formats-3.0.1.tgz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "beebo:npm-lock-path",
+          "value": "node_modules/ajv-formats"
+        },
+        {
+          "name": "beebo:development",
+          "value": "false"
+        },
+        {
+          "name": "beebo:optional",
+          "value": "false"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "f2252a979d04511fae51c7514371c3a9ae84572a3776870bf20e5627714d7169aeeb621b90652e7bfa44c8b056f1518a2ae7133e0a9e92ce1f214d43038ca8c1"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "node_modules/ajv/node_modules/fast-uri",
+      "name": "fast-uri",
+      "version": "3.1.9",
+      "licenses": [
+        {
+          "expression": "BSD-3-Clause"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/fast-uri/-/fast-uri-3.1.9.tgz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "beebo:npm-lock-path",
+          "value": "node_modules/ajv/node_modules/fast-uri"
+        },
+        {
+          "name": "beebo:development",
+          "value": "false"
+        },
+        {
+          "name": "beebo:optional",
+          "value": "false"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "852ff45addd86b4e37a0a5ecd2c231acca4a4084d784c2c8ad500a2978b8828cc60bdbfb6115959d7219ce334f4ced3633d05dc4b096a8ad7245780dce257225"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "node_modules/atomic-sleep",
+      "name": "atomic-sleep",
+      "version": "1.0.0",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/atomic-sleep/-/atomic-sleep-1.0.0.tgz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "beebo:npm-lock-path",
+          "value": "node_modules/atomic-sleep"
+        },
+        {
+          "name": "beebo:development",
+          "value": "false"
+        },
+        {
+          "name": "beebo:optional",
+          "value": "false"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "90d3a30ea021ee9c745d6348fb841bce8891fe74e41c058db9ddaebe726ab83d7fc796bb11064c253d00733a8ad109faee863f4d34352db50a6a3669a7723db5"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "node_modules/avvio",
+      "name": "avvio",
+      "version": "9.3.1",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/avvio/-/avvio-9.3.1.tgz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "beebo:npm-lock-path",
+          "value": "node_modules/avvio"
+        },
+        {
+          "name": "beebo:development",
+          "value": "false"
+        },
+        {
+          "name": "beebo:optional",
+          "value": "false"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "4324ca5bad7faa56daf9c510066fec4fd5fc96b8b851da26a920f00a7ae78f522f2d50d14625d1933e0280145607efdc99f0bb48ae5641cf13d6f49d1af69471"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "node_modules/cookie",
+      "name": "cookie",
+      "version": "2.0.2",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/cookie/-/cookie-2.0.2.tgz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "beebo:npm-lock-path",
+          "value": "node_modules/cookie"
+        },
+        {
+          "name": "beebo:development",
+          "value": "false"
+        },
+        {
+          "name": "beebo:optional",
+          "value": "false"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "48bd1c56e11d113129ee937416e65bd35b68737be738311f5540a8a311b5489374c888ab87b24c6fd5fd6ef7c215fd2fcf36d3ebc45d6ca0c7613896cbb6bb8b"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "node_modules/csstype",
+      "name": "csstype",
+      "version": "3.2.3",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/csstype/-/csstype-3.2.3.tgz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "beebo:npm-lock-path",
+          "value": "node_modules/csstype"
+        },
+        {
+          "name": "beebo:development",
+          "value": "false"
+        },
+        {
+          "name": "beebo:optional",
+          "value": "false"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "cf51c629c632db103c00641fc2b9f43c0cbe3c1ed7fc64a3dd45495bda8aca7e37c566be825e675e6538aaa2cc4735952c50bc2aeb145fc4ffd240a2398a4021"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "node_modules/dequal",
+      "name": "dequal",
+      "version": "2.0.3",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/dequal/-/dequal-2.0.3.tgz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "beebo:npm-lock-path",
+          "value": "node_modules/dequal"
+        },
+        {
+          "name": "beebo:development",
+          "value": "false"
+        },
+        {
+          "name": "beebo:optional",
+          "value": "false"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "d237bea8f28710ca21bdf453084a370ab3c6e9c033018826ccacb1462612483912e9e1897725499bb59a600e4409a003f702c1d93e0411eca603968555c61708"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "node_modules/esbuild",
+      "name": "esbuild",
+      "version": "0.28.2",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/esbuild/-/esbuild-0.28.2.tgz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "beebo:npm-lock-path",
+          "value": "node_modules/esbuild"
+        },
+        {
+          "name": "beebo:development",
+          "value": "true"
+        },
+        {
+          "name": "beebo:optional",
+          "value": "false"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "1ca54b4bc76f208fb1a0a5bd926ab16d12ab9d61177c926bfc56618499a2a880747b4e7740d605a8e068b9330efe4e6c203e0cbc28940afbfc6fd338877db020"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "node_modules/fast-decode-uri-component",
+      "name": "fast-decode-uri-component",
+      "version": "1.0.1",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/fast-decode-uri-component/-/fast-decode-uri-component-1.0.1.tgz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "beebo:npm-lock-path",
+          "value": "node_modules/fast-decode-uri-component"
+        },
+        {
+          "name": "beebo:development",
+          "value": "false"
+        },
+        {
+          "name": "beebo:optional",
+          "value": "false"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "58a80a5a0e5e531bd1646c16f05bdf6da1fb0174a1d9c2fede3e5f306cd4302c56049ddd5776bb5b3f32d9ffee4347b707a5a6a1d0f7a12e788d343d1d54c822"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "node_modules/fast-deep-equal",
+      "name": "fast-deep-equal",
+      "version": "3.1.3",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/fast-deep-equal/-/fast-deep-equal-3.1.3.tgz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "beebo:npm-lock-path",
+          "value": "node_modules/fast-deep-equal"
+        },
+        {
+          "name": "beebo:development",
+          "value": "false"
+        },
+        {
+          "name": "beebo:optional",
+          "value": "false"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "7f7a90f68432f63d808417bf1fd542f75c0b98a042094fe00ce9ca340606e61b303bb04b2a3d3d1dce4760dcfd70623efb19690c22200da8ad56cd3701347ce1"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "node_modules/fast-json-stringify",
+      "name": "fast-json-stringify",
+      "version": "7.3.5",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/fast-json-stringify/-/fast-json-stringify-7.3.5.tgz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "beebo:npm-lock-path",
+          "value": "node_modules/fast-json-stringify"
+        },
+        {
+          "name": "beebo:development",
+          "value": "false"
+        },
+        {
+          "name": "beebo:optional",
+          "value": "false"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "83b1f7c6a266747f5a58b5a1f12dc2aab459159df6d7269e347669dd0503977c2d5c35a33c28435c20c34f003833fcec538da73a113ecf92a6a42ce005a68283"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "node_modules/fast-querystring",
+      "name": "fast-querystring",
+      "version": "1.1.2",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/fast-querystring/-/fast-querystring-1.1.2.tgz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "beebo:npm-lock-path",
+          "value": "node_modules/fast-querystring"
+        },
+        {
+          "name": "beebo:development",
+          "value": "false"
+        },
+        {
+          "name": "beebo:optional",
+          "value": "false"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "83a2ae2969855dcd1f203f16587d238ade20d00181a0984290931bd5199bb1211436f43e642f03e82519f86b45f2733348f5e786278fcb2aaa8a9ccd3449c78e"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "node_modules/fast-uri",
+      "name": "fast-uri",
+      "version": "4.2.3",
+      "licenses": [
+        {
+          "expression": "BSD-3-Clause"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/fast-uri/-/fast-uri-4.2.3.tgz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "beebo:npm-lock-path",
+          "value": "node_modules/fast-uri"
+        },
+        {
+          "name": "beebo:development",
+          "value": "false"
+        },
+        {
+          "name": "beebo:optional",
+          "value": "false"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "2353d7c0fe5e02194d95c7698edf42801e7da29d99bd97f1c3e064a861552143a03690954dc4eaa771e14d7edbaf18f9bec8a9fa7498e274ef7dff9e200efa86"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "node_modules/fastify",
+      "name": "fastify",
+      "version": "5.12.8",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/fastify/-/fastify-5.12.8.tgz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "beebo:npm-lock-path",
+          "value": "node_modules/fastify"
+        },
+        {
+          "name": "beebo:development",
+          "value": "false"
+        },
+        {
+          "name": "beebo:optional",
+          "value": "false"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "9a83fc7b16f6b021cb51b264c29f88e82d2969d872e03f25a7449d9b363b1e149d66eaa6ecefeede8d9aabbbbca24690fffdf7403ce3dc6feef85b12741f10cf"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "node_modules/fastq",
+      "name": "fastq",
+      "version": "1.20.3",
+      "licenses": [
+        {
+          "expression": "ISC"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/fastq/-/fastq-1.20.3.tgz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "beebo:npm-lock-path",
+          "value": "node_modules/fastq"
+        },
+        {
+          "name": "beebo:development",
+          "value": "false"
+        },
+        {
+          "name": "beebo:optional",
+          "value": "false"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "5cabf99e72ecea72c5ef536088a24b21914b90fc8812e3ac7a52c6eee8d99c6ad17d02bc1e9bd8f96a8a84025401d2e89b054712b552e0b7f11653ead3f15303"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "node_modules/fdir",
+      "name": "fdir",
+      "version": "6.5.0",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/fdir/-/fdir-6.5.0.tgz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "beebo:npm-lock-path",
+          "value": "node_modules/fdir"
+        },
+        {
+          "name": "beebo:development",
+          "value": "true"
+        },
+        {
+          "name": "beebo:optional",
+          "value": "false"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "b486d8b596ee70eb340511aa3c992c84951874bf920c7edd54cf208f2f84469dd60148cb105244fb4da46a7c87b708d63a7c2b298062c0098cd29e242c90275e"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "node_modules/find-my-way",
+      "name": "find-my-way",
+      "version": "9.10.0",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/find-my-way/-/find-my-way-9.10.0.tgz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "beebo:npm-lock-path",
+          "value": "node_modules/find-my-way"
+        },
+        {
+          "name": "beebo:development",
+          "value": "false"
+        },
+        {
+          "name": "beebo:optional",
+          "value": "false"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "7abbbeb823d0da0fa72c191ff383073ff2b234d31aaf4043cb48fe8bc15bef6185f7f607059e7cabb14e0d4b5f555ed753d9df4541d74a668cf0d9997086d9e1"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "node_modules/fsevents",
+      "name": "fsevents",
+      "version": "2.3.3",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/fsevents/-/fsevents-2.3.3.tgz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "beebo:npm-lock-path",
+          "value": "node_modules/fsevents"
+        },
+        {
+          "name": "beebo:development",
+          "value": "true"
+        },
+        {
+          "name": "beebo:optional",
+          "value": "true"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "e71a037d7f9f2fb7da0139da82658fa5b16dc21fd1efb5a630caaa1c64bae42defbc1d181eb805f81d58999df8e35b4c8f99fade4d36d765cda09c339617df43"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "node_modules/ipaddr.js",
+      "name": "ipaddr.js",
+      "version": "2.5.0",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/ipaddr.js/-/ipaddr.js-2.5.0.tgz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "beebo:npm-lock-path",
+          "value": "node_modules/ipaddr.js"
+        },
+        {
+          "name": "beebo:development",
+          "value": "false"
+        },
+        {
+          "name": "beebo:optional",
+          "value": "false"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "6aafade4d01cf9c4baad94105560b6c7df023ea1ad28a4cc0dde066a876fd304a19c8b5d2a0ff9d5d8e4189d61a87f8ecb48af0dfb426d22c24286fcceca34d7"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "node_modules/isomorphic.js",
+      "name": "isomorphic.js",
+      "version": "0.2.5",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/isomorphic.js/-/isomorphic.js-0.2.5.tgz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "beebo:npm-lock-path",
+          "value": "node_modules/isomorphic.js"
+        },
+        {
+          "name": "beebo:development",
+          "value": "false"
+        },
+        {
+          "name": "beebo:optional",
+          "value": "false"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "3c878c6c7a8cb780e750fdcc03f1657341c49588cc5c0aecc35ab0259726f6ca91f26ab797c3588b314cb72d295b013fb732061f710a2b9fa37ace6602bf39cb"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "node_modules/its-fine",
+      "name": "its-fine",
+      "version": "2.1.1",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/its-fine/-/its-fine-2.1.1.tgz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "beebo:npm-lock-path",
+          "value": "node_modules/its-fine"
+        },
+        {
+          "name": "beebo:development",
+          "value": "false"
+        },
+        {
+          "name": "beebo:optional",
+          "value": "false"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "0b96685647aa4add008ded2dcc448efa24ff110a4d14d2f7f4690fee60800ada195050fa19cc9eac50abea4a7466d8882385bd1e8624638f12a32e7113fb872b"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "node_modules/its-fine/node_modules/@types/react-reconciler",
+      "name": "@types/react-reconciler",
+      "version": "0.28.9",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@types/react-reconciler/-/react-reconciler-0.28.9.tgz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "beebo:npm-lock-path",
+          "value": "node_modules/its-fine/node_modules/@types/react-reconciler"
+        },
+        {
+          "name": "beebo:development",
+          "value": "false"
+        },
+        {
+          "name": "beebo:optional",
+          "value": "false"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "1c73379f1c94677cc0ca55fc644cab0cd7765d93a74340f95dfba7245e452d09d96c71d8ab8516bd6d507de950357bf5202364c1885fc63c1f9ea8af601e9b16"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "node_modules/json-schema-ref-resolver",
+      "name": "json-schema-ref-resolver",
+      "version": "3.0.1",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/json-schema-ref-resolver/-/json-schema-ref-resolver-3.0.1.tgz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "beebo:npm-lock-path",
+          "value": "node_modules/json-schema-ref-resolver"
+        },
+        {
+          "name": "beebo:development",
+          "value": "false"
+        },
+        {
+          "name": "beebo:optional",
+          "value": "false"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "c3e1f08258d7a55c19dc889da14475a8f67148e43e351416b957ba6b9a5ef176c7b0d644e1403054f52fcd96a09fbc8129b26db7a5099d11586cd4d13d9238e5"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "node_modules/json-schema-traverse",
+      "name": "json-schema-traverse",
+      "version": "1.0.0",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/json-schema-traverse/-/json-schema-traverse-1.0.0.tgz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "beebo:npm-lock-path",
+          "value": "node_modules/json-schema-traverse"
+        },
+        {
+          "name": "beebo:development",
+          "value": "false"
+        },
+        {
+          "name": "beebo:optional",
+          "value": "false"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "34cf3f3fd9f75e35e12199f594b86415a0024ce5114178d6855e0103f4673aff31be0aadaa9017f483b89914314b1d51968e2dab37aa6f4b0e96bb9a3b2dddba"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "node_modules/konva",
+      "name": "konva",
+      "version": "10.9.1",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/konva/-/konva-10.9.1.tgz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "beebo:npm-lock-path",
+          "value": "node_modules/konva"
+        },
+        {
+          "name": "beebo:development",
+          "value": "false"
+        },
+        {
+          "name": "beebo:optional",
+          "value": "false"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "9b8f71f866ad4b11144afa9a858871a538e029bb6b2edc383f8a380788aec7de77645a5c79a2b9d846be085b00b1ded6e08d18e6eea6328454b18fde96d3599b"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "node_modules/lib0",
+      "name": "lib0",
+      "version": "0.2.120",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/lib0/-/lib0-0.2.120.tgz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "beebo:npm-lock-path",
+          "value": "node_modules/lib0"
+        },
+        {
+          "name": "beebo:development",
+          "value": "false"
+        },
+        {
+          "name": "beebo:optional",
+          "value": "false"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "fdad9e448991f2c65b98c54a7b6c1ed7f2ae903424b8fc8f7fcca897a7a9bc2bb63c7ea1bab8dc448de6746145022d2e1a84491b29ecf7d26ab99831c16d6d42"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "node_modules/light-my-request",
+      "name": "light-my-request",
+      "version": "6.8.0",
+      "licenses": [
+        {
+          "expression": "BSD-3-Clause"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/light-my-request/-/light-my-request-6.8.0.tgz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "beebo:npm-lock-path",
+          "value": "node_modules/light-my-request"
+        },
+        {
+          "name": "beebo:development",
+          "value": "false"
+        },
+        {
+          "name": "beebo:optional",
+          "value": "false"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "e50f0f8e848476d18807c7e2919b137a6e6f811a38176991eaf50a4c35bf1f583a32d02df1edddb906e0fd0c4be72ce0e81661a2bd8a3949b786158c58b4d9c2"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "node_modules/nanoid",
+      "name": "nanoid",
+      "version": "3.3.20",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/nanoid/-/nanoid-3.3.20.tgz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "beebo:npm-lock-path",
+          "value": "node_modules/nanoid"
+        },
+        {
+          "name": "beebo:development",
+          "value": "true"
+        },
+        {
+          "name": "beebo:optional",
+          "value": "false"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "b8a760d86dc63422909fd6f260ea716c6aab4f67c63b9291b7927ff1bde9a24f2b4faab119617a871332262118b407fe155c98b83f6145a0ea5f9b8f15827865"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "node_modules/on-exit-leak-free",
+      "name": "on-exit-leak-free",
+      "version": "2.1.2",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/on-exit-leak-free/-/on-exit-leak-free-2.1.2.tgz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "beebo:npm-lock-path",
+          "value": "node_modules/on-exit-leak-free"
+        },
+        {
+          "name": "beebo:development",
+          "value": "false"
+        },
+        {
+          "name": "beebo:optional",
+          "value": "false"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "d1e24963a8572c67f5b9d1f07cd7ed06a1fe83bdc4538079d389d978aa73d6c61129a7c0821c31109ba70763bbac36642f83c67ec3159d35d9d848e26dba9cb0"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "node_modules/picocolors",
+      "name": "picocolors",
+      "version": "1.1.1",
+      "licenses": [
+        {
+          "expression": "ISC"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/picocolors/-/picocolors-1.1.1.tgz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "beebo:npm-lock-path",
+          "value": "node_modules/picocolors"
+        },
+        {
+          "name": "beebo:development",
+          "value": "true"
+        },
+        {
+          "name": "beebo:optional",
+          "value": "false"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "c5c787dac9e1b5be4cf658aa0ec984c39ea57b7efa993664117fe311bfd1c4d1727a036e97b78db250973fd1438ff2dcbb45fc284c8c71e3f69eda5a1eb0c454"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "node_modules/picomatch",
+      "name": "picomatch",
+      "version": "4.0.7",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/picomatch/-/picomatch-4.0.7.tgz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "beebo:npm-lock-path",
+          "value": "node_modules/picomatch"
+        },
+        {
+          "name": "beebo:development",
+          "value": "true"
+        },
+        {
+          "name": "beebo:optional",
+          "value": "false"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "a9c26ef3c436216a89b030f9dbd24a31dc069bf76f2275b81ef427470887f49b62849bf318eb1c0ed1c4df1d6904a794393cac43c91598b9c9da426eef285c18"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "node_modules/pino",
+      "name": "pino",
+      "version": "10.4.0",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/pino/-/pino-10.4.0.tgz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "beebo:npm-lock-path",
+          "value": "node_modules/pino"
+        },
+        {
+          "name": "beebo:development",
+          "value": "false"
+        },
+        {
+          "name": "beebo:optional",
+          "value": "false"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "6e4d59313c06fd5ca6c7eccfa1adbc321373b9c16f5c95a9ddcb2b4aec6e1cf48c7947adb5a0a843926f834ee6b42e0918da5c7d3c33e35a150a736004af7ebc"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "node_modules/pino-abstract-transport",
+      "name": "pino-abstract-transport",
+      "version": "3.0.0",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/pino-abstract-transport/-/pino-abstract-transport-3.0.0.tgz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "beebo:npm-lock-path",
+          "value": "node_modules/pino-abstract-transport"
+        },
+        {
+          "name": "beebo:development",
+          "value": "false"
+        },
+        {
+          "name": "beebo:optional",
+          "value": "false"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "c257d473353e9fb1f2fc76b98fd6bf819372ed67b9f9c5e9f182fe5fe3c6f12d0a5f1c3b9ff257037738e98d334339c827cdd44498b0cbb2e1e7a58ba2436ec6"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "node_modules/pino-std-serializers",
+      "name": "pino-std-serializers",
+      "version": "7.1.0",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/pino-std-serializers/-/pino-std-serializers-7.1.0.tgz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "beebo:npm-lock-path",
+          "value": "node_modules/pino-std-serializers"
+        },
+        {
+          "name": "beebo:development",
+          "value": "false"
+        },
+        {
+          "name": "beebo:optional",
+          "value": "false"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "06774f1faeff271184c518225f5757d30d45bd9724e566b869a97dd7df12ad18598c7dc6c4a4142880676094dd8f61c3377510012d3a1e57dc49b423d8e1e66b"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "node_modules/playwright-core",
+      "name": "playwright-core",
+      "version": "1.65.0",
+      "licenses": [
+        {
+          "expression": "Apache-2.0"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/playwright-core/-/playwright-core-1.65.0.tgz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "beebo:npm-lock-path",
+          "value": "node_modules/playwright-core"
+        },
+        {
+          "name": "beebo:development",
+          "value": "true"
+        },
+        {
+          "name": "beebo:optional",
+          "value": "false"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "bcd48a807e98aad37b71d4ff2f7df8ce8d1af98c24ae989ccab1c995658f226fd0f8d9f64962278a5d35a13d266eef7a5381a0a11b426100fd0b3250823bbe94"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "node_modules/postcss",
+      "name": "postcss",
+      "version": "8.5.32",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/postcss/-/postcss-8.5.32.tgz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "beebo:npm-lock-path",
+          "value": "node_modules/postcss"
+        },
+        {
+          "name": "beebo:development",
+          "value": "true"
+        },
+        {
+          "name": "beebo:optional",
+          "value": "false"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "2c994a08201414a3ae6718a951d630d4dcc821312c3dc832386f4b92f449bee2a3fdb4736ee458d00457bcbd29586a6c66f9fc8e4bbe2cc7a9d9e534b1e1e9f2"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "node_modules/prettier",
+      "name": "prettier",
+      "version": "3.10.1",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/prettier/-/prettier-3.10.1.tgz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "beebo:npm-lock-path",
+          "value": "node_modules/prettier"
+        },
+        {
+          "name": "beebo:development",
+          "value": "true"
+        },
+        {
+          "name": "beebo:optional",
+          "value": "false"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "ef4be9dd9518a0f9456c5f6e8937571d4502184229edde3eea9fbc0d86e49b68cfef1ff78bfa5a5d517a768a52237cddfc2122b6b64dd6b7388bce715a699796"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "node_modules/process-warning",
+      "name": "process-warning",
+      "version": "5.1.1",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/process-warning/-/process-warning-5.1.1.tgz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "beebo:npm-lock-path",
+          "value": "node_modules/process-warning"
+        },
+        {
+          "name": "beebo:development",
+          "value": "false"
+        },
+        {
+          "name": "beebo:optional",
+          "value": "false"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "a0290d563e0e2a728472871505c0df888ba0375fdc13aae07d3de70adcdea993c0f3eac8c4c690d315f322418ff068f6a9468fd5447bba1275543f25502a730a"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "node_modules/quick-format-unescaped",
+      "name": "quick-format-unescaped",
+      "version": "4.0.4",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/quick-format-unescaped/-/quick-format-unescaped-4.0.4.tgz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "beebo:npm-lock-path",
+          "value": "node_modules/quick-format-unescaped"
+        },
+        {
+          "name": "beebo:development",
+          "value": "false"
+        },
+        {
+          "name": "beebo:optional",
+          "value": "false"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "b580b5435860c91b87825a15fd85ecdb0d79ba73d587ca9fbbfa824df85361a99ac3b7f286e98a6b6c86a5d4a8f3bbd8df6ac87258fee1f59841750cb3d107be"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "node_modules/react",
+      "name": "react",
+      "version": "19.3.1",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/react/-/react-19.3.1.tgz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "beebo:npm-lock-path",
+          "value": "node_modules/react"
+        },
+        {
+          "name": "beebo:development",
+          "value": "false"
+        },
+        {
+          "name": "beebo:optional",
+          "value": "false"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "40d85676dee7ae05565901b9f10b86b004778efdc76dee266f8bf3ef0d9cb271dabdc89926075ad423cd6a5745e9e571bfdd2e7778d45e92a51cbebd80edfccb"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "node_modules/react-dom",
+      "name": "react-dom",
+      "version": "19.3.1",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/react-dom/-/react-dom-19.3.1.tgz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "beebo:npm-lock-path",
+          "value": "node_modules/react-dom"
+        },
+        {
+          "name": "beebo:development",
+          "value": "false"
+        },
+        {
+          "name": "beebo:optional",
+          "value": "false"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "6346c0473e77961102d4d302012b34fe3f9f681ff3aaddd1f21a6f8357bcfbad59549e142f451d0b87016d77d931c22e86b7e07882d32def9978109abd03ed29"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "node_modules/react-konva",
+      "name": "react-konva",
+      "version": "19.3.2",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/react-konva/-/react-konva-19.3.2.tgz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "beebo:npm-lock-path",
+          "value": "node_modules/react-konva"
+        },
+        {
+          "name": "beebo:development",
+          "value": "false"
+        },
+        {
+          "name": "beebo:optional",
+          "value": "false"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "52fd31956a114820721e29eab3fd374852fc136f1f61b7b9f6c43ed84269c1ad4ee19973d3e4fef0368ac2599af42dab918c188fa8fc7870f8d45e6825a7da82"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "node_modules/react-reconciler",
+      "name": "react-reconciler",
+      "version": "0.34.0",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/react-reconciler/-/react-reconciler-0.34.0.tgz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "beebo:npm-lock-path",
+          "value": "node_modules/react-reconciler"
+        },
+        {
+          "name": "beebo:development",
+          "value": "false"
+        },
+        {
+          "name": "beebo:optional",
+          "value": "false"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "79589bbc1d5f73d8f941fd4a46488cdc6cd13c17638363fa1ba415d9fdcfe846f738633144185d836aeb5308db57926b41a263f2739af2e6a39a6240e6d2568d"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "node_modules/real-require",
+      "name": "real-require",
+      "version": "1.0.0",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/real-require/-/real-require-1.0.0.tgz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "beebo:npm-lock-path",
+          "value": "node_modules/real-require"
+        },
+        {
+          "name": "beebo:development",
+          "value": "false"
+        },
+        {
+          "name": "beebo:optional",
+          "value": "false"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "3f89db41841f78f271452998faffca20dc55b9c9b8345de9decee926f78c4eda26e76151e181a5b5440b07c89d0d7c030d65be798ad60c56eecd49e3a161c5ee"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "node_modules/require-from-string",
+      "name": "require-from-string",
+      "version": "2.0.2",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/require-from-string/-/require-from-string-2.0.2.tgz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "beebo:npm-lock-path",
+          "value": "node_modules/require-from-string"
+        },
+        {
+          "name": "beebo:development",
+          "value": "false"
+        },
+        {
+          "name": "beebo:optional",
+          "value": "false"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "5dfd2759ee91b1ece214cbbe029f5b8a251b9a996ae92f7fa7eef0ed85cffc904786b5030d48706bebc0372b9bbaa7d9593bde53ffc36151ac0c6ed128bfef13"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "node_modules/ret",
+      "name": "ret",
+      "version": "0.5.1",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/ret/-/ret-0.5.1.tgz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "beebo:npm-lock-path",
+          "value": "node_modules/ret"
+        },
+        {
+          "name": "beebo:development",
+          "value": "false"
+        },
+        {
+          "name": "beebo:optional",
+          "value": "false"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "67f9f2bc00707119d10f698c3fb2b3e86d5d15966a5f598d12b3a7c45e3638240a134edbf64f612bd490c472f72c511951dcd068b33874877513f13a566e1684"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "node_modules/reusify",
+      "name": "reusify",
+      "version": "1.1.0",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/reusify/-/reusify-1.1.0.tgz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "beebo:npm-lock-path",
+          "value": "node_modules/reusify"
+        },
+        {
+          "name": "beebo:development",
+          "value": "false"
+        },
+        {
+          "name": "beebo:optional",
+          "value": "false"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "83a4147dfd38a19a47b34786e69f37ac52e11de574d2e83f61ff6764ce9f2de52b3e0b814e44d039da40596b29321e794d97d54033da37735025f6d5440c5d23"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "node_modules/rfdc",
+      "name": "rfdc",
+      "version": "1.4.1",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/rfdc/-/rfdc-1.4.1.tgz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "beebo:npm-lock-path",
+          "value": "node_modules/rfdc"
+        },
+        {
+          "name": "beebo:development",
+          "value": "false"
+        },
+        {
+          "name": "beebo:optional",
+          "value": "false"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "ab56f737942445459497b8b2ca569a8f790ea484f43768bd32a2044173fbdc656c37d730ddf771f17eb77049968491a2d8f3c2176dc88e9ee4b66777f6b6b020"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "node_modules/rollup",
+      "name": "rollup",
+      "version": "4.68.2",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/rollup/-/rollup-4.68.2.tgz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "beebo:npm-lock-path",
+          "value": "node_modules/rollup"
+        },
+        {
+          "name": "beebo:development",
+          "value": "true"
+        },
+        {
+          "name": "beebo:optional",
+          "value": "false"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "c73b78e6b28ec7312eaa34dd9064c811a78f72af714442e5148d6ea1ace529aa7c4fa6c434990e35209f84ae753fa5c54e2c5ae2ba2c3dc0c78a149d76e5e775"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "node_modules/safe-regex2",
+      "name": "safe-regex2",
+      "version": "5.1.2",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/safe-regex2/-/safe-regex2-5.1.2.tgz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "beebo:npm-lock-path",
+          "value": "node_modules/safe-regex2"
+        },
+        {
+          "name": "beebo:development",
+          "value": "false"
+        },
+        {
+          "name": "beebo:optional",
+          "value": "false"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "b40b421853cf3f4d95ae80d5ce9e1d6868ba6c2ee3586fb8d43e3b18a7f5f05787fee6ef2901d3f559a1024bed8cd3a6270aad029cd6794a44864c846142ef9b"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "node_modules/safe-stable-stringify",
+      "name": "safe-stable-stringify",
+      "version": "2.5.0",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/safe-stable-stringify/-/safe-stable-stringify-2.5.0.tgz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "beebo:npm-lock-path",
+          "value": "node_modules/safe-stable-stringify"
+        },
+        {
+          "name": "beebo:development",
+          "value": "false"
+        },
+        {
+          "name": "beebo:optional",
+          "value": "false"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "6f7ae9a532a6f53f8fb1508110e511e3a19623b7dd3acd3454a675fbd7351160da0ccbe341cead530b85c88a6b806813716a151d22ab53c1f7d591c0d9ed111c"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "node_modules/scheduler",
+      "name": "scheduler",
+      "version": "0.28.0",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/scheduler/-/scheduler-0.28.0.tgz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "beebo:npm-lock-path",
+          "value": "node_modules/scheduler"
+        },
+        {
+          "name": "beebo:development",
+          "value": "false"
+        },
+        {
+          "name": "beebo:optional",
+          "value": "false"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "8eea2b7c2988908c3cb53fa9e415d29ba3c98d017fc9c11898acb3511088b7f45a64884bf8fba56d0f58bb6cf51dd3890dda834e5c40d7ec4a0661d726c73303"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "node_modules/secure-json-parse",
+      "name": "secure-json-parse",
+      "version": "4.1.1",
+      "licenses": [
+        {
+          "expression": "BSD-3-Clause"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/secure-json-parse/-/secure-json-parse-4.1.1.tgz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "beebo:npm-lock-path",
+          "value": "node_modules/secure-json-parse"
+        },
+        {
+          "name": "beebo:development",
+          "value": "false"
+        },
+        {
+          "name": "beebo:optional",
+          "value": "false"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "96777cd4c40464a8e15bf19dd9342a75de173fa41835d0d6fc43fe23b9d3ac51cff72d8b99a18f20793dc6c9f370e884af5737f5cfdef38c45806be240a05347"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "node_modules/semver",
+      "name": "semver",
+      "version": "7.8.6",
+      "licenses": [
+        {
+          "expression": "ISC"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/semver/-/semver-7.8.6.tgz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "beebo:npm-lock-path",
+          "value": "node_modules/semver"
+        },
+        {
+          "name": "beebo:development",
+          "value": "false"
+        },
+        {
+          "name": "beebo:optional",
+          "value": "false"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "f65a52494e0c972de6aedaeec0bb3578b2bafa0cdbcea78117044d8c88c4fbd2ee0e959d61cb6b4254377a3d489608bb8249e9b134673e82cff03a421ea1c827"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "node_modules/set-cookie-parser",
+      "name": "set-cookie-parser",
+      "version": "3.2.2",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/set-cookie-parser/-/set-cookie-parser-3.2.2.tgz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "beebo:npm-lock-path",
+          "value": "node_modules/set-cookie-parser"
+        },
+        {
+          "name": "beebo:development",
+          "value": "false"
+        },
+        {
+          "name": "beebo:optional",
+          "value": "false"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "75fd35eea31e62e5e8e1e98bd3d9e5c8ca62da2d8cb4420a4bfea3b571f7be68c580846c3a2f39dbfe519a1278124bcddd917c8d769d33f1244cf5e073cc8f23"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "node_modules/sonic-boom",
+      "name": "sonic-boom",
+      "version": "4.2.1",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/sonic-boom/-/sonic-boom-4.2.1.tgz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "beebo:npm-lock-path",
+          "value": "node_modules/sonic-boom"
+        },
+        {
+          "name": "beebo:development",
+          "value": "false"
+        },
+        {
+          "name": "beebo:optional",
+          "value": "false"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "c3a031b6e6d76b6c135c052c64c316111aec21101dacad1273e154cad5af60084124bcae238965acc202d43b65352748f7d108f3a299ba6d8c32adc4019945f5"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "node_modules/source-map-js",
+      "name": "source-map-js",
+      "version": "1.2.2",
+      "licenses": [
+        {
+          "expression": "BSD-3-Clause"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/source-map-js/-/source-map-js-1.2.2.tgz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "beebo:npm-lock-path",
+          "value": "node_modules/source-map-js"
+        },
+        {
+          "name": "beebo:development",
+          "value": "true"
+        },
+        {
+          "name": "beebo:optional",
+          "value": "false"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "2868fff18e37c77e5a6550edb7e27898ad61a0b18750b3187d290e0c93508cd0c2de85b53ea3e8c4cc28d292d4b1633f5041b338dfcdc5e1f2c047cd5cd3f757"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "node_modules/split2",
+      "name": "split2",
+      "version": "4.2.0",
+      "licenses": [
+        {
+          "expression": "ISC"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/split2/-/split2-4.2.0.tgz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "beebo:npm-lock-path",
+          "value": "node_modules/split2"
+        },
+        {
+          "name": "beebo:development",
+          "value": "false"
+        },
+        {
+          "name": "beebo:optional",
+          "value": "false"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "51c8dc24e5a49eb36417a3cb5fcdea70733a28781528d915eb663c6b9b980d5bfdc9d19057000730aa877498ded554d6a658c6d1662908386b09d00e607e135a"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "node_modules/thread-stream",
+      "name": "thread-stream",
+      "version": "4.2.1",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/thread-stream/-/thread-stream-4.2.1.tgz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "beebo:npm-lock-path",
+          "value": "node_modules/thread-stream"
+        },
+        {
+          "name": "beebo:development",
+          "value": "false"
+        },
+        {
+          "name": "beebo:optional",
+          "value": "false"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "4ad83a79d2570bfebfc6a1b0497c05a24ad4842849d7c6a6123a4a1fcf56ad0434a1514317ea5451c4e98b05a1154ac4f3d55fd7a1413a5c216b0fa57ac73131"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "node_modules/tinyglobby",
+      "name": "tinyglobby",
+      "version": "0.2.17",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/tinyglobby/-/tinyglobby-0.2.17.tgz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "beebo:npm-lock-path",
+          "value": "node_modules/tinyglobby"
+        },
+        {
+          "name": "beebo:development",
+          "value": "true"
+        },
+        {
+          "name": "beebo:optional",
+          "value": "false"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "c1747f758a5ca8a99f5a911d66388a24ec023459dd0f40cc9eb5bf7188d51adb449017d581c2c51e836b963e3b9a339589cf72c8dbbae5a96c805e0d4324dada"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "node_modules/toad-cache",
+      "name": "toad-cache",
+      "version": "3.7.4",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/toad-cache/-/toad-cache-3.7.4.tgz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "beebo:npm-lock-path",
+          "value": "node_modules/toad-cache"
+        },
+        {
+          "name": "beebo:development",
+          "value": "false"
+        },
+        {
+          "name": "beebo:optional",
+          "value": "false"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "9b54dd47faef4fb920189661b2936d5ddb1d624d1f75d1692491651b9b3e5243c5a3a9642e867760b39aa2f3d88ead51ef934fe497de4e548768eb04d3da5e0a"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "node_modules/tsx",
+      "name": "tsx",
+      "version": "4.23.15",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/tsx/-/tsx-4.23.15.tgz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "beebo:npm-lock-path",
+          "value": "node_modules/tsx"
+        },
+        {
+          "name": "beebo:development",
+          "value": "true"
+        },
+        {
+          "name": "beebo:optional",
+          "value": "false"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "6227b1d4ebe7f33db13e9396724222cac575492c91318f4190b17efaad322a20f10aa461a2c29f320de36a72a488b07067973f62bca5a0ac0665cac49adc312b"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "node_modules/typescript",
+      "name": "typescript",
+      "version": "5.9.3",
+      "licenses": [
+        {
+          "expression": "Apache-2.0"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/typescript/-/typescript-5.9.3.tgz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "beebo:npm-lock-path",
+          "value": "node_modules/typescript"
+        },
+        {
+          "name": "beebo:development",
+          "value": "true"
+        },
+        {
+          "name": "beebo:optional",
+          "value": "false"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "8e5d6f6733c38a72ebf5e52ddc9feded5e8580d130f508ef04f772b33f4a7d00c3e357d0ac2d98e2f290762694a454f86d795bd511e12e9a7cc2d9ba3394e04b"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "node_modules/undici-types",
+      "name": "undici-types",
+      "version": "6.21.0",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/undici-types/-/undici-types-6.21.0.tgz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "beebo:npm-lock-path",
+          "value": "node_modules/undici-types"
+        },
+        {
+          "name": "beebo:development",
+          "value": "true"
+        },
+        {
+          "name": "beebo:optional",
+          "value": "false"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "8b00d9aa0d10006ae0f516afe47e27d0ceb87379a4479f5c27ac10a7eec2e2723482c984c5a79d6982cd3b8e1e4f802d041c236d38863cc96dd8c7744fd1fd25"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "node_modules/vite",
+      "name": "vite",
+      "version": "7.3.8",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/vite/-/vite-7.3.8.tgz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "beebo:npm-lock-path",
+          "value": "node_modules/vite"
+        },
+        {
+          "name": "beebo:development",
+          "value": "true"
+        },
+        {
+          "name": "beebo:optional",
+          "value": "false"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "ded4e2efc3002a1564f61f986555cc43c3ce9a7789b84f7b4143c05ad260847ce11fb040ca2a90382d8a661d4358eb2efd4481d9c4578739cf07269a6ef6177f"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "node_modules/ws",
+      "name": "ws",
+      "version": "8.22.2",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/ws/-/ws-8.22.2.tgz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "beebo:npm-lock-path",
+          "value": "node_modules/ws"
+        },
+        {
+          "name": "beebo:development",
+          "value": "false"
+        },
+        {
+          "name": "beebo:optional",
+          "value": "false"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "feb119d9e8e8c27d8de60c554c752ef5b5550bbb6dbb4fd38337f985b4ce8b147716cee66db5e09f60db75b70a8093a6a5032dac85168afb58b95327a7f5bfc8"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "node_modules/yjs",
+      "name": "yjs",
+      "version": "13.6.33",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/yjs/-/yjs-13.6.33.tgz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "beebo:npm-lock-path",
+          "value": "node_modules/yjs"
+        },
+        {
+          "name": "beebo:development",
+          "value": "false"
+        },
+        {
+          "name": "beebo:optional",
+          "value": "false"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "abf518bebd603a4e17208f82bb5096d9d20d8d8a8924589f4f3a2011a2004739ebbd7eee3a51ec75311772738132e22cac218410a74dc62ef893230b6652957f"
+        }
+      ]
+    }
+  ]
+}
