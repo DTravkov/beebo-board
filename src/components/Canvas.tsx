@@ -68,14 +68,17 @@ type Props = {
   width: number;
   /** Diameter of the partial eraser in screen pixels. */
   partialEraserSize: number;
-  selected: string | null;
+  /** Ids of the selected objects, in selection order. */
+  selected: string[];
   view: View;
   lowBandwidth: boolean;
   presence: Presence[];
   onView: (view: View) => void;
-  onSelect: (id: string | null) => void;
+  onSelect: (ids: string[]) => void;
   onAdd: (shape: BoardShape) => void;
   onUpdate: (id: string, patch: Partial<BoardShape>) => void;
+  /** Moves several objects in one undo step. */
+  onMove: (changes: { id: string; x: number; y: number }[]) => void;
   onErase: (ids: string[]) => void;
   onSplice: (changes: { id: string; pieces: BoardShape[] }[]) => void;
   onCursor: (x: number, y: number) => void;
@@ -84,7 +87,10 @@ type Props = {
   onToolDone: () => void;
   /** Floating controls shown above the selected object. */
   renderToolbar: (shape: BoardShape) => ReactNode;
+  /** Floating controls shown above a group of selected objects. */
+  renderGroupToolbar: (shapes: BoardShape[]) => ReactNode;
 };
+type Marquee = { from: Point; to: Point; additive: boolean; base: string[] };
 type Editing = { shape: BoardShape; before: BoardShape | null };
 const CORNERS = ['top-left', 'top-right', 'bottom-left', 'bottom-right'];
 const SIDES = ['middle-left', 'middle-right'];
@@ -284,6 +290,12 @@ export function Canvas(props: Props) {
   // Set when a press on the canvas ended an edit, so that press does nothing else.
   const pressEndedEdit = useRef(false);
   const [moving, setMoving] = useState(false);
+  const [marquee, setMarqueeState] = useState<Marquee | null>(null);
+  const marqueeRef = useRef<Marquee | null>(null);
+  function setMarquee(next: Marquee | null) {
+    marqueeRef.current = next;
+    setMarqueeState(next);
+  }
   const [toolbarAt, setToolbarAt] = useState<{
     x: number;
     y: number;
@@ -294,7 +306,7 @@ export function Canvas(props: Props) {
     setEditingState(next);
   }
   function beginEdit(shape: BoardShape, isNew: boolean) {
-    props.onSelect(isNew ? null : shape.id);
+    props.onSelect(isNew ? [] : [shape.id]);
     setEditing({ shape, before: isNew ? null : shape });
   }
   function commitEdit() {
@@ -319,15 +331,24 @@ export function Canvas(props: Props) {
       props.onAdd(shape);
       props.onToolDone();
     }
-    props.onSelect(shape.id);
+    props.onSelect([shape.id]);
   }
-  const selectedShape =
-    props.shapes.find((shape) => shape.id === props.selected) ?? null;
+  const selectedShapes = props.shapes.filter((shape) =>
+    props.selected.includes(shape.id),
+  );
+  const multiple = selectedShapes.length > 1;
+  const selectedShape = selectedShapes.length === 1 ? selectedShapes[0] : null;
   const showHandles =
     props.tool === 'select' &&
     !middlePanning &&
-    !!selectedShape &&
-    editing?.shape.id !== selectedShape.id;
+    selectedShapes.length > 0 &&
+    !selectedShapes.some((shape) => shape.id === editing?.shape.id);
+  function selectedNodes() {
+    if (!showHandles) return [];
+    return props.selected
+      .map((id) => shapeNodes.current.get(id))
+      .filter((node): node is Konva.Group => !!node);
+  }
   const panning = props.tool === 'hand' || middlePanning;
   function stopPanning() {
     const gesture = panGesture.current;
@@ -363,23 +384,16 @@ export function Canvas(props: Props) {
   useEffect(() => {
     const tr = transformer.current;
     if (!tr) return;
-    const node =
-      showHandles && props.selected
-        ? shapeNodes.current.get(props.selected)
-        : undefined;
-    tr.nodes(node ? [node] : []);
+    tr.nodes(selectedNodes());
     tr.getLayer()?.batchDraw();
   }, [showHandles, props.selected, props.shapes]);
   useLayoutEffect(() => {
-    const node =
-      showHandles && props.selected
-        ? shapeNodes.current.get(props.selected)
-        : undefined;
-    if (!node) {
+    const nodes = selectedNodes();
+    if (!nodes.length) {
       setToolbarAt(null);
       return;
     }
-    const box = node.getClientRect();
+    const box = union(nodes.map((node) => node.getClientRect()));
     const below = box.y < 70;
     const next = {
       x: Math.round(box.x + box.width / 2),
@@ -521,7 +535,7 @@ export function Canvas(props: Props) {
     };
     setEraserCursor(screen);
     addTrail(screen);
-    props.onSelect(null);
+    props.onSelect([]);
     eraseBetween(board, board);
   }
   function pointerMove(event: ReactPointerEvent<HTMLDivElement>) {
@@ -586,8 +600,22 @@ export function Canvas(props: Props) {
     }
     const p = point();
     if (!p) return;
-    if (props.tool === 'select' || isEraser(props.tool)) {
-      if (event.target === event.target.getStage()) props.onSelect(null);
+    if (isEraser(props.tool)) {
+      if (event.target === event.target.getStage()) props.onSelect([]);
+      return;
+    }
+    if (props.tool === 'select') {
+      if (event.target !== event.target.getStage()) return;
+      // Dragging on empty board draws a selection box. Shift adds to the selection.
+      const additive =
+        event.evt.shiftKey || event.evt.ctrlKey || event.evt.metaKey;
+      if (!additive) props.onSelect([]);
+      setMarquee({
+        from: p,
+        to: p,
+        additive,
+        base: additive ? props.selected : [],
+      });
       return;
     }
     if (props.tool === 'text' || props.tool === 'sticky') {
@@ -633,6 +661,10 @@ export function Canvas(props: Props) {
     const p = point();
     if (!p) return;
     props.onCursor(p.x, p.y);
+    if (marqueeRef.current) {
+      setMarquee({ ...marqueeRef.current, to: p });
+      return;
+    }
     const shape = draftRef.current;
     if (!shape) return;
     let next = { ...shape, width: p.x - shape.x, height: p.y - shape.y };
@@ -651,7 +683,42 @@ export function Canvas(props: Props) {
     draftRef.current = next;
     setDraft(next);
   }
+  function finishMarquee() {
+    const box = marqueeRef.current;
+    setMarquee(null);
+    if (!box) return;
+    const area = toScreen(normalise(box.from, box.to));
+    if (area.width < 4 && area.height < 4) return;
+    const picked = props.shapes
+      .filter((shape) => {
+        const node = shapeNodes.current.get(shape.id);
+        if (!node) return false;
+        const bounds = node.getClientRect({ skipShadow: true });
+        // Frames are picked only when fully inside, so boxing notes on a frame
+        // does not grab the frame as well.
+        return shape.kind === 'frame'
+          ? contains(area, bounds)
+          : intersects(area, bounds);
+      })
+      .map((shape) => shape.id);
+    props.onSelect([
+      ...box.base.filter((id) => !picked.includes(id)),
+      ...picked.filter((id) => !box.base.includes(id) || !box.additive),
+    ]);
+  }
+  function toScreen(box: Bounds): Bounds {
+    return {
+      x: box.x * props.view.scale + props.view.x,
+      y: box.y * props.view.scale + props.view.y,
+      width: box.width * props.view.scale,
+      height: box.height * props.view.scale,
+    };
+  }
   function finish() {
+    if (marqueeRef.current) {
+      finishMarquee();
+      return;
+    }
     let shape = draftRef.current;
     draftRef.current = null;
     setDraft(null);
@@ -683,7 +750,7 @@ export function Canvas(props: Props) {
       };
     props.onAdd(shape);
     if (shape.kind === 'frame') {
-      props.onSelect(shape.id);
+      props.onSelect([shape.id]);
       props.onToolDone();
     }
   }
@@ -742,6 +809,7 @@ export function Canvas(props: Props) {
         onPointerCancel={() => {
           draftRef.current = null;
           setDraft(null);
+          setMarquee(null);
         }}
         onWheel={zoom}
       >
@@ -760,10 +828,33 @@ export function Canvas(props: Props) {
               y={shape.y}
               draggable={props.tool === 'select' && !panning}
               onPointerDown={(event) => {
-                if (props.tool === 'select' && !panning) {
-                  event.cancelBubble = true;
-                  props.onSelect(shape.id);
-                }
+                if (props.tool !== 'select' || panning) return;
+                event.cancelBubble = true;
+                const chosen = props.selected.includes(shape.id);
+                if (
+                  event.evt.shiftKey ||
+                  event.evt.ctrlKey ||
+                  event.evt.metaKey
+                )
+                  props.onSelect(
+                    chosen
+                      ? props.selected.filter((id) => id !== shape.id)
+                      : [...props.selected, shape.id],
+                  );
+                // Pressing a selected object keeps the group, so it can be dragged.
+                else if (!chosen) props.onSelect([shape.id]);
+              }}
+              onClick={(event) => {
+                // A plain click (no drag) inside a group narrows it to this object.
+                const additive =
+                  event.evt.shiftKey || event.evt.ctrlKey || event.evt.metaKey;
+                if (
+                  props.tool === 'select' &&
+                  !additive &&
+                  props.selected.length > 1 &&
+                  props.selected.includes(shape.id)
+                )
+                  props.onSelect([shape.id]);
               }}
               onDblClick={() => {
                 if (
@@ -781,8 +872,24 @@ export function Canvas(props: Props) {
               }}
               onDragStart={() => {
                 setMoving(true);
-                carry.current =
-                  shape.kind === 'frame' ? framed(shape, props.shapes) : [];
+                // Move the rest of the selection and whatever sits inside the
+                // frames being moved.
+                const moved = props.selected.includes(shape.id)
+                  ? selectedShapes
+                  : [shape];
+                const ids = new Set([shape.id]);
+                const others: BoardShape[] = [];
+                for (const item of [
+                  ...moved,
+                  ...moved.flatMap((item) =>
+                    item.kind === 'frame' ? framed(item, props.shapes) : [],
+                  ),
+                ])
+                  if (!ids.has(item.id)) {
+                    ids.add(item.id);
+                    others.push(item);
+                  }
+                carry.current = others;
               }}
               onDragMove={(event) => {
                 // A frame carries the objects inside it.
@@ -798,22 +905,26 @@ export function Canvas(props: Props) {
                 setMoving(false);
                 const dx = event.currentTarget.x() - shape.x;
                 const dy = event.currentTarget.y() - shape.y;
-                props.onUpdate(shape.id, {
-                  x: event.currentTarget.x(),
-                  y: event.currentTarget.y(),
-                });
-                for (const inner of carry.current)
-                  props.onUpdate(inner.id, {
+                props.onMove([
+                  {
+                    id: shape.id,
+                    x: event.currentTarget.x(),
+                    y: event.currentTarget.y(),
+                  },
+                  ...carry.current.map((inner) => ({
+                    id: inner.id,
                     x: inner.x + dx,
                     y: inner.y + dy,
-                  });
+                  })),
+                ]);
                 carry.current = [];
               }}
               onTransformStart={() => setMoving(true)}
               onTransform={(event) => {
                 // Side handles reflow text instead of stretching it.
                 const anchor = transformer.current?.getActiveAnchor() ?? '';
-                if (shape.kind !== 'text' || !SIDES.includes(anchor)) return;
+                if (multiple || shape.kind !== 'text' || !SIDES.includes(anchor))
+                  return;
                 const group = event.currentTarget as Konva.Group;
                 const text = group.findOne<Konva.Text>('Text');
                 text?.width(Math.max(20, text.width() * group.scaleX()));
@@ -868,10 +979,12 @@ export function Canvas(props: Props) {
             borderStroke="#5f8a3c"
             borderStrokeWidth={1.5}
             keepRatio={
-              selectedShape?.kind === 'text' || selectedShape?.kind === 'image'
+              multiple ||
+              selectedShape?.kind === 'text' ||
+              selectedShape?.kind === 'image'
             }
             enabledAnchors={
-              selectedShape?.kind === 'image'
+              multiple || selectedShape?.kind === 'image'
                 ? CORNERS
                 : selectedShape?.kind === 'text'
                   ? [...CORNERS, ...SIDES]
@@ -895,6 +1008,16 @@ export function Canvas(props: Props) {
                 : newBox
             }
           />
+          {marquee && (
+            <Rect
+              {...normalise(marquee.from, marquee.to)}
+              fill="#5f8a3c14"
+              stroke="#5f8a3c"
+              strokeWidth={1 / props.view.scale}
+              dash={[4 / props.view.scale, 3 / props.view.scale]}
+              listening={false}
+            />
+          )}
           {draft && (
             <Group x={draft.x} y={draft.y} listening={false}>
               <ShapeContent shape={draft} scale={props.view.scale} />
@@ -942,24 +1065,30 @@ export function Canvas(props: Props) {
           onCommit={commitEdit}
         />
       )}
-      {toolbarAt && selectedShape && !moving && !editing && (
-        <div
-          ref={(node) => {
-            // Keep the toolbar fully inside the canvas.
-            if (!node) return;
-            const half = node.offsetWidth / 2;
-            const left = Math.min(
-              Math.max(toolbarAt.x, half + 8),
-              Math.max(half + 8, size.width - half - 8),
-            );
-            node.style.left = `${left}px`;
-          }}
-          className={`object-toolbar-anchor${toolbarAt.below ? ' below' : ''}`}
-          style={{ left: toolbarAt.x, top: toolbarAt.y }}
-        >
-          {props.renderToolbar(selectedShape)}
-        </div>
-      )}
+      {toolbarAt &&
+        selectedShapes.length > 0 &&
+        !moving &&
+        !editing &&
+        !marquee && (
+          <div
+            ref={(node) => {
+              // Keep the toolbar fully inside the canvas.
+              if (!node) return;
+              const half = node.offsetWidth / 2;
+              const left = Math.min(
+                Math.max(toolbarAt.x, half + 8),
+                Math.max(half + 8, size.width - half - 8),
+              );
+              node.style.left = `${left}px`;
+            }}
+            className={`object-toolbar-anchor${toolbarAt.below ? ' below' : ''}`}
+            style={{ left: toolbarAt.x, top: toolbarAt.y }}
+          >
+            {selectedShape
+              ? props.renderToolbar(selectedShape)
+              : props.renderGroupToolbar(selectedShapes)}
+          </div>
+        )}
       {trailPoints.length > 1 && (
         <svg className="eraser-trail" aria-hidden="true">
           <polyline
@@ -1120,6 +1249,40 @@ const InlineText = function InlineText({
 };
 
 /** Objects lying fully inside a frame; they move with it. */
+function normalise(a: Point, b: Point): Bounds {
+  return {
+    x: Math.min(a.x, b.x),
+    y: Math.min(a.y, b.y),
+    width: Math.abs(b.x - a.x),
+    height: Math.abs(b.y - a.y),
+  };
+}
+function intersects(a: Bounds, b: Bounds) {
+  return (
+    a.x <= b.x + b.width &&
+    b.x <= a.x + a.width &&
+    a.y <= b.y + b.height &&
+    b.y <= a.y + a.height
+  );
+}
+function contains(outer: Bounds, inner: Bounds) {
+  return (
+    inner.x >= outer.x &&
+    inner.y >= outer.y &&
+    inner.x + inner.width <= outer.x + outer.width &&
+    inner.y + inner.height <= outer.y + outer.height
+  );
+}
+function union(boxes: Bounds[]): Bounds {
+  const x = Math.min(...boxes.map((box) => box.x));
+  const y = Math.min(...boxes.map((box) => box.y));
+  return {
+    x,
+    y,
+    width: Math.max(...boxes.map((box) => box.x + box.width)) - x,
+    height: Math.max(...boxes.map((box) => box.y + box.height)) - y,
+  };
+}
 function framed(frame: BoardShape, shapes: BoardShape[]) {
   return shapes.filter((shape) => {
     if (shape.id === frame.id || shape.kind === 'frame') return false;

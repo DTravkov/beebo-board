@@ -222,3 +222,39 @@ test('image objects carry only base64 raster data and nothing else does', () => 
   ])
     assert.throws(() => parseBoard(JSON.stringify({ ...file, shapes: [bad] })));
 });
+
+test('moving a group is one update, rejects bad values, and undoes in one step', () => {
+  const a = new BoardDocument();
+  try {
+    a.replace({
+      format: 'beebo-board',
+      version: 1,
+      title: 'Group',
+      shapes: sampleShapes,
+    });
+    a.undo.clear();
+    let updates = 0;
+    a.doc.on('update', () => updates++);
+    const [first, second] = sampleShapes;
+    a.updateMany([
+      { id: first.id, patch: { x: first.x + 40, y: first.y + 10 } },
+      { id: second.id, patch: { x: second.x + 40, y: second.y + 10 } },
+      { id: 'missing', patch: { x: 1 } },
+    ]);
+    assert.equal(updates, 1);
+    const moved = a.getShapes();
+    assert.equal(moved[0].x, first.x + 40);
+    assert.equal(moved[1].y, second.y + 10);
+    assert.throws(() =>
+      a.updateMany([
+        { id: first.id, patch: { x: 0 } },
+        { id: second.id, patch: { x: Number.NaN } },
+      ]),
+    );
+    assert.equal(a.getShapes()[0].x, first.x + 40, 'nothing applied on error');
+    a.undo.undo();
+    assert.deepEqual(a.getShapes(), sampleShapes);
+  } finally {
+    a.destroy();
+  }
+});
