@@ -65,6 +65,24 @@ export class BoardDocument {
         if (key !== 'id') map.set(key, value);
     }, this.localOrigin);
   }
+  /** Applies several changes as one step, e.g. moving a group of objects. */
+  updateMany(changes: { id: string; patch: Partial<BoardShape> }[]) {
+    const valid = changes.filter(({ id, patch }) => {
+      const map = this.objects.get(id);
+      if (!(map instanceof Y.Map)) return false;
+      if (!isShape({ ...map.toJSON(), ...patch, id }))
+        throw new Error('Invalid object change.');
+      return true;
+    });
+    if (!valid.length) return;
+    this.doc.transact(() => {
+      for (const { id, patch } of valid) {
+        const map = this.objects.get(id) as Y.Map<unknown>;
+        for (const [key, value] of Object.entries(patch))
+          if (key !== 'id') map.set(key, value);
+      }
+    }, this.localOrigin);
+  }
   remove(id: string) {
     this.removeMany([id]);
   }

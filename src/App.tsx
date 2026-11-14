@@ -126,7 +126,7 @@ export default function App() {
   ) {
     setBrushStyles((all) => ({ ...all, [target]: update(all[target]) }));
   }
-  const [selected, setSelected] = useState<string | null>(null);
+  const [selected, setSelected] = useState<string[]>([]);
   const [view, setView] = useState<View>({ x: 0, y: 0, scale: 1 });
   const [panel, setPanel] = useState(false);
   const [dialog, setDialog] = useState<
@@ -158,7 +158,10 @@ export default function App() {
   const session = useRef<RoomSession | null>(null);
   const stage = useRef<Konva.Stage | null>(null);
   const fileInput = useRef<HTMLInputElement>(null);
-  const selectedShape = shapes.find((shape) => shape.id === selected);
+  const selectedShape =
+    selected.length === 1
+      ? shapes.find((shape) => shape.id === selected[0])
+      : undefined;
 
   useEffect(() => {
     const off = board.subscribe(() => setRevision((value) => value + 1));
@@ -219,18 +222,25 @@ export default function App() {
   function update(id: string, patch: Partial<BoardShape>) {
     safely(() => board.update(id, patch));
   }
-  function remove(id: string) {
-    safely(() => board.remove(id));
-    setSelected(null);
+  function remove(ids: string[]) {
+    safely(() => board.removeMany(ids));
+    setSelected([]);
+  }
+  function move(changes: { id: string; x: number; y: number }[]) {
+    safely(() =>
+      board.updateMany(
+        changes.map(({ id, x, y }) => ({ id, patch: { x, y } })),
+      ),
+    );
   }
   function erase(ids: string[]) {
     safely(() => board.removeMany(ids));
-    setSelected((id) => (id && ids.includes(id) ? null : id));
+    setSelected((chosen) => chosen.filter((id) => !ids.includes(id)));
   }
   function splice(changes: { id: string; pieces: BoardShape[] }[]) {
     safely(() => board.splice(changes));
-    setSelected((id) =>
-      id && changes.some((change) => change.id === id) ? null : id,
+    setSelected((chosen) =>
+      chosen.filter((id) => !changes.some((change) => change.id === id)),
     );
   }
   function exportBoard() {
@@ -261,8 +271,15 @@ export default function App() {
           event.preventDefault();
           exportBoard();
         }
-        if (event.key.toLowerCase() === 'c' && selected) {
-          const shape = board.getShapes().find((item) => item.id === selected);
+        if (event.key.toLowerCase() === 'a') {
+          event.preventDefault();
+          setTool('select');
+          setSelected(board.getShapes().map((shape) => shape.id));
+        }
+        if (event.key.toLowerCase() === 'c' && selected.length === 1) {
+          const shape = board
+            .getShapes()
+            .find((item) => item.id === selected[0]);
           if (shape?.kind === 'image') {
             event.preventDefault();
             void copyImage(shape);
@@ -271,10 +288,13 @@ export default function App() {
         return;
       }
       if (event.key === 'Escape') {
-        setSelected(null);
+        setSelected([]);
         setTool('select');
       }
-      if ((event.key === 'Delete' || event.key === 'Backspace') && selected) {
+      if (
+        (event.key === 'Delete' || event.key === 'Backspace') &&
+        selected.length
+      ) {
         event.preventDefault();
         remove(selected);
       }
@@ -283,29 +303,33 @@ export default function App() {
       );
       if (found) setTool(found.id);
       if (
-        selected &&
+        selected.length &&
         ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(event.key)
       ) {
         event.preventDefault();
-        const shape = board.getShapes().find((item) => item.id === selected);
-        if (!shape) return;
         const distance = event.shiftKey ? 10 : 1;
-        update(selected, {
-          x:
-            shape.x +
-            (event.key === 'ArrowRight'
-              ? distance
-              : event.key === 'ArrowLeft'
-                ? -distance
-                : 0),
-          y:
-            shape.y +
-            (event.key === 'ArrowDown'
-              ? distance
-              : event.key === 'ArrowUp'
-                ? -distance
-                : 0),
-        });
+        const dx =
+          event.key === 'ArrowRight'
+            ? distance
+            : event.key === 'ArrowLeft'
+              ? -distance
+              : 0;
+        const dy =
+          event.key === 'ArrowDown'
+            ? distance
+            : event.key === 'ArrowUp'
+              ? -distance
+              : 0;
+        move(
+          board
+            .getShapes()
+            .filter((shape) => selected.includes(shape.id))
+            .map((shape) => ({
+              id: shape.id,
+              x: shape.x + dx,
+              y: shape.y + dy,
+            })),
+        );
       }
     };
     window.addEventListener('keydown', keydown);
@@ -339,7 +363,7 @@ export default function App() {
     if (joining) {
       target = new BoardDocument();
       setBoard(target);
-      setSelected(null);
+      setSelected([]);
     }
     setLocalSaving(false);
     setSavingLabel('Session only');
@@ -436,7 +460,7 @@ export default function App() {
           ? ''
           : name.replace(/\.\w+$/, '').slice(0, 300);
         board.add(shape);
-        setSelected(shape.id);
+        setSelected([shape.id]);
         setTool('select');
         offset += 24;
       } catch (error) {
@@ -529,7 +553,7 @@ export default function App() {
     try {
       const data = parseBoard(await file.text());
       board.replace(data);
-      setSelected(null);
+      setSelected([]);
       setToast('Board opened. Undo will restore your previous canvas.');
       setDialog(null);
     } catch (error) {
@@ -746,6 +770,7 @@ export default function App() {
           onSelect={setSelected}
           onAdd={add}
           onUpdate={update}
+          onMove={move}
           onErase={erase}
           onSplice={splice}
           onToolDone={() => setTool('select')}
@@ -753,10 +778,29 @@ export default function App() {
             <ObjectToolbar
               shape={shape}
               onUpdate={(patch) => update(shape.id, restyle(shape, patch))}
-              onDelete={() => remove(shape.id)}
+              onDelete={() => remove([shape.id])}
               onExport={() => exportFrame(shape)}
               onCopy={() => void copyImage(shape)}
             />
+          )}
+          renderGroupToolbar={(group) => (
+            <div
+              className="object-toolbar"
+              role="toolbar"
+              aria-label="Selected objects"
+              onPointerDown={(event) => event.stopPropagation()}
+            >
+              <span className="toolbar-count">{group.length} selected</span>
+              <span className="toolbar-divider" />
+              <button
+                className="toolbar-button"
+                title="Delete selected objects (Delete)"
+                aria-label="Delete selected objects"
+                onClick={() => remove(group.map((shape) => shape.id))}
+              >
+                <Icon name="trash" size={17} />
+              </button>
+            </div>
           )}
           onCursor={(x, y) => session.current?.cursor(x, y, lowBandwidth)}
         />
@@ -941,10 +985,18 @@ export default function App() {
               {shapes.length ? (
                 shapes.map((shape, index) => (
                   <button
-                    className={`object-item ${selected === shape.id ? 'chosen' : ''}`}
+                    className={`object-item ${selected.includes(shape.id) ? 'chosen' : ''}`}
                     key={shape.id}
-                    onClick={() => setSelected(shape.id)}
-                    aria-pressed={selected === shape.id}
+                    onClick={(event) =>
+                      setSelected((chosen) =>
+                        event.shiftKey || event.ctrlKey || event.metaKey
+                          ? chosen.includes(shape.id)
+                            ? chosen.filter((id) => id !== shape.id)
+                            : [...chosen, shape.id]
+                          : [shape.id],
+                      )
+                    }
+                    aria-pressed={selected.includes(shape.id)}
                   >
                     <Icon
                       name={
@@ -1016,7 +1068,7 @@ export default function App() {
                 )}
                 <button
                   className="danger-button wide"
-                  onClick={() => remove(selectedShape.id)}
+                  onClick={() => remove([selectedShape.id])}
                 >
                   <Icon name="trash" size={15} /> Delete object
                 </button>
@@ -1403,7 +1455,7 @@ export default function App() {
                   title: 'Untitled board',
                   shapes: [],
                 });
-                setSelected(null);
+                setSelected([]);
                 setView({ x: 0, y: 0, scale: 1 });
                 setDialog(null);
                 setToast(
@@ -1504,6 +1556,14 @@ export default function App() {
             <div>
               <span>Zoom</span>
               <kbd>Scroll</kbd>
+            </div>
+            <div>
+              <span>Select several</span>
+              <kbd>Shift+click / drag a box</kbd>
+            </div>
+            <div>
+              <span>Select all</span>
+              <kbd>Ctrl/⌘ A</kbd>
             </div>
             <div>
               <span>Edit text</span>

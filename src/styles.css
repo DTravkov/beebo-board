@@ -317,6 +317,13 @@ button svg {
   margin: 0 4px;
   background: #e8ece4;
 }
+.toolbar-count {
+  padding: 0 8px;
+  color: #4b5747;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+}
 .toolbar-button {
   min-width: 34px;
   height: 34px;
