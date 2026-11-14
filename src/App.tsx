@@ -10,6 +10,7 @@ import { Dialog } from './components/Dialog';
 import { Icon } from './components/Icon';
 import { ObjectToolbar } from './components/ObjectToolbar';
 import { restyle } from './lib/text';
+import { imagePng, prepareImage } from './lib/image';
 import {
   BrushStyles,
   EraserThickness,
@@ -260,6 +261,13 @@ export default function App() {
           event.preventDefault();
           exportBoard();
         }
+        if (event.key.toLowerCase() === 'c' && selected) {
+          const shape = board.getShapes().find((item) => item.id === selected);
+          if (shape?.kind === 'image') {
+            event.preventDefault();
+            void copyImage(shape);
+          }
+        }
         return;
       }
       if (event.key === 'Escape') {
@@ -303,6 +311,25 @@ export default function App() {
     window.addEventListener('keydown', keydown);
     return () => window.removeEventListener('keydown', keydown);
   }, [board, selected]);
+  useEffect(() => {
+    // Pictures pasted anywhere outside a text field land on the board.
+    const paste = (event: ClipboardEvent) => {
+      const target = event.target as HTMLElement | null;
+      if (
+        target?.closest?.('input, textarea, [contenteditable]') ||
+        document.querySelector('dialog[open]')
+      )
+        return;
+      const files = [...(event.clipboardData?.files ?? [])].filter((file) =>
+        file.type.startsWith('image/'),
+      );
+      if (!files.length) return;
+      event.preventDefault();
+      void addImages(files);
+    };
+    window.addEventListener('paste', paste);
+    return () => window.removeEventListener('paste', paste);
+  });
   async function startSession(
     value: { room: string; secret: string },
     joining: boolean,
@@ -376,6 +403,66 @@ export default function App() {
       x: width / 2 - ((width / 2 - view.x) / view.scale) * scale,
       y: height / 2 - ((height / 2 - view.y) / view.scale) * scale,
     });
+  }
+  /** Adds pasted or dropped pictures as image objects, centred on a point. */
+  async function addImages(files: Blob[], at?: { x: number; y: number }) {
+    const pictures = files.filter((file) => file.type.startsWith('image/'));
+    if (!pictures.length) return;
+    if (pictures.length > 5) setToast('Only the first 5 pictures were added.');
+    const width = stage.current?.width() ?? 800;
+    const height = stage.current?.height() ?? 600;
+    const center = at ?? {
+      x: (width / 2 - view.x) / view.scale,
+      y: (height / 2 - view.y) / view.scale,
+    };
+    let offset = 0;
+    for (const file of pictures.slice(0, 5)) {
+      try {
+        const picture = await prepareImage(file);
+        if (board.byteSize() + picture.src.length > MAX_DOCUMENT_BYTES)
+          throw new Error(
+            'This board has no room for another picture. Boards are limited to 2 MB.',
+          );
+        const fit = Math.min(1, 480 / Math.max(picture.width, picture.height));
+        const shape = makeShape('image', 0, 0);
+        shape.width = Math.round(picture.width * fit);
+        shape.height = Math.round(picture.height * fit);
+        shape.x = Math.round(center.x - shape.width / 2 + offset);
+        shape.y = Math.round(center.y - shape.height / 2 + offset);
+        shape.src = picture.src;
+        const name = file instanceof File ? file.name : '';
+        // Clipboard pictures arrive as "image.png"; that is not a description.
+        shape.text = /^image\.\w+$/i.test(name)
+          ? ''
+          : name.replace(/\.\w+$/, '').slice(0, 300);
+        board.add(shape);
+        setSelected(shape.id);
+        setTool('select');
+        offset += 24;
+      } catch (error) {
+        setToast(
+          error instanceof Error ? error.message : 'The picture was not added.',
+        );
+      }
+    }
+  }
+  async function copyImage(shape: BoardShape) {
+    try {
+      if (
+        !shape.src ||
+        !navigator.clipboard?.write ||
+        !('ClipboardItem' in window)
+      )
+        throw new Error('This browser cannot copy pictures.');
+      await navigator.clipboard.write([
+        new ClipboardItem({ 'image/png': imagePng(shape.src) }),
+      ]);
+      setToast('Picture copied.');
+    } catch (error) {
+      setToast(
+        error instanceof Error ? error.message : 'The picture was not copied.',
+      );
+    }
   }
   /** Saves what is inside a frame as a PNG, at twice the board resolution. */
   function exportFrame(frame: BoardShape) {
@@ -624,7 +711,26 @@ export default function App() {
           </button>
         </div>
       </aside>
-      <main className="board-area" aria-label="Board workspace">
+      <main
+        className="board-area"
+        aria-label="Board workspace"
+        onDragOver={(event) => {
+          if (event.dataTransfer.types.includes('Files'))
+            event.preventDefault();
+        }}
+        onDrop={(event) => {
+          const files = [...event.dataTransfer.files].filter((file) =>
+            file.type.startsWith('image/'),
+          );
+          if (!files.length) return;
+          event.preventDefault();
+          const box = event.currentTarget.getBoundingClientRect();
+          void addImages(files, {
+            x: (event.clientX - box.left - view.x) / view.scale,
+            y: (event.clientY - box.top - view.y) / view.scale,
+          });
+        }}
+      >
         <Canvas
           shapes={shapes}
           tool={tool}
@@ -649,6 +755,7 @@ export default function App() {
               onUpdate={(patch) => update(shape.id, restyle(shape, patch))}
               onDelete={() => remove(shape.id)}
               onExport={() => exportFrame(shape)}
+              onCopy={() => void copyImage(shape)}
             />
           )}
           onCursor={(x, y) => session.current?.cursor(x, y, lowBandwidth)}

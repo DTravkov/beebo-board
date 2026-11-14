@@ -33,14 +33,22 @@ type Props = {
   onUpdate: (patch: Partial<BoardShape>) => void;
   onDelete: () => void;
   onExport: () => void;
+  onCopy: () => void;
 };
 
 /** Context controls for the selected object, shown above it on the canvas. */
-export function ObjectToolbar({ shape, onUpdate, onDelete, onExport }: Props) {
+export function ObjectToolbar({
+  shape,
+  onUpdate,
+  onDelete,
+  onExport,
+  onCopy,
+}: Props) {
   const [open, setOpen] = useState<'color' | 'fill' | null>(null);
   const root = useRef<HTMLDivElement>(null);
   const textual = shape.kind === 'text' || shape.kind === 'sticky';
   const frame = shape.kind === 'frame';
+  const image = shape.kind === 'image';
   const style = textStyle(shape);
   const [sizeDraft, setSizeDraft] = useState(String(style.fontSize));
   useEffect(() => setSizeDraft(String(style.fontSize)), [style.fontSize]);
@@ -186,7 +194,28 @@ export function ObjectToolbar({ shape, onUpdate, onDelete, onExport }: Props) {
           </button>
         </>
       )}
-      {!textual && !frame && (
+      {image && (
+        <>
+          <input
+            className="frame-title"
+            aria-label="Picture description"
+            placeholder="Describe the picture"
+            value={shape.text}
+            maxLength={300}
+            onChange={(event) => onUpdate({ text: event.target.value })}
+          />
+          <span className="toolbar-divider" />
+          <button
+            className="toolbar-button export-button"
+            title="Copy the picture (Ctrl/Cmd C)"
+            onClick={onCopy}
+          >
+            <Icon name="copy" size={17} />
+            <span>Copy</span>
+          </button>
+        </>
+      )}
+      {!textual && !frame && !image && (
         <label className="toolbar-thickness" title="Thickness">
           <span className="sr-only">Thickness</span>
           <input
@@ -201,8 +230,8 @@ export function ObjectToolbar({ shape, onUpdate, onDelete, onExport }: Props) {
           />
         </label>
       )}
-      {!frame && <span className="toolbar-divider" />}
-      {!frame && (
+      {!frame && !image && <span className="toolbar-divider" />}
+      {!frame && !image && (
         <button
           className="toolbar-button"
           aria-label={textual ? 'Text color' : 'Color'}

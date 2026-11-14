@@ -200,3 +200,25 @@ test('text styling fields are optional, validated, and round-trip', () => {
       parseBoard(JSON.stringify({ ...file, shapes: [{ ...text, ...bad }] })),
     );
 });
+
+test('image objects carry only base64 raster data and nothing else does', () => {
+  const file = { format: 'beebo-board', version: 1, title: 'Pictures' };
+  const image = makeShape('image', 0, 0);
+  image.width = 120;
+  image.height = 80;
+  image.src = 'data:image/webp;base64,UklGRhYAAABXRUJQ';
+  assert.equal(
+    parseBoard(JSON.stringify({ ...file, shapes: [image] })).shapes[0].kind,
+    'image',
+  );
+  const note = { ...makeShape('sticky', 0, 0), src: image.src };
+  for (const bad of [
+    { ...image, src: undefined },
+    { ...image, src: 'https://example.com/tracker.png' },
+    { ...image, src: 'data:image/svg+xml;base64,PHN2Zz4=' },
+    { ...image, src: 'data:image/png;base64,<script>' },
+    { ...image, src: `data:image/png;base64,${'A'.repeat(700_001)}` },
+    note,
+  ])
+    assert.throws(() => parseBoard(JSON.stringify({ ...file, shapes: [bad] })));
+});

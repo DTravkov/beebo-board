@@ -11,6 +11,7 @@ import {
   Text,
   Circle,
   Transformer,
+  Image as KonvaImage,
 } from 'react-konva';
 import type Konva from 'konva';
 import type { PointerEvent as ReactPointerEvent } from 'react';
@@ -125,6 +126,7 @@ function ShapeContent({ shape, scale }: { shape: BoardShape; scale: number }) {
         hitStrokeWidth={Math.max(14 / scale, shape.strokeWidth)}
       />
     );
+  if (shape.kind === 'image') return <BoardImage shape={shape} />;
   if (shape.kind === 'frame')
     return (
       <>
@@ -865,11 +867,15 @@ export function Canvas(props: Props) {
             padding={4}
             borderStroke="#5f8a3c"
             borderStrokeWidth={1.5}
-            keepRatio={selectedShape?.kind === 'text'}
+            keepRatio={
+              selectedShape?.kind === 'text' || selectedShape?.kind === 'image'
+            }
             enabledAnchors={
-              selectedShape?.kind === 'text'
-                ? [...CORNERS, ...SIDES]
-                : [...CORNERS, ...SIDES, 'top-center', 'bottom-center']
+              selectedShape?.kind === 'image'
+                ? CORNERS
+                : selectedShape?.kind === 'text'
+                  ? [...CORNERS, ...SIDES]
+                  : [...CORNERS, ...SIDES, 'top-center', 'bottom-center']
             }
             anchorStyleFunc={(anchor) => {
               const corner = CORNERS.some((name) => anchor.hasName(name));
@@ -1023,7 +1029,14 @@ function resized(
           Math.round((index % 2 ? value * sy : value * sx) * 100) / 100,
       ),
     };
-  const min = shape.kind === 'sticky' ? 80 : shape.kind === 'frame' ? 40 : 4;
+  const min =
+    shape.kind === 'sticky'
+      ? 80
+      : shape.kind === 'frame'
+        ? 40
+        : shape.kind === 'image'
+          ? 16
+          : 4;
   const sign = (value: number) => (value < 0 ? -1 : 1);
   return {
     width:
@@ -1118,4 +1131,47 @@ function framed(frame: BoardShape, shapes: BoardShape[]) {
       box.y + box.height <= frame.y + frame.height
     );
   });
+}
+
+// Decoded pictures, shared by every render of the same image data.
+const decoded = new Map<string, HTMLImageElement>();
+function BoardImage({ shape }: { shape: BoardShape }) {
+  const src = shape.src ?? '';
+  const [image, setImage] = useState(() => {
+    const cached = decoded.get(src);
+    return cached?.complete ? cached : null;
+  });
+  useEffect(() => {
+    let cached = decoded.get(src);
+    if (cached?.complete) {
+      setImage(cached);
+      return;
+    }
+    if (!cached) {
+      cached = new window.Image();
+      cached.src = src;
+      if (decoded.size > 200) decoded.clear();
+      decoded.set(src, cached);
+    }
+    const element = cached;
+    let live = true;
+    element
+      .decode()
+      .then(() => live && setImage(element))
+      .catch(() => live && setImage(null));
+    return () => {
+      live = false;
+    };
+  }, [src]);
+  if (!image)
+    return (
+      <Rect
+        width={shape.width}
+        height={shape.height}
+        fill="#eef2ea"
+        stroke="#d5dccd"
+        strokeWidth={1}
+      />
+    );
+  return <KonvaImage image={image} width={shape.width} height={shape.height} />;
 }
