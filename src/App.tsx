@@ -8,6 +8,13 @@ import {
 } from './components/Canvas';
 import { Dialog } from './components/Dialog';
 import { Icon } from './components/Icon';
+import {
+  BrushStyles,
+  MAX_COLORS,
+  MAX_STYLES,
+  BASE_COLORS,
+  type BrushStyle,
+} from './components/BrushStyles';
 import { BoardDocument } from './lib/document';
 import {
   createRoom,
@@ -37,18 +44,24 @@ const TOOLS: { id: Tool; label: string; key: string }[] = [
   { id: 'sticky', label: 'Sticky note', key: 'N' },
 ];
 // Everything in the Pen button's flyout: brushes first, then erasers.
-const PEN_GROUP: { id: Tool; label: string; key: string; sizes?: number[] }[] =
-  [
-    { id: 'pen', label: 'Pen brush', key: 'P', sizes: [2, 4, 8, 14] },
-    {
-      id: 'highlighter',
-      label: 'Highlighter',
-      key: 'L',
-      sizes: [8, 14, 20, 24],
-    },
-    { id: 'eraser', label: 'Object eraser', key: 'E' },
-    { id: 'eraser-partial', label: 'Partial eraser', key: 'X' },
-  ];
+const PEN_GROUP: { id: Tool; label: string; key: string }[] = [
+  { id: 'pen', label: 'Pen brush', key: 'P' },
+  { id: 'highlighter', label: 'Highlighter', key: 'L' },
+  { id: 'eraser', label: 'Object eraser', key: 'E' },
+  { id: 'eraser-partial', label: 'Partial eraser', key: 'X' },
+];
+type Brush = 'pen' | 'highlighter';
+const DEFAULT_STYLES: Record<Brush, BrushStyle[]> = {
+  pen: [
+    { color: '#34483e', width: 3 },
+    { color: '#c84b3c', width: 3 },
+    { color: '#3d5fa8', width: 6 },
+  ],
+  highlighter: [
+    { color: '#f2c94c', width: 16 },
+    { color: '#768f54', width: 16 },
+  ],
+};
 const COLORS = [
   '#34483e',
   '#768f54',
@@ -91,12 +104,22 @@ export default function App() {
   const [tool, setTool] = useState<Tool>('select');
   const [color, setColor] = useState(COLORS[0]);
   const [strokeWidth, setStrokeWidth] = useState(3);
-  const [highlightWidth, setHighlightWidth] = useState(14);
+  const [brushStyles, setBrushStyles] = useState(DEFAULT_STYLES);
+  const [activeStyle, setActiveStyle] = useState<Record<Brush, number>>({
+    pen: 0,
+    highlighter: 0,
+  });
+  const [customColors, setCustomColors] = useState<string[]>([]);
   const penItem = PEN_GROUP.find((item) => item.id === tool);
-  const brushSizes = penItem?.sizes;
-  const activeWidth = tool === 'highlighter' ? highlightWidth : strokeWidth;
-  const setActiveWidth =
-    tool === 'highlighter' ? setHighlightWidth : setStrokeWidth;
+  const brush: Brush | null =
+    tool === 'pen' || tool === 'highlighter' ? tool : null;
+  const brushStyle = brush ? brushStyles[brush][activeStyle[brush]] : null;
+  function changeStyles(
+    target: Brush,
+    update: (styles: BrushStyle[]) => BrushStyle[],
+  ) {
+    setBrushStyles((all) => ({ ...all, [target]: update(all[target]) }));
+  }
   const [selected, setSelected] = useState<string | null>(null);
   const [view, setView] = useState<View>({ x: 0, y: 0, scale: 1 });
   const [panel, setPanel] = useState(false);
@@ -525,8 +548,8 @@ export default function App() {
         <Canvas
           shapes={shapes}
           tool={tool}
-          color={color}
-          width={activeWidth}
+          color={brushStyle?.color ?? color}
+          width={brushStyle?.width ?? strokeWidth}
           selected={selected}
           view={view}
           lowBandwidth={lowBandwidth}
@@ -622,47 +645,49 @@ export default function App() {
                 <Icon name={item.id} size={18} />
               </button>,
             ])}
-            {brushSizes && <span className="brush-divider" />}
-            {brushSizes?.map((value) => (
-              <button
-                key={value}
-                className={`size-dot ${activeWidth === value ? 'chosen' : ''}`}
-                aria-label={`Brush size ${value}`}
-                title={`Size ${value}`}
-                aria-pressed={activeWidth === value}
-                onClick={() => setActiveWidth(value)}
-              >
-                <span
-                  style={{
-                    width: 4 + value * 0.75,
-                    height: 4 + value * 0.75,
-                    background: color,
-                  }}
-                />
-              </button>
-            ))}
-            {brushSizes && (
+            {brush && (
               <>
                 <span className="brush-divider" />
-                {COLORS.map((value) => (
-                  <button
-                    key={value}
-                    className={`swatch ${color === value ? 'chosen' : ''}`}
-                    style={{ background: value }}
-                    aria-label={`Use color ${value}`}
-                    aria-pressed={color === value}
-                    onClick={() => setColor(value)}
-                  />
-                ))}
-                <label className="custom-color" title="Custom color">
-                  <input
-                    type="color"
-                    aria-label="Custom brush color"
-                    value={color}
-                    onChange={(event) => setColor(event.target.value)}
-                  />
-                  <Icon name="plus" size={14} />
-                </label>
+                <BrushStyles
+                  label={brush === 'pen' ? 'Pen' : 'Highlighter'}
+                  styles={brushStyles[brush]}
+                  active={activeStyle[brush]}
+                  customColors={customColors}
+                  onSelect={(index) =>
+                    setActiveStyle((all) => ({ ...all, [brush]: index }))
+                  }
+                  onChange={(index, next) =>
+                    changeStyles(brush, (styles) =>
+                      styles.map((item, i) => (i === index ? next : item)),
+                    )
+                  }
+                  onAdd={() => {
+                    const count = brushStyles[brush].length;
+                    if (count >= MAX_STYLES) return;
+                    changeStyles(brush, (styles) => [
+                      ...styles,
+                      { ...styles[activeStyle[brush]] },
+                    ]);
+                    setActiveStyle((all) => ({ ...all, [brush]: count }));
+                  }}
+                  onRemove={(index) => {
+                    changeStyles(brush, (styles) =>
+                      styles.length > 1
+                        ? styles.filter((_, i) => i !== index)
+                        : styles,
+                    );
+                    setActiveStyle((all) => ({ ...all, [brush]: 0 }));
+                  }}
+                  onAddColor={(value) =>
+                    setCustomColors((list) =>
+                      BASE_COLORS.includes(value) ||
+                      list.includes(value) ||
+                      BASE_COLORS.length + list.length >= MAX_COLORS
+                        ? list
+                        : [...list, value],
+                    )
+                  }
+                />
               </>
             )}
           </div>

@@ -68,6 +68,7 @@ type Props = {
 };
 
 const HIGHLIGHT_OPACITY = 0.35;
+const TRAIL_MS = 220;
 const isBrush = (tool: Tool) => tool === 'pen' || tool === 'highlighter';
 const isEraser = (tool: Tool) => tool === 'eraser' || tool === 'eraser-partial';
 const isLine = (kind: ShapeKind) => kind === 'stroke' || kind === 'highlight';
@@ -194,6 +195,24 @@ export function Canvas(props: Props) {
   } | null>(null);
   const [eraserCursor, setEraserCursor] = useState<Point | null>(null);
   const [brushCursor, setBrushCursor] = useState<Point | null>(null);
+  // Short-lived gray trail behind the eraser, in screen coordinates.
+  const trail = useRef<(Point & { t: number })[]>([]);
+  const [trailPoints, setTrailPoints] = useState<Point[]>([]);
+  const trailFrame = useRef(0);
+  function fadeTrail() {
+    const now = performance.now();
+    trail.current = trail.current.filter((point) => now - point.t < TRAIL_MS);
+    setTrailPoints(trail.current.map(({ x, y }) => ({ x, y })));
+    trailFrame.current = trail.current.length
+      ? requestAnimationFrame(fadeTrail)
+      : 0;
+  }
+  function addTrail(point: Point) {
+    trail.current.push({ ...point, t: performance.now() });
+    if (!trailFrame.current)
+      trailFrame.current = requestAnimationFrame(fadeTrail);
+  }
+  useEffect(() => () => cancelAnimationFrame(trailFrame.current), []);
   const erasing = useRef<{
     pointerId: number;
     last: Point | null;
@@ -342,6 +361,7 @@ export function Canvas(props: Props) {
       removed: new Set(),
     };
     setEraserCursor(screen);
+    addTrail(screen);
     props.onSelect(null);
     eraseBetween(board, board);
   }
@@ -381,6 +401,7 @@ export function Canvas(props: Props) {
       return;
     }
     props.onCursor(board.x, board.y);
+    addTrail(screen);
     eraseBetween(gesture.last ?? board, board);
     gesture.last = board;
   }
@@ -630,6 +651,19 @@ export function Canvas(props: Props) {
           <Circle x={-100} y={-100} radius={0} />
         </Layer>
       </Stage>
+      {trailPoints.length > 1 && (
+        <svg className="eraser-trail" aria-hidden="true">
+          <polyline
+            points={trailPoints.map((p) => `${p.x},${p.y}`).join(' ')}
+            fill="none"
+            stroke="#8a8f88"
+            strokeOpacity={0.35}
+            strokeWidth={ERASER_RADIUS * 2}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </svg>
+      )}
       {isEraser(props.tool) && !panning && eraserCursor && (
         <span
           className={`eraser-cursor${props.tool === 'eraser-partial' ? ' partial' : ''}`}
