@@ -422,8 +422,9 @@ test(
         x: box.x + (box.width / 2) * (1 - scale) + x * scale,
         y: box.y + (box.height / 2) * (1 - scale) + y * scale,
       });
+      await page.getByRole('button', { name: 'Pen (P)', exact: true }).click();
       await page
-        .getByRole('button', { name: 'Eraser (E)', exact: true })
+        .getByRole('button', { name: 'Object eraser (E)', exact: true })
         .click();
       let p = screen(200, 200);
       await page.mouse.move(p.x, p.y);
@@ -461,7 +462,11 @@ test(
       await page
         .getByRole('button', { name: 'Reset zoom to 100 percent' })
         .click();
-      for (const tool of ['Cursor (V)', 'Pen (P)', 'Eraser (E)']) {
+      for (const tool of ['Cursor (V)', 'Pen (P)', 'Object eraser (E)']) {
+        if (tool === 'Object eraser (E)')
+          await page
+            .getByRole('button', { name: 'Pen (P)', exact: true })
+            .click();
         await page.getByRole('button', { name: tool, exact: true }).click();
         // Start on an existing object: middle dragging must never move, draw, or erase content.
         await page.mouse.move(box.x + 310, box.y + 225);

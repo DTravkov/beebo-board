@@ -35,8 +35,20 @@ const TOOLS: { id: Tool; label: string; key: string }[] = [
   { id: 'arrow', label: 'Arrow', key: 'A' },
   { id: 'text', label: 'Text', key: 'T' },
   { id: 'sticky', label: 'Sticky note', key: 'N' },
-  { id: 'eraser', label: 'Eraser', key: 'E' },
 ];
+// Everything in the Pen button's flyout: brushes first, then erasers.
+const PEN_GROUP: { id: Tool; label: string; key: string; sizes?: number[] }[] =
+  [
+    { id: 'pen', label: 'Pen brush', key: 'P', sizes: [2, 4, 8, 14] },
+    {
+      id: 'highlighter',
+      label: 'Highlighter',
+      key: 'L',
+      sizes: [8, 14, 20, 24],
+    },
+    { id: 'eraser', label: 'Object eraser', key: 'E' },
+    { id: 'eraser-partial', label: 'Partial eraser', key: 'X' },
+  ];
 const COLORS = [
   '#34483e',
   '#768f54',
@@ -79,6 +91,12 @@ export default function App() {
   const [tool, setTool] = useState<Tool>('select');
   const [color, setColor] = useState(COLORS[0]);
   const [strokeWidth, setStrokeWidth] = useState(3);
+  const [highlightWidth, setHighlightWidth] = useState(14);
+  const penItem = PEN_GROUP.find((item) => item.id === tool);
+  const brushSizes = penItem?.sizes;
+  const activeWidth = tool === 'highlighter' ? highlightWidth : strokeWidth;
+  const setActiveWidth =
+    tool === 'highlighter' ? setHighlightWidth : setStrokeWidth;
   const [selected, setSelected] = useState<string | null>(null);
   const [view, setView] = useState<View>({ x: 0, y: 0, scale: 1 });
   const [panel, setPanel] = useState(false);
@@ -180,6 +198,12 @@ export default function App() {
     safely(() => board.removeMany(ids));
     setSelected((id) => (id && ids.includes(id) ? null : id));
   }
+  function splice(changes: { id: string; pieces: BoardShape[] }[]) {
+    safely(() => board.splice(changes));
+    setSelected((id) =>
+      id && changes.some((change) => change.id === id) ? null : id,
+    );
+  }
   function exportBoard() {
     download(
       `${board.title.replace(/[^a-z0-9_-]/gi, '-').slice(0, 60) || 'beebo'}.beebo.json`,
@@ -218,7 +242,7 @@ export default function App() {
         event.preventDefault();
         remove(selected);
       }
-      const found = TOOLS.find(
+      const found = [...TOOLS, ...PEN_GROUP].find(
         (item) => item.key.toLowerCase() === event.key.toLowerCase(),
       );
       if (found) setTool(found.id);
@@ -502,7 +526,7 @@ export default function App() {
           shapes={shapes}
           tool={tool}
           color={color}
-          width={strokeWidth}
+          width={activeWidth}
           selected={selected}
           view={view}
           lowBandwidth={lowBandwidth}
@@ -513,6 +537,7 @@ export default function App() {
           onAdd={add}
           onUpdate={update}
           onErase={erase}
+          onSplice={splice}
           onEditText={setEditor}
           onCursor={(x, y) => session.current?.cursor(x, y, lowBandwidth)}
         />
@@ -549,15 +574,14 @@ export default function App() {
           aria-orientation="vertical"
         >
           {TOOLS.map((item, index) => (
-            <div
-              key={item.id}
-              className={index === 2 || index === 8 ? 'tool-divider' : ''}
-            >
+            <div key={item.id} className={index === 2 ? 'tool-divider' : ''}>
               <button
-                className={`tool-button ${tool === item.id ? 'selected' : ''}`}
+                className={`tool-button ${tool === item.id || (item.id === 'pen' && penItem) ? 'selected' : ''}`}
                 aria-label={`${item.label} (${item.key})`}
                 title={`${item.label} · ${item.key}`}
-                aria-pressed={tool === item.id}
+                aria-pressed={
+                  tool === item.id || (item.id === 'pen' && !!penItem)
+                }
                 onClick={() => setTool(item.id)}
               >
                 <Icon name={item.id} />
@@ -576,9 +600,74 @@ export default function App() {
             <span style={{ background: color }} />
           </label>
         </div>
-        {['pen', 'rect', 'ellipse', 'arrow', 'text', 'sticky'].includes(
-          tool,
-        ) && (
+        {penItem && (
+          <div
+            className="brush-panel"
+            role="toolbar"
+            aria-label="Pen tools"
+            aria-orientation="vertical"
+          >
+            {PEN_GROUP.map((item, index) => [
+              index === 2 && (
+                <span key="eraser-divider" className="brush-divider" />
+              ),
+              <button
+                key={item.id}
+                className={`tool-button ${tool === item.id ? 'selected' : ''}`}
+                aria-label={`${item.label} (${item.key})`}
+                title={`${item.label} · ${item.key}`}
+                aria-pressed={tool === item.id}
+                onClick={() => setTool(item.id)}
+              >
+                <Icon name={item.id} size={18} />
+              </button>,
+            ])}
+            {brushSizes && <span className="brush-divider" />}
+            {brushSizes?.map((value) => (
+              <button
+                key={value}
+                className={`size-dot ${activeWidth === value ? 'chosen' : ''}`}
+                aria-label={`Brush size ${value}`}
+                title={`Size ${value}`}
+                aria-pressed={activeWidth === value}
+                onClick={() => setActiveWidth(value)}
+              >
+                <span
+                  style={{
+                    width: 4 + value * 0.75,
+                    height: 4 + value * 0.75,
+                    background: color,
+                  }}
+                />
+              </button>
+            ))}
+            {brushSizes && (
+              <>
+                <span className="brush-divider" />
+                {COLORS.map((value) => (
+                  <button
+                    key={value}
+                    className={`swatch ${color === value ? 'chosen' : ''}`}
+                    style={{ background: value }}
+                    aria-label={`Use color ${value}`}
+                    aria-pressed={color === value}
+                    onClick={() => setColor(value)}
+                  />
+                ))}
+                <label className="custom-color" title="Custom color">
+                  <input
+                    type="color"
+                    aria-label="Custom brush color"
+                    value={color}
+                    onChange={(event) => setColor(event.target.value)}
+                  />
+                  <Icon name="plus" size={14} />
+                </label>
+              </>
+            )}
+          </div>
+        )}
+        {['rect', 'ellipse', 'arrow', 'text', 'sticky'].includes(tool) && (
           <div className="style-bar" aria-label="Drawing style">
             {COLORS.map((value) => (
               <button
@@ -690,7 +779,13 @@ export default function App() {
                     aria-pressed={selected === shape.id}
                   >
                     <Icon
-                      name={shape.kind === 'stroke' ? 'pen' : shape.kind}
+                      name={
+                        shape.kind === 'stroke'
+                          ? 'pen'
+                          : shape.kind === 'highlight'
+                            ? 'highlighter'
+                            : shape.kind
+                      }
                       size={16}
                     />
                     <span>

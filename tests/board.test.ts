@@ -149,3 +149,21 @@ test('batch erasing publishes one update, converges, and can be undone', () => {
     b.destroy();
   }
 });
+
+test('highlighter strokes round-trip through the board format and stay size-limited', () => {
+  const highlight = makeShape('highlight', 10, 20, '#c58a48');
+  highlight.points = [0, 0, 30, 5];
+  highlight.strokeWidth = 24;
+  const file = {
+    format: 'beebo-board',
+    version: 1,
+    title: 'Highlights',
+    shapes: [highlight],
+  };
+  assert.equal(parseBoard(JSON.stringify(file)).shapes[0].kind, 'highlight');
+  assert.throws(() =>
+    parseBoard(
+      JSON.stringify({ ...file, shapes: [{ ...highlight, strokeWidth: 30 }] }),
+    ),
+  );
+});

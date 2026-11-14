@@ -1,4 +1,4 @@
-import type { BoardShape } from '../shared/board';
+import { MAX_POINTS, type BoardShape } from '../shared/board';
 
 export type Point = { x: number; y: number };
 export type Bounds = Point & { width: number; height: number };
@@ -80,7 +80,7 @@ export function shapeBounds(shape: BoardShape, textBounds?: Bounds): Bounds {
         height: shape.height || 30,
       }
     );
-  if (shape.kind === 'stroke') {
+  if (shape.kind === 'stroke' || shape.kind === 'highlight') {
     let left = 0;
     let right = 0;
     let top = 0;
@@ -126,7 +126,7 @@ export function eraserHits(
   )
     return false;
   const origin = { x: shape.x, y: shape.y };
-  if (shape.kind === 'stroke') {
+  if (shape.kind === 'stroke' || shape.kind === 'highlight') {
     const points: Point[] = [];
     for (let i = 0; i < shape.points.length; i += 2)
       points.push({
@@ -202,4 +202,58 @@ export function eraserHits(
     true,
     shape.kind !== 'rect' || shape.fill !== 'transparent',
   );
+}
+
+/**
+ * Partial erase for freehand lines: removes only the ink under the eraser path
+ * and returns the surviving pieces as new shapes. Returns null when the eraser
+ * misses the line, and an empty array when the whole line is erased.
+ */
+export function splitStroke(
+  shape: BoardShape,
+  from: Point,
+  to: Point,
+  radius: number,
+  makeId: () => string = () => crypto.randomUUID(),
+): BoardShape[] | null {
+  if (shape.kind !== 'stroke' && shape.kind !== 'highlight') return null;
+  if (!eraserHits(shape, from, to, radius)) return null;
+  const reach = (radius + shape.strokeWidth / 2) ** 2;
+  // Resample long segments so the cut follows the eraser, not the sample spacing.
+  const step = Math.max(1, radius / 3);
+  const dense: Point[] = [];
+  for (let i = 0; i < shape.points.length; i += 2) {
+    const point = {
+      x: shape.x + shape.points[i],
+      y: shape.y + shape.points[i + 1],
+    };
+    const last = dense.at(-1);
+    if (last) {
+      const count = Math.min(
+        64,
+        Math.floor(Math.hypot(point.x - last.x, point.y - last.y) / step),
+      );
+      for (let k = 1; k < count; k++)
+        dense.push({
+          x: last.x + ((point.x - last.x) * k) / count,
+          y: last.y + ((point.y - last.y) * k) / count,
+        });
+    }
+    dense.push(point);
+  }
+  const pieces: Point[][] = [[]];
+  for (const point of dense) {
+    if (distanceToSegment(point, from, to) <= reach) {
+      if (pieces.at(-1)!.length) pieces.push([]);
+    } else pieces.at(-1)!.push(point);
+  }
+  return pieces
+    .filter((piece) => piece.length >= 2)
+    .map((piece) => {
+      const origin = piece[0];
+      const points: number[] = [];
+      for (const point of piece.slice(0, MAX_POINTS / 2))
+        points.push(point.x - origin.x, point.y - origin.y);
+      return { ...shape, id: makeId(), x: origin.x, y: origin.y, points };
+    });
 }

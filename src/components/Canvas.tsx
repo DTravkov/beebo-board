@@ -21,6 +21,7 @@ import {
 import type { Presence } from '../lib/room';
 import {
   eraserHits,
+  splitStroke,
   ERASER_RADIUS,
   type Bounds,
   type Point,
@@ -29,13 +30,15 @@ import {
 export type Tool =
   | 'select'
   | 'pen'
+  | 'highlighter'
   | 'rect'
   | 'ellipse'
   | 'arrow'
   | 'text'
   | 'sticky'
   | 'hand'
-  | 'eraser';
+  | 'eraser'
+  | 'eraser-partial';
 export type View = { x: number; y: number; scale: number };
 export type TextEditor = {
   id?: string;
@@ -58,10 +61,16 @@ type Props = {
   onAdd: (shape: BoardShape) => void;
   onUpdate: (id: string, patch: Partial<BoardShape>) => void;
   onErase: (ids: string[]) => void;
+  onSplice: (changes: { id: string; pieces: BoardShape[] }[]) => void;
   onEditText: (editor: TextEditor) => void;
   onCursor: (x: number, y: number) => void;
   stageRef: React.RefObject<Konva.Stage | null>;
 };
+
+const HIGHLIGHT_OPACITY = 0.35;
+const isBrush = (tool: Tool) => tool === 'pen' || tool === 'highlighter';
+const isEraser = (tool: Tool) => tool === 'eraser' || tool === 'eraser-partial';
+const isLine = (kind: ShapeKind) => kind === 'stroke' || kind === 'highlight';
 
 function ShapeContent({ shape, scale }: { shape: BoardShape; scale: number }) {
   const common = {
@@ -78,6 +87,18 @@ function ShapeContent({ shape, scale }: { shape: BoardShape; scale: number }) {
         lineCap="round"
         lineJoin="round"
         hitStrokeWidth={14 / scale}
+      />
+    );
+  if (shape.kind === 'highlight')
+    return (
+      <Line
+        points={shape.points}
+        stroke={shape.color}
+        strokeWidth={shape.strokeWidth}
+        opacity={HIGHLIGHT_OPACITY}
+        lineCap="round"
+        lineJoin="round"
+        hitStrokeWidth={Math.max(14 / scale, shape.strokeWidth)}
       />
     );
   if (shape.kind === 'arrow')
@@ -172,6 +193,7 @@ export function Canvas(props: Props) {
     buttons: number;
   } | null>(null);
   const [eraserCursor, setEraserCursor] = useState<Point | null>(null);
+  const [brushCursor, setBrushCursor] = useState<Point | null>(null);
   const erasing = useRef<{
     pointerId: number;
     last: Point | null;
@@ -219,6 +241,7 @@ export function Canvas(props: Props) {
     stopPanning();
     stopErasing();
     setEraserCursor(null);
+    setBrushCursor(null);
   }, [props.tool]);
   function pointer(event: ReactPointerEvent<HTMLDivElement>) {
     const rect = event.currentTarget.getBoundingClientRect();
@@ -242,6 +265,19 @@ export function Canvas(props: Props) {
   function eraseBetween(from: Point, to: Point) {
     const gesture = erasing.current;
     if (!gesture) return;
+    const radius = ERASER_RADIUS / props.view.scale;
+    if (props.tool === 'eraser-partial') {
+      const changes: { id: string; pieces: BoardShape[] }[] = [];
+      for (const shape of props.shapes) {
+        if (gesture.removed.has(shape.id)) continue;
+        const pieces = splitStroke(shape, from, to, radius);
+        if (!pieces) continue;
+        gesture.removed.add(shape.id);
+        changes.push({ id: shape.id, pieces });
+      }
+      if (changes.length) props.onSplice(changes);
+      return;
+    }
     const ids: string[] = [];
     for (const shape of props.shapes) {
       if (gesture.removed.has(shape.id)) continue;
@@ -291,7 +327,7 @@ export function Canvas(props: Props) {
       return;
     }
     if (
-      props.tool !== 'eraser' ||
+      !isEraser(props.tool) ||
       panning ||
       event.button !== 0 ||
       !event.isPrimary
@@ -325,7 +361,13 @@ export function Canvas(props: Props) {
       });
       return;
     }
-    if (props.tool !== 'eraser' || panning) return;
+    if (panning) return;
+    if (isBrush(props.tool)) {
+      const { screen, inside } = pointer(event);
+      setBrushCursor(inside ? screen : null);
+      return;
+    }
+    if (!isEraser(props.tool)) return;
     const { screen, board, inside } = pointer(event);
     setEraserCursor(inside ? screen : null);
     const gesture = erasing.current;
@@ -359,7 +401,7 @@ export function Canvas(props: Props) {
     if (panning || event.evt.button > 0) return;
     const p = point();
     if (!p) return;
-    if (props.tool === 'select' || props.tool === 'eraser') {
+    if (props.tool === 'select' || isEraser(props.tool)) {
       if (event.target === event.target.getStage()) props.onSelect(null);
       return;
     }
@@ -368,10 +410,14 @@ export function Canvas(props: Props) {
       return;
     }
     const kind: ShapeKind =
-      props.tool === 'pen' ? 'stroke' : (props.tool as ShapeKind);
+      props.tool === 'pen'
+        ? 'stroke'
+        : props.tool === 'highlighter'
+          ? 'highlight'
+          : (props.tool as ShapeKind);
     const shape = makeShape(kind, p.x, p.y, props.color);
     shape.strokeWidth = props.width;
-    if (kind === 'stroke') shape.points = [0, 0];
+    if (isLine(kind)) shape.points = [0, 0];
     draftRef.current = shape;
     setDraft(shape);
   }
@@ -382,7 +428,7 @@ export function Canvas(props: Props) {
     const shape = draftRef.current;
     if (!shape) return;
     let next = { ...shape, width: p.x - shape.x, height: p.y - shape.y };
-    if (shape.kind === 'stroke') {
+    if (isLine(shape.kind)) {
       const dx = p.x - shape.x;
       const dy = p.y - shape.y;
       const points = shape.points;
@@ -402,9 +448,9 @@ export function Canvas(props: Props) {
     draftRef.current = null;
     setDraft(null);
     if (!shape) return;
-    if (shape.kind === 'stroke' && shape.points.length === 2)
+    if (isLine(shape.kind) && shape.points.length === 2)
       shape = { ...shape, points: [0, 0, 0.1, 0.1] };
-    if (shape.kind !== 'stroke' && Math.hypot(shape.width, shape.height) < 3)
+    if (!isLine(shape.kind) && Math.hypot(shape.width, shape.height) < 3)
       return;
     if (shape.kind === 'rect' || shape.kind === 'ellipse')
       shape = {
@@ -444,7 +490,10 @@ export function Canvas(props: Props) {
       onAuxClick={(event) => {
         if (event.button === 1) event.preventDefault();
       }}
-      onPointerLeave={() => setEraserCursor(null)}
+      onPointerLeave={() => {
+        setEraserCursor(null);
+        setBrushCursor(null);
+      }}
       className={`canvas-host cursor-${panning ? 'hand' : props.tool}${panning ? ' is-panning' : ''}`}
       style={{
         backgroundSize: `${24 * props.view.scale}px ${24 * props.view.scale}px`,
@@ -581,11 +630,26 @@ export function Canvas(props: Props) {
           <Circle x={-100} y={-100} radius={0} />
         </Layer>
       </Stage>
-      {props.tool === 'eraser' && !panning && eraserCursor && (
+      {isEraser(props.tool) && !panning && eraserCursor && (
         <span
-          className="eraser-cursor"
+          className={`eraser-cursor${props.tool === 'eraser-partial' ? ' partial' : ''}`}
           aria-hidden="true"
           style={{ left: eraserCursor.x, top: eraserCursor.y }}
+        />
+      )}
+      {isBrush(props.tool) && !panning && brushCursor && (
+        <span
+          className="brush-cursor"
+          aria-hidden="true"
+          style={{
+            left: brushCursor.x,
+            top: brushCursor.y,
+            width: Math.max(6, props.width * props.view.scale),
+            height: Math.max(6, props.width * props.view.scale),
+            background: props.color,
+            opacity:
+              props.tool === 'highlighter' ? HIGHLIGHT_OPACITY + 0.15 : 1,
+          }}
         />
       )}
     </div>
