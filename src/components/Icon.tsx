@@ -45,6 +45,9 @@ export function Icon({ name, size = 20 }: { name: string; size?: number }) {
         <path d="M14 20h1M18 20h1M22 20h.01" />
       </>
     ),
+    'align-left': <path d="M4 6h16M4 10h10M4 14h16M4 18h10" />,
+    'align-center': <path d="M4 6h16M7 10h10M4 14h16M7 18h10" />,
+    'align-right': <path d="M4 6h16M10 10h10M4 14h16M10 18h10" />,
     undo: (
       <>
         <path d="m9 5-5 5 5 5" />

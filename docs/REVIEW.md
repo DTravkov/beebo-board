@@ -5,7 +5,7 @@ Start with `npm ci`, `npm run check`, and `npm run dev`. Open `http://127.0.0.1:
 ## Local board
 
 - Draw freehand, rectangles in both directions, ellipses, and arrows. Add multiline text and notes. Select/move objects, erase, undo, and redo.
-- Move every element type with Cursor (V), including outlined shapes by their interiors. Hold and drag Object eraser (E, in the Pen flyout) across several objects, including overlapping objects; verify it stops on release and works after zoom/pan.
+- Move every element type with Cursor (V), including outlined shapes by their interiors. Click with Text (T), type, and click away; check the box hugs the text. Change font, size, bold, and alignment from the toolbar; resize with corner handles (scales text) and side handles (rewraps text); double-click to edit again. Hold and drag Object eraser (E, in the Pen flyout) across several objects, including overlapping objects; verify it stops on release and works after zoom/pan.
 - Pan with the Hand tool or middle-mouse drag; verify middle dragging over an object pans without moving or erasing it. Space is no longer a pan shortcut. Zoom with the wheel and controls; fit the board. Repeat Hand-tool panning with touch/pen input on a target device.
 - Open Objects and perform tasks without canvas dragging: add a note, edit text/coordinates/color/size, delete, and undo. Check keyboard shortcuts, focus visibility, modal Escape behavior, and focus return.
 - Export JSON, open it again, and compare title, text, positions, colors, and order. Import malformed/oversized files and confirm the existing board survives.

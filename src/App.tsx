@@ -8,6 +8,8 @@ import {
 } from './components/Canvas';
 import { Dialog } from './components/Dialog';
 import { Icon } from './components/Icon';
+import { ObjectToolbar } from './components/ObjectToolbar';
+import { restyle } from './lib/text';
 import {
   BrushStyles,
   EraserThickness,
@@ -564,7 +566,14 @@ export default function App() {
           onUpdate={update}
           onErase={erase}
           onSplice={splice}
-          onEditText={setEditor}
+          onToolDone={() => setTool('select')}
+          renderToolbar={(shape) => (
+            <ObjectToolbar
+              shape={shape}
+              onUpdate={(patch) => update(shape.id, restyle(shape, patch))}
+              onDelete={() => remove(shape.id)}
+            />
+          )}
           onCursor={(x, y) => session.current?.cursor(x, y, lowBandwidth)}
         />
         <div className="board-heading">
@@ -704,7 +713,7 @@ export default function App() {
             )}
           </div>
         )}
-        {['rect', 'ellipse', 'arrow', 'text', 'sticky'].includes(tool) && (
+        {['rect', 'ellipse', 'arrow', 'text'].includes(tool) && (
           <div className="style-bar" aria-label="Drawing style">
             {COLORS.map((value) => (
               <button

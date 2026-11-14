@@ -15,7 +15,27 @@ export type BoardShape = {
   fill: string;
   strokeWidth: number;
   text: string;
+  /** Optional text styling for text and sticky notes. */
+  fontFamily?: FontFamily;
+  fontSize?: number;
+  bold?: boolean;
+  align?: TextAlign;
 };
+export type FontFamily = 'sans' | 'serif' | 'mono' | 'hand';
+export type TextAlign = 'left' | 'center' | 'right';
+export const MIN_FONT_SIZE = 8;
+export const MAX_FONT_SIZE = 200;
+// System fonts only: the project avoids loading remote assets.
+export const FONTS: Record<FontFamily, { label: string; css: string }> = {
+  sans: { label: 'Sans', css: "'Segoe UI', system-ui, sans-serif" },
+  serif: { label: 'Serif', css: 'Georgia, serif' },
+  mono: { label: 'Mono', css: "Consolas, 'Courier New', monospace" },
+  hand: {
+    label: 'Hand',
+    css: "'Segoe Print', 'Comic Sans MS', 'Chalkboard SE', cursive",
+  },
+};
+const optionalKeys = new Set(['fontFamily', 'fontSize', 'bold', 'align']);
 export type BoardFile = {
   format: 'beebo-board';
   version: 1;
@@ -55,8 +75,22 @@ export function isShape(value: unknown): value is BoardShape {
   if (!value || typeof value !== 'object') return false;
   const s = value as Record<string, unknown>;
   return (
-    Object.keys(s).length === shapeKeys.size &&
-    Object.keys(s).every((key) => shapeKeys.has(key)) &&
+    [...shapeKeys].every((key) => key in s) &&
+    Object.keys(s).every(
+      (key) => shapeKeys.has(key) || optionalKeys.has(key),
+    ) &&
+    (s.fontFamily === undefined ||
+      (typeof s.fontFamily === 'string' &&
+        Object.hasOwn(FONTS, s.fontFamily))) &&
+    (s.fontSize === undefined ||
+      (typeof s.fontSize === 'number' &&
+        s.fontSize >= MIN_FONT_SIZE &&
+        s.fontSize <= MAX_FONT_SIZE)) &&
+    (s.bold === undefined || typeof s.bold === 'boolean') &&
+    (s.align === undefined ||
+      s.align === 'left' ||
+      s.align === 'center' ||
+      s.align === 'right') &&
     typeof s.id === 'string' &&
     /^[a-zA-Z0-9_-]{1,80}$/.test(s.id) &&
     typeof s.kind === 'string' &&
