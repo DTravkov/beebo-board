@@ -2,7 +2,7 @@ export const MAX_OBJECTS = 1000;
 export const MAX_POINTS = 8000;
 export const MAX_DOCUMENT_BYTES = 2_000_000;
 export type ShapeKind =
-  'stroke' | 'rect' | 'ellipse' | 'arrow' | 'text' | 'sticky';
+  'stroke' | 'highlight' | 'rect' | 'ellipse' | 'arrow' | 'text' | 'sticky';
 export type BoardShape = {
   id: string;
   kind: ShapeKind;
@@ -22,7 +22,15 @@ export type BoardFile = {
   title: string;
   shapes: BoardShape[];
 };
-const kinds = new Set(['stroke', 'rect', 'ellipse', 'arrow', 'text', 'sticky']);
+const kinds = new Set([
+  'stroke',
+  'highlight',
+  'rect',
+  'ellipse',
+  'arrow',
+  'text',
+  'sticky',
+]);
 const shapeKeys = new Set([
   'id',
   'kind',

@@ -78,6 +78,33 @@ export class BoardDocument {
         if (removed.has(this.order.get(i))) this.order.delete(i, 1);
     }, this.localOrigin);
   }
+  /** Swaps each erased line for its surviving pieces, keeping stacking order. */
+  splice(changes: { id: string; pieces: BoardShape[] }[]) {
+    if (!changes.length) return;
+    const pieces = changes.flatMap((change) => change.pieces);
+    if (!pieces.every(isShape)) throw new Error('Invalid board object.');
+    if (this.objects.size - changes.length + pieces.length > MAX_OBJECTS)
+      throw new Error('This board has reached its 1,000 object limit.');
+    // No stopCapturing: one eraser drag merges into a single undo step.
+    this.doc.transact(() => {
+      for (const { id, pieces } of changes) {
+        this.objects.delete(id);
+        for (const piece of pieces) {
+          const map = new Y.Map<unknown>();
+          for (const [key, value] of Object.entries(piece)) map.set(key, value);
+          this.objects.set(piece.id, map);
+        }
+        const ids = pieces.map((piece) => piece.id);
+        const index = this.order.toArray().indexOf(id);
+        if (index < 0) {
+          if (ids.length) this.order.push(ids);
+          continue;
+        }
+        this.order.delete(index, 1);
+        if (ids.length) this.order.insert(index, ids);
+      }
+    }, this.localOrigin);
+  }
   replace(board: BoardFile) {
     this.undo.stopCapturing();
     this.doc.transact(() => {

@@ -7,6 +7,13 @@ export function Icon({ name, size = 20 }: { name: string; size?: number }) {
         <path d="m14 7 3 3M4 20l1-4" />
       </>
     ),
+    highlighter: (
+      <>
+        <path d="m9 15-3 3h5l1-1" />
+        <path d="m9 15 8-8a2.1 2.1 0 0 1 3 3l-8 8Z" />
+        <path d="M3 21h18" />
+      </>
+    ),
     rect: <rect x="4" y="4" width="16" height="16" rx="2" />,
     ellipse: <circle cx="12" cy="12" r="8" />,
     arrow: <path d="M4 19 19 4M8 4h11v11" />,
@@ -30,6 +37,12 @@ export function Icon({ name, size = 20 }: { name: string; size?: number }) {
       <>
         <path d="m4 13 9-9a2 2 0 0 1 3 0l5 5a2 2 0 0 1 0 3l-8 8H9l-5-4a2 2 0 0 1 0-3Z" />
         <path d="m8 9 8 8M13 20h8" />
+      </>
+    ),
+    'eraser-partial': (
+      <>
+        <path d="m4 13 9-9a2 2 0 0 1 3 0l5 5a2 2 0 0 1 0 3l-8 8H9l-5-4a2 2 0 0 1 0-3Z" />
+        <path d="M14 20h1M18 20h1M22 20h.01" />
       </>
     ),
     undo: (

@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { eraserHits, shapeBounds } from '../src/lib/eraser';
+import { eraserHits, shapeBounds, splitStroke } from '../src/lib/eraser';
 import { makeShape } from '../src/shared/board';
 
 test('a fast eraser sweep hits thin strokes and arrowheads between pointer samples', () => {
@@ -82,4 +82,36 @@ test('collision radius follows zoom, and text uses its rendered multiline bounds
     width: 150,
     height: 120,
   });
+});
+
+test('partial eraser cuts a line into the pieces outside the eraser path', () => {
+  const line = makeShape('stroke', 0, 0);
+  line.points = [0, 0, 200, 0];
+  let next = 0;
+  const pieces = splitStroke(
+    line,
+    { x: 100, y: -20 },
+    { x: 100, y: 20 },
+    10,
+    () => `piece-${next++}`,
+  );
+  assert.ok(pieces);
+  assert.equal(pieces.length, 2);
+  const [left, right] = pieces;
+  assert.equal(left.x, 0);
+  assert.ok(left.points.at(-2)! < 100 - 10);
+  assert.ok(right.x > 100 + 10);
+  assert.equal(right.x + right.points.at(-2)!, 200);
+  assert.equal(
+    splitStroke(line, { x: 100, y: 80 }, { x: 100, y: 90 }, 10),
+    null,
+  );
+  assert.deepEqual(
+    splitStroke(line, { x: -10, y: 0 }, { x: 210, y: 0 }, 10),
+    [],
+  );
+  const rect = makeShape('rect', 0, 0);
+  rect.width = 50;
+  rect.height = 50;
+  assert.equal(splitStroke(rect, { x: 0, y: 25 }, { x: 0, y: 25 }, 10), null);
 });
