@@ -16,6 +16,8 @@ Beebo aims to minimize information collection. This document describes the repos
 
 No analytics, advertising identifiers, third-party fonts, remote asset requests, mandatory email address, camera, microphone, or geolocation are used. Low-bandwidth settings and display names are not persisted. The app starts without restoring stored personal content; restoration is explicit.
 
+The header's Save board locally checkbox enables automatic saving for personal boards and remains disabled in shared rooms. Save board writes an explicit local snapshot, including a shared board only when the user deliberately clicks it. Export board downloads a portable plaintext file. These actions do not upload the board to a server.
+
 ## Connection policy
 
 Default relay-only WebRTC prevents other participants from learning endpoint IP addresses through direct peer connectivity. It does not hide endpoint IP addresses from the relay or application infrastructure. Direct connections are an explicit option and can reveal endpoint addresses to participants. The room creator selects the policy; invitees are told this before joining.

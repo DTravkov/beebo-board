@@ -34,6 +34,180 @@ async function addNote(page: Page, text: string) {
 }
 
 test(
+  'header controls save/export, Share requires X, brush sizes persist, and strokes have generous zoom-safe hit areas',
+  { timeout: 90_000 },
+  async () => {
+    const editorOrigin = `http://127.0.0.1:${port + 3}`;
+    const app = createApp({ origins: [editorOrigin] });
+    await app.listen({ port: port + 3, host: '127.0.0.1' });
+    const browser = await chromium.launch({
+      ...browserOptions,
+      headless: true,
+    });
+    try {
+      const page = await browser.newPage({
+        viewport: { width: 1440, height: 960 },
+      });
+      const errors: string[] = [];
+      page.on('pageerror', (error) => errors.push(error.message));
+      await page.goto(editorOrigin);
+      await waitForTitle(page, 'Board 1');
+      const header = page.locator('header');
+      assert.equal(
+        await header
+          .getByRole('checkbox', { name: 'Save board locally' })
+          .isChecked(),
+        false,
+      );
+      await header
+        .getByRole('button', { name: 'Share board', exact: true })
+        .click();
+      const share = page.getByRole('dialog', {
+        name: 'Good ideas are better together',
+      });
+      assert.equal(
+        await share.getByLabel('What should we call you?').inputValue(),
+        'User',
+      );
+      await share.getByLabel('What should we call you?').fill('A learner');
+      await page.mouse.click(3, 3);
+      assert.equal(await share.isVisible(), true);
+      await page.keyboard.press('Escape');
+      assert.equal(await share.isVisible(), true);
+      assert.equal(
+        await share.getByLabel('What should we call you?').inputValue(),
+        'A learner',
+      );
+      await share.getByRole('button', { name: 'Close dialog' }).click();
+      await page
+        .getByLabel('Board title', { exact: true })
+        .fill('Manual snapshot');
+      await header
+        .getByRole('button', { name: 'Save board', exact: true })
+        .click();
+      await page
+        .getByText(
+          'Board saved on this device. Restore it from My workspace.',
+          { exact: true },
+        )
+        .waitFor();
+      await page.reload();
+      await waitForTitle(page, 'Board 1');
+      assert.equal(
+        await header
+          .getByRole('checkbox', { name: 'Save board locally' })
+          .isChecked(),
+        false,
+      );
+      await page
+        .getByRole('button', { name: 'Board files', exact: true })
+        .click();
+      await page
+        .getByRole('button', { name: 'Restore saved board', exact: true })
+        .click();
+      await waitForTitle(page, 'Manual snapshot');
+      await page
+        .getByRole('button', { name: 'Board files', exact: true })
+        .click();
+      await page
+        .getByRole('button', { name: 'New blank board', exact: false })
+        .click();
+      await waitForTitle(page, 'Board 1');
+      const box = await page.locator('.canvas-host').boundingBox();
+      assert.ok(box);
+      async function draw(y: number) {
+        await page.mouse.move(box!.x + 400, box!.y + y);
+        await page.mouse.down();
+        await page.mouse.move(box!.x + 650, box!.y + y, { steps: 8 });
+        await page.mouse.up();
+      }
+      async function exported() {
+        const downloaded = page.waitForEvent('download');
+        await header
+          .getByRole('button', { name: 'Export board', exact: true })
+          .click();
+        const file = await (await downloaded).path();
+        assert.ok(file);
+        return JSON.parse(await readFile(file, 'utf8')) as BoardFile;
+      }
+      await page.getByRole('button', { name: 'Pen (P)', exact: true }).click();
+      const penSize = page.getByRole('slider', {
+        name: 'Pen size',
+        exact: true,
+      });
+      await penSize.focus();
+      await penSize.press('Home');
+      for (let i = 0; i < 7; i++) await penSize.press('ArrowRight');
+      assert.equal(await penSize.inputValue(), '8');
+      await draw(220);
+      await page
+        .getByRole('button', { name: 'Highlighter (L)', exact: true })
+        .click();
+      const highlightSize = page.getByRole('slider', {
+        name: 'Highlighter size',
+        exact: true,
+      });
+      await highlightSize.focus();
+      await highlightSize.press('End');
+      await draw(360);
+      await page
+        .getByRole('button', { name: 'Pen brush (P)', exact: true })
+        .click();
+      assert.equal(await penSize.inputValue(), '8');
+      const before = await exported();
+      assert.equal(
+        before.shapes.find((shape) => shape.kind === 'stroke')?.strokeWidth,
+        8,
+      );
+      assert.equal(
+        before.shapes.find((shape) => shape.kind === 'highlight')?.strokeWidth,
+        24,
+      );
+      await page
+        .getByRole('button', { name: 'Cursor (V)', exact: true })
+        .click();
+      // Press 12px away from the visible line, outside the old 7px target radius.
+      await page.mouse.move(box.x + 500, box.y + 232);
+      await page.mouse.down();
+      await page.mouse.move(box.x + 540, box.y + 257, { steps: 5 });
+      await page.mouse.up();
+      let stroke = (await exported()).shapes.find(
+        (shape) => shape.kind === 'stroke',
+      )!;
+      assert.equal(stroke.x, 440);
+      assert.equal(stroke.y, 245);
+      for (let i = 0; i < 10; i++)
+        await page
+          .getByRole('button', { name: 'Zoom in', exact: true })
+          .click();
+      const atZoom = (x: number, y: number) => ({
+        x: box.x - box.width / 2 + x * 2,
+        y: box.y - box.height / 2 + y * 2,
+      });
+      const start = atZoom(550, 245);
+      start.y += 12;
+      await page.mouse.move(start.x, start.y);
+      await page.mouse.down();
+      await page.mouse.move(start.x + 40, start.y + 30, { steps: 5 });
+      await page.mouse.up();
+      stroke = (await exported()).shapes.find(
+        (shape) => shape.kind === 'stroke',
+      )!;
+      assert.equal(stroke.x, 460);
+      assert.equal(stroke.y, 260);
+      await page.screenshot({
+        path: 'test-results/editor-controls.png',
+        fullPage: true,
+      });
+      assert.deepEqual(errors, []);
+    } finally {
+      await browser.close();
+      await app.close();
+    }
+  },
+);
+
+test(
   'production client: editing, files, privacy defaults, two-browser sync, and mobile layout',
   { timeout: 120_000 },
   async () => {
@@ -66,7 +240,7 @@ test(
         });
       }
       await a.goto(origin);
-      await waitForTitle(a, 'Our little idea space');
+      await waitForTitle(a, 'Board 1');
       await mkdir('test-results', { recursive: true });
       await a.screenshot({ path: 'test-results/desktop.png', fullPage: true });
       await a.getByRole('button', { name: 'Share board', exact: true }).click();
@@ -85,14 +259,12 @@ test(
       await a
         .getByLabel('Board title', { exact: true })
         .fill('My saved learning board');
-      await a.getByRole('button', { name: 'Board files', exact: true }).click();
       await a
-        .getByLabel('Save personal board on this device', { exact: false })
+        .getByRole('checkbox', { name: 'Save board locally', exact: true })
         .check();
-      await a.getByRole('button', { name: 'Close dialog' }).click();
       await a.getByText('Saved on this device', { exact: true }).waitFor();
       await a.reload();
-      await waitForTitle(a, 'Our little idea space');
+      await waitForTitle(a, 'Board 1');
       await a.getByRole('button', { name: 'Board files', exact: true }).click();
       await a
         .getByRole('button', { name: 'Restore saved board', exact: true })
@@ -139,13 +311,13 @@ test(
         'true',
       );
       await a.getByRole('button', { name: 'Cursor (V)', exact: true }).click();
-      await a.getByRole('button', { name: 'Board files', exact: true }).click();
       const downloadEvent = a.waitForEvent('download');
-      await a.getByRole('button', { name: /Export board Editable/ }).click();
+      await a
+        .getByRole('button', { name: 'Export board', exact: true })
+        .click();
       assert.ok(
         (await downloadEvent).suggestedFilename().endsWith('.beebo.json'),
       );
-      await a.getByRole('button', { name: 'Close dialog' }).click();
       await a.getByRole('button', { name: 'Share board', exact: true }).click();
       await a.getByRole('radio', { name: /Allow direct connections/ }).check();
       await a.getByRole('button', { name: 'Create private room' }).click();
@@ -287,17 +459,13 @@ test(
       );
       const boards = [];
       for (const page of pages) {
-        await page
-          .getByRole('button', { name: 'Board files', exact: true })
-          .click();
         const downloaded = page.waitForEvent('download');
         await page
-          .getByRole('button', { name: /Export board Editable/ })
+          .getByRole('button', { name: 'Export board', exact: true })
           .click();
         const file = await (await downloaded).path();
         assert.ok(file);
         boards.push(JSON.parse(await readFile(file, 'utf8')));
-        await page.getByRole('button', { name: 'Close dialog' }).click();
       }
       for (const board of boards) assert.deepEqual(board, boards[0]);
       assert.deepEqual(errors, []);
@@ -368,17 +536,13 @@ test(
         await waitForTitle(page, title);
       }
       async function exported() {
-        await page
-          .getByRole('button', { name: 'Board files', exact: true })
-          .click();
         const downloaded = page.waitForEvent('download');
         await page
-          .getByRole('button', { name: /Export board Editable/ })
+          .getByRole('button', { name: 'Export board', exact: true })
           .click();
         const path = await (await downloaded).path();
         assert.ok(path);
         const board = JSON.parse(await readFile(path, 'utf8')) as BoardFile;
-        await page.getByRole('button', { name: 'Close dialog' }).click();
         return board;
       }
       await load(shapes);

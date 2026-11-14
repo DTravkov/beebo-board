@@ -5,10 +5,13 @@ export function Dialog({
   title,
   onClose,
   children,
+  dismissible = true,
 }: {
   title: string;
   onClose: () => void;
   children: ReactNode;
+  /** False keeps the dialog open until its explicit close button is used. */
+  dismissible?: boolean;
 }) {
   const ref = useRef<HTMLDialogElement>(null);
   useEffect(() => {
@@ -26,10 +29,10 @@ export function Dialog({
       aria-label={title}
       onCancel={(event) => {
         event.preventDefault();
-        onClose();
+        if (dismissible) onClose();
       }}
       onClick={(event) => {
-        if (event.target === event.currentTarget) onClose();
+        if (dismissible && event.target === event.currentTarget) onClose();
       }}
     >
       <div className="dialog-heading">

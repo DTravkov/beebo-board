@@ -3,9 +3,10 @@ dist/
 dist-server/
 coverage/
 test-results/
-.env
-.env.*
+.env*
 !.env.example
 *.log
 .DS_Store
 .sites-local/
+.deploy/
+.docker-local/

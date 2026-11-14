@@ -3,6 +3,37 @@ import { Icon } from './Icon';
 
 export type BrushStyle = { color: string; width: number };
 
+/** Direct size control for the active brush; preset colors stay unchanged. */
+export function BrushSize({
+  label,
+  size,
+  min = 1,
+  max = 24,
+  onChange,
+}: {
+  label: string;
+  size: number;
+  min?: number;
+  max?: number;
+  onChange: (size: number) => void;
+}) {
+  return (
+    <label className="brush-size-control">
+      <span>{label}</span>
+      <output>{size}px</output>
+      <input
+        type="range"
+        aria-label={label}
+        min={min}
+        max={max}
+        step={1}
+        value={size}
+        onChange={(event) => onChange(Number(event.target.value))}
+      />
+    </label>
+  );
+}
+
 export const MAX_STYLES = 5;
 export const MAX_COLORS = 15;
 export const BASE_COLORS = [

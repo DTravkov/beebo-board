@@ -4,6 +4,22 @@ import * as Y from 'yjs';
 import { BoardDocument } from '../src/lib/document';
 import { makeShape, parseBoard, sampleShapes } from '../src/shared/board';
 
+test('new documents default to Board 1 without changing imported titles', () => {
+  const board = new BoardDocument();
+  try {
+    assert.equal(board.title, 'Board 1');
+    board.replace({
+      format: 'beebo-board',
+      version: 1,
+      title: 'My lesson',
+      shapes: [],
+    });
+    assert.equal(board.title, 'My lesson');
+  } finally {
+    board.destroy();
+  }
+});
+
 test('portable board format round-trips and rejects malicious or oversized values', () => {
   const board = {
     format: 'beebo-board',

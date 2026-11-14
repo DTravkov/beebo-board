@@ -71,12 +71,13 @@ button svg {
 .app-shell {
   display: grid;
   grid-template-columns: 52px minmax(0, 1fr);
-  grid-template-rows: 56px minmax(0, 1fr);
+  grid-template-rows: auto minmax(0, 1fr);
   height: 100dvh;
   min-height: 420px;
   overflow: hidden;
 }
 .header {
+  min-height: 56px;
   grid-column: 1 / -1;
   display: flex;
   align-items: center;
@@ -151,8 +152,60 @@ button svg {
 .header-actions {
   display: flex;
   align-items: center;
-  gap: 19px;
+  gap: 10px;
+  margin-left: 0;
+}
+.header-file-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   margin-left: auto;
+  flex-shrink: 0;
+}
+.header-local-save {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: #607254;
+  white-space: nowrap;
+}
+.header-local-save input {
+  accent-color: #789a50;
+}
+.header-file-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 34px;
+  padding: 6px 9px;
+  border: 1px solid #e0e7d8;
+  border-radius: 7px;
+  font-size: 11px;
+  white-space: nowrap;
+}
+.header-file-button:hover:not(:disabled) {
+  background: #f1f6e9;
+}
+.brush-size-control {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 6px;
+  width: 128px;
+  padding: 3px 6px;
+  color: #607254;
+  font-size: 11px;
+}
+.brush-size-control input {
+  grid-column: 1 / -1;
+  width: 100%;
+  accent-color: #789a50;
+}
+.brush-size-control output {
+  font-size: 10px;
+  color: #7b8b70;
 }
 .history-buttons {
   display: flex;
@@ -698,7 +751,7 @@ button svg {
   color: #a4ad9f;
 }
 .board-title-row input {
-  width: 260px;
+  width: 170px;
   max-width: calc(100vw - 160px);
   border: 1px solid transparent;
   padding: 4px 0;
@@ -1395,13 +1448,24 @@ kbd {
 }
 @media (max-width: 1100px) {
   .header {
-    gap: 20px;
+    gap: 12px;
+    flex-wrap: wrap;
+    padding-top: 6px;
+    padding-bottom: 6px;
+  }
+  .header-file-actions {
+    order: 2;
+    flex-basis: 100%;
+    justify-content: flex-end;
+  }
+  .header-actions {
+    margin-left: auto;
   }
 }
 @media (max-width: 750px) {
   .app-shell {
     grid-template-columns: 48px minmax(0, 1fr);
-    grid-template-rows: 52px minmax(0, 1fr);
+    grid-template-rows: auto minmax(0, 1fr);
   }
   .header {
     padding: 0 14px;
@@ -1430,6 +1494,18 @@ kbd {
   }
   .header-actions {
     gap: 10px;
+  }
+  .header-file-actions {
+    justify-content: space-between;
+    gap: 5px;
+  }
+  .header-file-button {
+    font-size: 10px;
+    padding: 5px 7px;
+  }
+  .header-local-save {
+    font-size: 10px;
+    gap: 3px;
   }
   .history-buttons {
     display: none;

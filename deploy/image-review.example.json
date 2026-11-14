@@ -1,0 +1,10 @@
+{
+  "reviewedBy": "",
+  "reviewedAt": "",
+  "images": {
+    "NODE_BUILD_IMAGE": { "reference": "", "licenses": [], "evidence": "" },
+    "NODE_RUNTIME_IMAGE": { "reference": "", "licenses": [], "evidence": "" },
+    "CADDY_IMAGE": { "reference": "", "licenses": [], "evidence": "" },
+    "COTURN_IMAGE": { "reference": "", "licenses": [], "evidence": "" }
+  }
+}
