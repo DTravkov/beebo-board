@@ -1,77 +1,62 @@
-# Local operation and self-hosting
+# Deployment
 
-## Docker Compose
+The root `docker-compose.yml` has two profiles. Both use the same `.env`; there is no setup generator or image-approval file. Use Docker with Linux containers and Compose **2.23.1+**, which supports the inline Caddy and coturn configurations.
 
-The root `docker-compose.yml` defines the app, Caddy HTTPS proxy, and coturn relay. Follow [deploy/README.md](../deploy/README.md) for required DNS, protected secrets, explicit reviewed image digests, image contracts, firewall ports, and startup commands. Stock images are not automatically cleared under the project's no-copyleft policy.
-
-The provided stack uses application HTTPS and TURN/UDP + TURN/TCP on 3478. TURN/TLS is a documented extension requiring a separate working certificate/renewal setup; it is not silently advertised. Validate configuration with `node scripts/check-compose.mjs`; this renders only synthetic inputs and does not pull images or test a live relay.
-
-## Local review
+## Local development
 
 ```sh
-npm ci
-npm run dev
+docker compose --profile dev up
 ```
 
-Open `http://127.0.0.1:5173`. Vite proxies `/api` and `/signal` to `127.0.0.1:3001`. Keep the signaling port at 3001 for this development proxy, or change the proxy deliberately. The combined development script loads `.env` for the signaling process.
+Open **http://localhost:5173**. The `dev` service installs the locked dependencies, starts Vite and the signaling server with file watching, and mounts the source for editing. A separate Docker volume holds Linux `node_modules`; it does not overwrite host dependencies. Stop with Ctrl+C or `docker compose --profile dev down`.
 
-For a local direct-mode evaluation, put `DIRECT_CONNECTIONS_ENABLED=true` in `.env`, restart, and select **Allow direct connections** in Share board. Use independent browser profiles/contexts for realistic peer tests. Direct mode is an explicit evaluation option; the default remains relay-only.
+This profile binds ports 5173 and 3001 to localhost and enables the direct-connection option. Choose **Allow direct connections** in Share board to test a room between tabs or browsers on this machine. TURN-only remains the default room policy; there is no silent fallback. Direct connections can reveal peers' IP addresses.
 
-## Production process
+## Public hosting
 
-Build with development dependencies available:
+One Linux host with a public IPv4 address runs three services:
 
-```sh
-npm ci
-npm run check
-npm start
-```
+| Service | Purpose                                | Public ports                    |
+| ------- | -------------------------------------- | ------------------------------- |
+| `app`   | Built client, API, WebSocket signaling | None; Caddy connects internally |
+| `https` | Caddy HTTPS and certificate renewal    | TCP 80, 443                     |
+| `turn`  | Authenticated coturn relay             | TCP/UDP 3478, UDP 49160-49260   |
 
-The build produces `dist/` for the static client and `dist-server/` for the Node server. `npm start` runs compiled JavaScript and loads `.env`. A runtime-only installation may use `npm ci --omit=dev --ignore-scripts` after the build. Keep `dist`, `dist-server`, package metadata/lockfile, required notices, and runtime dependencies together. Never include `.env` in a release artifact.
+1. Point `board.your-domain.org` and `relay.your-domain.org` DNS A records to the host. The relay record must resolve directly to it, without an HTTP proxy. Open the listed firewall ports; if behind NAT, forward them without changing relay ports.
+2. Copy `.env.example` to `.env` and set these four values:
 
-Example configuration:
+   ```dotenv
+   APP_DOMAIN=board.your-domain.org
+   TURN_DOMAIN=relay.your-domain.org
+   TURN_PUBLIC_IP=your-public-ipv4
+   TURN_SECRET=your-random-secret
+   ```
 
-```dotenv
-HOST=127.0.0.1
-PORT=3001
-PUBLIC_ORIGIN=https://board.example.org
-TURN_URLS=turn:relay.example.org:3478?transport=udp,turns:relay.example.org:5349?transport=tcp
-TURN_SECRET=replace-with-a-long-random-operator-secret
-DIRECT_CONNECTIONS_ENABLED=false
-```
+   Generate the secret with `node -p "require('crypto').randomBytes(32).toString('hex')"`. Keep `.env` private and uncommitted. Production Compose sets origins and TURN URLs from these values and keeps direct connections disabled; the local npm settings in `.env` do not override that policy.
 
-Set `PUBLIC_ORIGIN` to the exact origin, with no trailing slash. Comma-separated values support deliberate multiple-origin deployments. The server binds loopback by default. Terminate HTTPS at your chosen reverse proxy, forward WebSocket upgrades on `/signal`, and forward ordinary requests to Node. The static client and API are intended to share one public origin. Audit the proxy, operating-system packages, Node distribution, and runtime image independently under the license policy.
+3. Start the stack:
 
-The app does not trust forwarded IP headers. Behind a proxy, its per-IP quota may group all clients under the proxy's address. Configure rate limits at the edge and review a restricted trusted-proxy design before increasing capacity; do not enable blanket proxy trust.
+   ```sh
+   docker compose --profile production up -d --build
+   docker compose --profile production ps
+   ```
 
-## TURN service
+4. Open `https://board.your-domain.org`. Caddy obtains certificates automatically when DNS and ports are reachable. Create a room and share the complete invitation, including its fragment. Independent groups use separate rooms on the same deployment, with up to eight participants per room.
 
-coturn is an external service; this repository does not install it or ship a container image. Audit the exact relay binary and its dependencies before deployment. Its upstream project uses BSD-3-Clause.
+The Compose file passes the same TURN secret to Node and coturn. Node issues temporary credentials after room admission; browsers never receive the long-term secret. Missing relay settings stop coturn at startup. Docker administrators can inspect container configuration and secrets; avoid sharing expanded `docker compose config` output.
 
-Configure coturn's shared-secret authentication with the same value as `TURN_SECRET`. Relevant settings include:
+Caddy certificate state survives container restarts in named volumes. Restarting Node loses in-memory rooms and invalidates their admission; participants need a new invitation. Rebuild after pulling changes with the same `up -d --build` command. Stop with `docker compose --profile production down`.
 
-```ini
-fingerprint
-use-auth-secret
-static-auth-secret=replace-with-the-same-operator-secret
-realm=relay.example.org
-listening-port=3478
-tls-listening-port=5349
-min-port=49160
-max-port=49260
-no-multicast-peers
-# cert=/operator/path/to/fullchain.pem
-# pkey=/operator/path/to/privkey.pem
-```
+## Test across machines
 
-This is a settings outline, not a complete secure coturn configuration. Supply valid TLS certificates, advertised/public IP configuration as needed, a relay port range in your firewall, per-user/global quotas, bandwidth limits, and peer-address restrictions for your network. Block relay access to internal/management networks where appropriate. Do not expose an unauthenticated relay. Test TURN/TLS on a port reachable from the intended learning environments; a separate relay endpoint on 443 can help restrictive networks, but is not guaranteed to bypass their policy.
+Use two machines on different networks, such as home Wi-Fi and a mobile hotspot. Open the HTTPS URL on both, create a default relay room, and join using its invitation. Verify that strokes, notes, movement, cursors, and exports agree. Create another room and confirm its objects remain separate.
 
-The server issues one-hour HMAC-SHA1 TURN REST credentials after admission. The HMAC authenticates TURN credentials; board payload encryption uses AES-256-GCM. No long-term TURN secret goes to the browser. Credential refresh is not automatic yet.
+Inspect the connection in Chromium's `chrome://webrtc-internals` or Firefox's `about:webrtc`: the selected candidate pair must use relay candidates in default mode. Confirm there are no WebSocket, certificate, or ICE errors. This live test establishes TURN operation; local direct-mode tests do not.
 
-Primary references: [coturn deployment documentation](https://github.com/coturn/coturn), [TURN REST authentication](https://github.com/coturn/coturn/blob/master/README.turnserver).
+The supplied relay offers TURN over UDP and TCP on 3478, with UDP relay allocations. It does **not** configure TURN/TLS on 5349 or 443. Networks blocking these transports need an additional TLS relay configuration and certificates. Browser-to-browser data remains encrypted, but arbitrary restrictive networks are not guaranteed to work.
 
-## Acceptance before public hosting
+## Without Docker
 
-Run the live-relay checklist in [REVIEW.md](REVIEW.md). Measure relay traffic/cost at eight participants, test the target networks, and verify relay candidates in default mode. Configure monitoring without board contents/tokens, deliberate log retention, dependency updates, backups for operator configuration, and process supervision.
+Run `npm ci`, `npm run build`, and `npm start`. Set `HOST`, `PORT`, and the exact `PUBLIC_ORIGIN` in `.env`; forward HTTPS and WebSocket upgrades to Node with your reverse proxy. Configure an external coturn with matching `TURN_SECRET` and `TURN_URLS`, or use `TURN_SECRET_FILE` instead of `TURN_SECRET`. This requires managing the proxy, certificates, relay configuration, and process supervision yourself.
 
-Before offering a classroom service, resolve the documented gaps around private security/conduct contacts, enforceable teacher permissions, participant removal/key rotation, applicable privacy obligations, and accessibility assessment. Hosting configuration alone does not confer DPG recognition.
+See [SECURITY.md](../SECURITY.md) for retention, permissions, and hosting limits. Standard infrastructure images are allowed under their own licenses; Beebo's application dependency policy is in [CONTRIBUTING.md](../CONTRIBUTING.md).

@@ -1,104 +1,64 @@
-# Architecture and protocol, version 1
+# Architecture
 
-## Decisions
+Beebo targets groups of up to eight participants. React renders the UI, Konva draws the canvas, Yjs holds shared content, and native WebRTC data channels synchronize peers. Fastify and `ws` handle admission and signaling. coturn relays traffic by default.
 
-The first release targets trusted groups of up to eight people. React renders application controls; Konva renders the canvas. Yjs stores board content in the browser. Native WebRTC data channels carry browser-encrypted payloads. Fastify and `ws` provide room admission and signaling. coturn is an external operator-managed relay.
-
-The default policy is `iceTransportPolicy: 'relay'`. Room creation fails if TURN is not configured. Direct mode requires `DIRECT_CONNECTIONS_ENABLED=true` and an explicit selection by the creator. A room's policy is immutable; the server returns it to each admitted member. Joining users are told that the creator chooses the connection policy. No public STUN servers or public signaling services are built in.
-
-## Source layout
-
-```text
-src/App.tsx                 Workspace and local product flows
-src/components/Canvas.tsx   Konva interaction and rendering
-src/components/Dialog.tsx   Native modal focus containment
-src/shared/board.ts         Portable schema, validation, and limits
-src/lib/document.ts         Yjs document and local undo
-src/lib/crypto.ts           Invitation key derivation and payload encryption
-src/lib/room.ts             Signaling client, peer mesh, and wire protocol
-src/lib/storage.ts          Explicit personal-board IndexedDB saving
-server/app.ts               Admission, quotas, membership, and static serving
-server/index.ts             Environment configuration and lifecycle
-scripts/                    Development, packaging, and license checks
-tests/                      Behavioral unit, signaling, and browser tests
+```mermaid
+flowchart LR
+  A[Browser A] <-->|HTTPS / WSS| S[Node signaling]
+  B[Browser B] <-->|HTTPS / WSS| S
+  A <-->|Encrypted WebRTC| T[coturn]
+  T <-->|Encrypted WebRTC| B
 ```
 
-## Shared state
+The production Compose profile places Caddy in front of Node for HTTPS. Node and coturn never hold the invitation encryption key or a plaintext board. Explicit direct mode connects browsers without requiring a relay; no public STUN service is built in.
 
-Each `BoardDocument` owns a Yjs document with three roots:
+## Code boundaries
 
-| Root       | Representation          | Purpose                                            |
-| ---------- | ----------------------- | -------------------------------------------------- |
-| `objects`  | `Y.Map<Y.Map<unknown>>` | Shape IDs map to independently editable properties |
-| `order`    | `Y.Array<string>`       | Stacking order                                     |
-| `metadata` | `Y.Map<string>`         | Board title                                        |
+| Location                           | Responsibility                                            |
+| ---------------------------------- | --------------------------------------------------------- |
+| `src/App.tsx`, `src/components/`   | Workspace, controls, canvas interaction                   |
+| `src/shared/board.ts`              | Portable schema, validation, resource limits              |
+| `src/lib/document.ts`              | Yjs state and local undo                                  |
+| `src/lib/crypto.ts`                | Key derivation and payload encryption                     |
+| `src/lib/room.ts`                  | Signaling client, peer mesh, synchronization              |
+| `src/lib/storage.ts`               | Explicit browser-local persistence                        |
+| `server/app.ts`, `server/index.ts` | Admission, quotas, configuration, static serving          |
+| `scripts/dev.mjs`                  | Starts/stops the development server and Vite together     |
+| `tests/`                           | Document, security, signaling, and browser behavior tests |
 
-Local selections, tool settings, viewport, and dialog state are never synchronized. Remote cursors are short-lived presence frames. Remote transaction origins are excluded from local undo and rebroadcast. Undo tracks this browser's edits and should preserve independent remote property edits.
+## Document and storage
 
-Concurrent writes to the same scalar property resolve through Yjs's deterministic conflict rules. Text fields are currently whole-string properties: simultaneous edits to the same note do not merge character-by-character. Repositioning an object and editing its text are independent. Concurrent deletion/replacement and reordering need further interaction testing before complex classroom editing is promised.
+A board has three Yjs roots: `objects` maps shape IDs to independently editable properties, `order` stores stacking order, and `metadata` stores the title. Selection, viewport, tool settings, and dialogs stay local. Cursors use transient presence messages. Undo tracks local edits and excludes remote transactions.
 
-A joining client starts with an empty document. On channel opening, both sides send state vectors and exchange missing updates. There is no persistent server replica. Reloading requires an explicit join and at least one connected peer holding the board. If all replicas disappear, exports are the recovery mechanism.
+Yjs resolves concurrent property writes deterministically. Text is stored as a whole-string property, so simultaneous typing in one note does not merge character by character. Joining peers exchange state vectors and missing updates. There is no server replica or durable shared room; at least one peer must retain the board for others to recover it.
 
-## Invitation and admission
+Portable `.beebo.json` files contain format/version, title, and ordered shapes, without keys, presence, or CRDT history. Imports validate before replacing content. IndexedDB holds one explicitly restorable snapshot; personal autosaving is opt-in and shared-board saving requires a button click. PNG is a visual export, not an editable backup. There is no offline application-shell cache.
 
-1. The creator generates a random room UUID and a cryptographically random 32-byte invitation secret in the browser.
-2. HKDF-SHA-256 uses the room ID as salt and distinct information strings to derive an AES-256-GCM key and a 32-byte admission token.
-3. The creator sends the room ID, connection policy, and SHA-256 hash of the admission token to `POST /api/rooms`.
-4. The invitation stores `room` and `key` in the URL fragment, which is not sent in normal HTTP requests. It is not put in a query string or server logs.
-5. A WebSocket must send an admission message within five seconds. The server hashes its token and uses a timing-safe comparison against the stored verifier.
-6. Successful admission returns peer IDs, room policy/expiry, and temporary TURN credentials. Subsequent signaling is routed only to members of that room.
+## Admission and encryption
 
-The server can observe or interfere with membership and signaling. It does not know the secret needed to decrypt or forge application payloads. This is group-secret authentication, not individual identities: any invitation holder has the same document privileges. Room secrets can leak through clipboard sharing, browser history, extensions, screenshots, or invited users.
+1. The creator generates a random room UUID and 32-byte invitation secret in the browser.
+2. HKDF-SHA-256 derives separate AES-256-GCM encryption and admission keys using the room ID as salt.
+3. Room creation sends the ID, connection policy, and SHA-256 admission-token verifier to Node. Invitations keep the ID and secret in the URL fragment.
+4. A WebSocket must supply its admission token within five seconds. After verification, Node returns peers, room policy, expiry, and one-hour TURN credentials.
+5. Only members of the same room can exchange SDP/ICE signaling. A room's connection policy cannot change. Default relay mode requires TURN; direct mode requires operator enablement and the creator's explicit choice.
 
-## Data channel protocol
+This authenticates a shared invitation, not individual identities. Every invitation holder is an editor. Node can observe membership and connectivity metadata; the host can also replace served JavaScript. See [SECURITY.md](../SECURITY.md).
 
-Each pair has one ordered, reliable data channel labeled `beebo-v1`. Complete strokes are committed on pointer release; pen previews are local. Local document transactions produce incremental Yjs updates. Reliable transport currently also carries presence, which is throttled and skipped while a peer is backlogged.
+## Synchronization and bounds
 
-Messages are split into 12,000-byte plaintext chunks. Each plaintext chunk has a 14-byte header:
+Each peer pair uses one ordered, reliable `beebo-v1` data channel. State vectors, document updates, and throttled presence are sent as encrypted chunks of at most 12,000 plaintext bytes. Each chunk carries a version, message kind, random message ID, index, and count; AES-GCM uses a fresh 96-bit nonce and authenticates the room ID. The mesh has 28 connections at eight participants, including in TURN mode.
 
-| Bytes     | Meaning                                                  |
-| --------- | -------------------------------------------------------- |
-| 0         | Protocol version, currently 1                            |
-| 1         | Kind: 0 state vector, 1 document update, 2 presence JSON |
-| 2–9       | Random 8-byte message identifier                         |
-| 10–11     | Big-endian chunk index                                   |
-| 12–13     | Big-endian total chunk count                             |
-| 14 onward | Chunk payload                                            |
+Sends and receives are serialized. Backpressure pauses sending and disconnects persistently slow peers. Received updates are applied to an isolated candidate document and validated before reaching live state. These bounds reduce resource abuse without establishing measured production capacity:
 
-Every chunk gets a fresh random 96-bit nonce and AES-GCM encryption. The transmitted bytes are nonce followed by ciphertext and authentication tag. The room ID is authenticated as additional data. Replay tracking is bounded and session-local; this is not a forward-secure group messaging protocol.
+| Resource                                   | Limit                                               |
+| ------------------------------------------ | --------------------------------------------------- |
+| Participants / rooms                       | 8 per room / 250 per process                        |
+| Objects / stroke coordinates               | 1,000 / 8,000 numeric values                        |
+| Import, update, or accepted shared history | 2,000,000 bytes                                     |
+| Queued payload / incomplete messages       | 4,000,000 bytes per direction per peer / 4 messages |
+| Signaling payload / HTTP body              | 32,768 / 4,096 bytes                                |
+| HTTP room requests and socket upgrades     | 60 per minute per observed IP                       |
+| WebSocket signaling                        | 100 messages per 10 seconds per connection          |
+| Room / empty-room lifetime                 | 2 hours / 10 minutes                                |
 
-Outgoing encryption and sends, incoming decryption/application, and signaling handling are serialized to avoid races. Channel backpressure pauses sending; a slow peer is disconnected after a bounded wait. Inbound updates are applied to an isolated candidate replica and validated before reaching the live document. This adds copying overhead and does not eliminate all CRDT denial-of-service risks.
-
-## Current bounds
-
-| Resource                                           | Limit                                                  |
-| -------------------------------------------------- | ------------------------------------------------------ |
-| Participants                                       | 8 per room                                             |
-| In-memory rooms                                    | 250 per process                                        |
-| Signaling sockets                                  | 2,100 per process; admission required within 5 seconds |
-| Objects                                            | 1,000 per board                                        |
-| Stroke points                                      | 8,000 numeric values / 4,000 points                    |
-| Text                                               | 2,000 characters per object                            |
-| Import / message / accepted encoded shared history | 2,000,000 bytes                                        |
-| Per-peer queued send/receive payload               | 4,000,000 bytes each                                   |
-| Incomplete messages                                | 4 per peer; cleaned after 10 seconds                   |
-| Signaling payload                                  | 32,768 bytes                                           |
-| HTTP body                                          | 4,096 bytes                                            |
-| HTTP room requests + socket upgrades               | 60 per minute per observed IP                          |
-| WebSocket signaling                                | 100 messages per 10 seconds per connection             |
-| Room lifetime                                      | 2 hours; empty rooms cleaned after 10 minutes          |
-| TURN credentials                                   | 1 hour from admission                                  |
-
-Limits are defensive starting values, not measured capacity claims. TURN credentials are not refreshed automatically; long sessions may require a new admission for fresh allocations. The cleanup loop runs every 30 seconds. A closed or failed peer must rejoin; automatic negotiation recovery is not implemented. Export and start a fresh room when shared history reaches its limit.
-
-## Persistence and portability
-
-The `.beebo.json` format includes `format: 'beebo-board'`, `version: 1`, title, and ordered shapes. It excludes encryption material, presence, and CRDT internals. Imports validate schema/version, bounded values, and duplicate IDs before replacing board content. A replacement can be undone locally.
-
-IndexedDB stores one local snapshot under a local-only key. Automatic saving is opt-in for personal boards and disabled in shared rooms. The header's Save board button explicitly saves a snapshot of either kind of board; restoration is always explicit in My workspace. Export board produces the portable JSON file. PNG exports show the current viewport and are not editable backups. A service worker, offline application-shell cache, durable room storage, and cloud accounts are outside this implementation.
-
-## Scaling and next decisions
-
-An eight-person mesh has 28 connections and seven outgoing recipients per author. TURN preserves that topology and incurs relay bandwidth cost. There are no video/audio streams. Classroom-sized sessions need measured bandwidth results, a topology decision, enforceable roles, and a separate encryption/key lifecycle design.
-
-Sources: [WebRTC](https://www.w3.org/TR/webrtc/), [Yjs](https://github.com/yjs/yjs), [Web Crypto](https://www.w3.org/TR/WebCryptoAPI/).
+TURN credential refresh, automatic reconnect, multi-instance signaling, teacher roles, revocation, and key rotation remain unimplemented. Larger groups require a different topology and measured relay bandwidth.

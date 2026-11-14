@@ -1,138 +1,54 @@
 # Beebo Board
 
-A private, open-source space to think and learn together. Beebo is a browser-based collaborative whiteboard for tutoring, study groups, and small teams of **up to eight people**.
+A privacy-first collaborative whiteboard for tutoring and small groups of up to **eight people**. Built with React, Konva, Yjs, native WebRTC, and a Node.js signaling server.
 
-**Status: initial implementation for review.** Local editing and encrypted WebRTC collaboration are implemented. This is not a production-hardened classroom service or a formally recognized Digital Public Good.
+Draw, write notes, add images and frames, move and resize objects, and export JSON or PNG. Boards stay in browser memory unless you explicitly save or export them. The header provides local saving and export; saved boards can be restored or deleted in My workspace.
 
-## Why Beebo exists
-
-Collaborative learning should be accessible without a subscription, a mandatory account, or sharing classroom work with advertising systems. Beebo supports **SDG 4: Quality Education**, particularly equitable access and inclusion, through portable learning materials, small-group activities, keyboard editing, and a low-bandwidth mode.
-
-The software is open source. Learners' boards remain their content and are not published as open data.
-
-## Implemented
-
-- Pen, rectangles, ellipses, arrows, text, and sticky notes; selection and movement.
-- Pan with middle-mouse drag or the Hand tool; zoom, local undo/redo, editable board titles, and an accessible Objects panel.
-- Cursor tool (V) moves every element. Select several at once with Shift/Ctrl+click, by dragging a box on empty board, or with Ctrl/⌘ A; the group moves, resizes, nudges with arrow keys, and deletes together. Paste a picture (Ctrl/⌘ V) or drop an image file to add it as its own object: it is shrunk and re-encoded in the browser so boards stay small, can be resized from its corners, described for screen readers, and copied back out (Ctrl/⌘ C). Frame (F) adds a background area (white or any color) that carries the objects inside it and exports to PNG from its toolbar. Text (T) and Sticky note (N) are typed right on the board; selecting any object shows handles to resize it and a toolbar for font, size, bold, alignment, color, and thickness. The Pen (P) flyout holds the brushes, sizes, colors, and two erasers: Object eraser (E) removes whole objects along its path, and Partial eraser (X) cuts away only the part of a pen or highlighter line it touches.
-- Versioned JSON import/export and PNG export of the visible view.
-- New boards start as **Board 1** and the display name starts as **User**. The header provides **Save board locally** (opt-in automatic personal saving), **Save board** (an explicit local snapshot), and **Export board** (a portable JSON download). Restore/delete local snapshots in My workspace. Shared boards are saved only when you explicitly choose Save board.
-- Pen and Highlighter have directly visible size sliders in their flyout. Cursor selection gives thin strokes a wider target at every zoom. The Share board dialog stays open until its X is used, including after outside clicks or Escape.
-- Opt-in personal-board storage in IndexedDB; explicit restore and deletion.
-- Think–Pair–Share and Know–Wonder–Learn activity templates.
-- Browser-encrypted document updates and cursors over WebRTC data channels.
-- Private invitations, authenticated signaling admission, eight-participant room limits, and expiring rooms.
-- TURN-only connections by default. Direct connections require both operator enablement and the creator's explicit choice.
-- Pinned dependencies, a license gate, CycloneDX SBOM, and third-party notices.
+Collaboration uses encrypted WebRTC data channels. TURN-only networking is the default; direct connections require operator enablement and an explicit choice when creating a room. No accounts, analytics, or external asset services are required.
 
 ## Run locally
 
-Use **Node.js 22.12 or newer** and npm. The lockfile was generated with npm 11.10.0; dependency lifecycle scripts are disabled in `.npmrc`.
+Use Node.js 22.12+ and npm.
 
 ```sh
 npm ci
+# Copy .env.example to .env and configure it if collaboration is needed.
 npm run dev
 ```
 
-Open **http://127.0.0.1:5173**. The client uses Vite; the signaling service listens on port 3001. `npm run dev` starts both. The canvas works without TURN, accounts, or an Internet connection after the page has loaded; the application shell is not yet cached for offline launches.
+Open **http://localhost:5173**. To test rooms without TURN, set `DIRECT_CONNECTIONS_ENABLED=true` in `.env`, restart, and select direct connections in Share board. This can expose participants' IP addresses to one another.
 
-For a production build served by the Node process:
+For a local production build, run `npm run build` then `npm start` and open **http://localhost:3001**.
 
-```sh
-npm run build
-npm start
-```
+## Docker
 
-Open **http://127.0.0.1:3001**. For deployment beyond localhost, configure HTTPS/WSS, the exact allowed origin, and your TURN service. See [deployment instructions](docs/DEPLOYMENT.md).
-
-For the complete container topology, use the root `docker-compose.yml` and [Compose setup](deploy/README.md). App, Caddy, and coturn run as separate services on one host. Image references are explicit, reviewed, digest-pinned inputs; the npm license gate does not approve whole OS/container images. The default stack supplies HTTPS and TURN/UDP + TURN/TCP; TURN/TLS requires the documented additional certificate configuration.
-
-### Collaboration setup
-
-Copy `.env.example` to `.env` and provide `TURN_URLS` and `TURN_SECRET` for a coturn service using its shared-secret authentication mode. Both `npm run dev` and `npm start` load `.env`. Open **Share board**, enter a display name, and create a private room. Share the complete invitation privately; its fragment contains the room key.
-
-Without TURN, default room creation stays unavailable. To test direct connections explicitly on your own machine, add this to `.env`, restart the server, and select **Allow direct connections** when creating the room:
-
-```dotenv
-DIRECT_CONNECTIONS_ENABLED=true
-```
-
-Direct connections can expose participants' IP addresses to one another. Joining an invitation accepts the room creator's connection policy. No automatic downgrade from relay-only to direct connections occurs.
-
-## Architecture
-
-```mermaid
-flowchart LR
-  A["Browser A: React / Konva / Yjs"] <-->|"Admission + SDP/ICE over WSS"| S["Node.js / Fastify / ws"]
-  B["Browser B: React / Konva / Yjs"] <-->|"Admission + SDP/ICE over WSS"| S
-  A <-->|"Encrypted WebRTC data"| T["Operator-hosted coturn"]
-  T <-->|"Encrypted WebRTC data"| B
-  A <-.->|"Explicitly enabled direct mode"| B
-```
-
-The browser owns the document, rendering, encryption, and export. Yjs maps store shape properties; a shared array stores stacking order. UI state stays local. Cursors are transient messages rather than document history. A small native WebRTC adapter exchanges state vectors, updates, and presence in bounded encrypted chunks.
-
-The signaling service holds temporary room admission verifiers and membership in memory. It never receives the invitation encryption key or board content. It issues short-lived TURN credentials only after successful room admission. Eight peers form a mesh of 28 pairwise connections, including when TURN relays them.
-
-See [architecture and protocol](docs/ARCHITECTURE.md) for encryption, limits, conflict behavior, and trust boundaries.
-
-| Layer           | Technology                                                | Declared upstream license                               |
-| --------------- | --------------------------------------------------------- | ------------------------------------------------------- |
-| Interface       | React, React DOM                                          | MIT                                                     |
-| Drawing         | Konva, react-konva                                        | MIT                                                     |
-| Shared document | Yjs                                                       | MIT                                                     |
-| Signaling       | Fastify, ws                                               | MIT                                                     |
-| Language        | TypeScript                                                | Apache-2.0                                              |
-| Build           | Vite 7, esbuild, Rollup                                   | MIT with additional permissive bundled notices          |
-| Tests           | Node test runner, playwright-core, existing local browser | Driver: Apache-2.0; external browser audited separately |
-| External relay  | coturn                                                    | BSD-3-Clause; not bundled                               |
-
-License scope and review details are in [LICENSE_POLICY.md](docs/LICENSE_POLICY.md), [THIRD_PARTY_NOTICES.txt](THIRD_PARTY_NOTICES.txt), [sbom.cdx.json](sbom.cdx.json), and [license evidence](docs/license-audit.json).
-
-## Privacy and safe use
-
-- No telemetry, third-party fonts, remote asset CDNs, or account requirement.
-- Personal saving is off by default. Enabling it saves only your personal board on this browser/device. It is not encrypted at rest. Shared rooms disable automatic personal saving.
-- Browser-held room content uses AES-256-GCM in addition to WebRTC transport encryption. The shared invitation secret is separated into encryption and admission material using HKDF-SHA-256.
-- Anyone with the invitation can read, edit, export, and retain the board. Treat invitations as sensitive. There are no teacher-only permissions, kick/ban controls, or key rotation yet.
-- Static hosting, signaling, and TURN operators can observe IP addresses and connection metadata. Encryption does not hide traffic patterns or protect against a compromised application host or endpoint.
-- Rooms expire after two hours; empty rooms expire after ten minutes. Closing every participant's tab loses the live shared state unless someone exported it. Server restarts erase rooms. A browser reload requires joining again and an online peer to restore shared content.
-- Export before closing your tab. There is no cloud backup or server-side board recovery.
-
-Read [PRIVACY.md](docs/PRIVACY.md) and [SECURITY.md](SECURITY.md) before hosting sensitive sessions. The current all-editor model is intended for trusted small groups, not public unmoderated rooms.
-
-## Accessibility and bandwidth
-
-The Objects panel supports adding notes, selecting objects, editing text and coordinates, and deleting without dragging. Keyboard shortcuts are listed in Help; focused controls and dialogs use native keyboard behavior. Reduced-motion preferences are respected. Low-bandwidth mode throttles cursors to five updates per second and reduces pen samples; completed strokes are synchronized after pointer release.
-
-**WCAG 2.2 AA is a target, not a conformance claim.** Manual screen-reader reviews, touch/usability testing, contrast assessment, and measurements on constrained networks remain in the [roadmap](docs/ROADMAP.md).
-
-## Checks and review
+One Compose file provides two profiles (Docker Compose 2.23.1+):
 
 ```sh
-npm run check
-npm run test:browser
+# Local development with hot reload; choose direct mode to test rooms.
+docker compose --profile dev up
+
+# Public hosting: configure .env first.
+docker compose --profile production up -d --build
 ```
 
-`check` runs TypeScript checks, unit/integration tests, the license gate, and the production build. Browser smoke tests start their own local production server, use an already-installed Microsoft Edge, and save screenshots to `test-results/`. No browser is downloaded. Set `BROWSER_EXECUTABLE` to an existing compatible Chromium browser if necessary. Build before running browser tests.
+Production runs the app, Caddy for HTTPS, and coturn on one host. It requires two DNS names, a public IPv4 address, a TURN secret, and open firewall ports. See [deployment](docs/DEPLOYMENT.md) for the exact settings and connection test.
 
-After a reviewed dependency change:
+## Development
 
 ```sh
-npm run licenses:generate
-npm run licenses:check
+npm run check          # TypeScript, unit/server tests, production build
+npm run test:browser   # Browser smoke tests; build first, requires installed Edge
 ```
 
-The gate covers every locked npm package's declared license, including optional dependencies, and inspects available installed license/notice files. It does not certify every source file, native binary, operating-system package, browser, or hosting provider. See the policy for platform-specific inspection gaps.
+Set `BROWSER_EXECUTABLE` to use another installed Chromium browser. All changes use a fresh branch and a human-reviewed PR; see [CONTRIBUTING.md](CONTRIBUTING.md) and [AGENTS.md](AGENTS.md).
 
-Follow [the manual review checklist](docs/REVIEW.md) to evaluate behavior and the live TURN path.
+## Education, privacy, and licensing
 
-## Digital Public Goods alignment
+Beebo supports **SDG 4: Quality Education** through free small-group collaboration, activity templates, keyboard editing, a semantic Objects panel, and a low-bandwidth option. Its open formats and privacy controls support the Digital Public Goods standard's aims; it has **not received DPG recognition** or an independent accessibility or security assessment.
 
-Beebo is being designed to align with the [DPG Standard](https://www.digitalpublicgoods.net/standard). Formal recognition has not been obtained. The [evidence matrix](docs/DPG_COMPLIANCE.md) distinguishes implemented safeguards from remaining work, including ownership confirmation, applicable-law review, harassment protections, and independent accessibility/security assessment.
+This is an early implementation. Invitation holders can edit and copy all room content. There are no teacher roles or participant revocation, and rooms have no server-side board storage. Read [security and privacy limits](SECURITY.md) before hosting for learners.
 
-## Contributing and ownership
+Beebo is [Apache-2.0](LICENSE). Application dependencies must be permissively licensed; retain [third-party notices](THIRD_PARTY_NOTICES.txt). Standard Node, Caddy, and coturn infrastructure images are allowed and retain their own component licenses.
 
-Read [CONTRIBUTING.md](CONTRIBUTING.md) and [AGENTS.md](AGENTS.md). All initialization and subsequent changes go through PRs, on distinct feature or fix branches. The repository steward is the account managing [DTravkov/beebo-board](https://github.com/DTravkov/beebo-board); formal project governance is documented in [GOVERNANCE.md](docs/GOVERNANCE.md).
-
-Project code and original documentation are licensed under [Apache-2.0](LICENSE). Contributors retain their copyrights. Third-party licenses and notices remain applicable to their respective components.
+[Architecture](docs/ARCHITECTURE.md) describes the document, encryption, and transport boundaries.
