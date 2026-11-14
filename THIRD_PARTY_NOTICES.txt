@@ -1,9 +1,9 @@
 Beebo Board — third-party notices
 
-Generated from installed npm packages, including development tools.
-Original notices are reproduced below. Platform-specific release artifacts
-must regenerate this file on their build platform. Host tools and browsers
-are not redistributed or certified by this inventory.
+Third-party license texts for application dependencies and development tools.
+Preserve these notices with distributions and update them when dependencies
+change, including bundled and platform-specific components. Infrastructure
+images, host tools, and browsers retain their own licenses and notices.
 
 ========================================================================
 @esbuild/win32-x64@0.28.2 — node_modules/esbuild/LICENSE.md
@@ -1800,7 +1800,7 @@ logger.child = () => logger
 [MIT License](http://jsumners.mit-license.org/)
 
 ========================================================================
-abstract-logging@2.0.1 — docs/licenses/abstract-logging-2.0.1-MIT.txt
+abstract-logging@2.0.1 — upstream license: https://jsumners.mit-license.org/
 ========================================================================
 The MIT License (MIT)
 

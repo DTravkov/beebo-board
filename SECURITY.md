@@ -1,23 +1,31 @@
-# Security policy
+# Security and privacy
 
-Beebo is an initial implementation undergoing review. No independent security assessment has been completed. Trusted small groups may evaluate it locally; public classroom deployment needs the outstanding safeguards listed in [the roadmap](docs/ROADMAP.md).
+Beebo is an early implementation without an independent security assessment.
 
 ## Reporting
 
-Use this repository's GitHub private vulnerability reporting feature or a private security advisory **if the steward has enabled it**. Do not put tokens, invitations, learner data, or exploitable details in a public issue.
+Use GitHub private vulnerability reporting or a private security advisory if enabled. Do not post invitations, learner data, tokens, or exploitable details in public issues. Include the affected version, reproduction steps using synthetic data, and expected impact.
 
-**Outstanding setup:** the repository steward must enable private reporting or publish a monitored private security address before a public service or supported release. No response-time commitment or verified private reporting channel exists yet. See [governance](docs/GOVERNANCE.md).
+The maintainer must enable private reporting or publish a monitored private contact before a supported public service. No verified private contact or response-time commitment is currently documented.
 
-Reports should describe the affected commit/version, reproduction steps with synthetic data, expected impact, and suggested mitigation. Acknowledgments and coordinated disclosure will be agreed with the reporter.
+## Data and retention
 
-## Boundaries and current limits
+- Board content lives in participant browser memory and travels encrypted over WebRTC. The server has no persistent board replica. Participants can retain copies.
+- Automatic local saving is opt-in for personal boards and disabled in shared rooms. Save board explicitly stores a snapshot of either kind in this browser's IndexedDB. Restore and deletion are explicit in My workspace. Local snapshots and JSON/PNG exports are plaintext.
+- Invitations carry the room secret in the URL fragment. It is not sent in normal HTTP requests, but can remain in history, clipboard contents, messages, or recipients' copies.
+- Room admission verifiers, membership, and signaling are held in server memory until expiry or restart. Application request logging is disabled. Hosting and TURN operators can see IP addresses and traffic metadata; their log retention is deployment-specific.
+- Display names and cursors are ephemeral encrypted presence. There are no accounts, analytics, third-party fonts, camera, microphone, or geolocation requests.
 
-- A room invitation is a shared read/write capability. All invited participants are editors. There is no per-user revocation, key rotation, or teacher-only role.
-- AES-GCM protects room payloads against parties without the shared key. It does not protect against invited malicious editors, compromised browsers, or a hosting operator serving malicious JavaScript.
-- Endpoint memory and opt-in IndexedDB storage are not encrypted at rest. Exported files contain plaintext board content.
-- Input validation and size limits reduce exposure but do not eliminate denial-of-service risks in CRDT decoding or native browser/network components.
-- The signaling service uses in-memory quotas and rooms. Multi-instance deployment, distributed rate limiting, reconnect automation, and comprehensive load testing are not implemented.
-- Operators must provide HTTPS, TURN credentials and quotas, restricted origins, log retention policies, and independent relay/host dependency audits.
-- Package lifecycle scripts are disabled. The automated license gate is not a security scanner; run `npm audit` as well and review advisories in context.
+## Limits
 
-Use synthetic content for security tests. Never test against other users' rooms without authorization.
+All invitation holders can edit and copy the board. There are no teacher permissions, participant revocation, or group key rotation. Encryption does not protect against invited malicious editors, compromised devices, or a host serving modified JavaScript.
+
+TURN-only mode prevents direct peer connections; the infrastructure still sees endpoint IP addresses. Explicit direct mode can reveal those addresses to participants. Input limits reduce denial-of-service exposure without eliminating it.
+
+Rooms expire after two hours. TURN credentials last one hour and are not refreshed automatically. Rejoining is required after failed connections; automatic recovery and multi-instance signaling are not implemented. Exports or explicitly saved snapshots are needed when no peer retains the board.
+
+## Operator responsibilities
+
+Provide HTTPS, authenticated TURN, restricted origins, firewall rules, quotas, and deliberate log retention. Keep host images and npm dependencies updated; use `npm audit` to review advisories. The app groups clients behind a reverse proxy under its observed IP quota, so capacity and edge rate limits need review before broader hosting.
+
+Before classroom use, assess learner privacy, accessibility, consent requirements, incident reporting, and moderation. Publish deployment-specific privacy and contact information. The project does not establish legal compliance or child-safety certification.

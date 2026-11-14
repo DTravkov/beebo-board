@@ -3,8 +3,5 @@ dist/
 dist-server/
 test-results/
 package-lock.json
-sbom.cdx.json
-docs/license-audit.json
 THIRD_PARTY_NOTICES.txt
-docs/licenses/
 LICENSE
