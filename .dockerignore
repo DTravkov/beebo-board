@@ -2,6 +2,7 @@
 .env*
 .deploy
 .docker-local
+.sites-local
 node_modules
 dist
 dist-server

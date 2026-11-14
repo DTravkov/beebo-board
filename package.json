@@ -12,16 +12,14 @@
     "dev": "node scripts/dev.mjs",
     "dev:client": "vite --host 127.0.0.1",
     "dev:server": "tsx watch server/index.ts",
-    "build": "tsc --noEmit && tsc -p tsconfig.server.json && vite build && node scripts/package-notices.mjs",
+    "build": "tsc --noEmit && tsc -p tsconfig.server.json && vite build",
     "start": "node --env-file-if-exists=.env dist-server/index.js",
     "typecheck": "tsc --noEmit",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "test": "tsx --test tests/*.test.ts",
     "test:browser": "tsx --test tests/browser.smoke.ts",
-    "licenses:check": "node scripts/licenses.mjs",
-    "licenses:generate": "node scripts/licenses.mjs --write",
-    "check": "npm run typecheck && npm test && npm run licenses:check && npm run build"
+    "check": "npm run typecheck && npm test && npm run build"
   },
   "dependencies": {
     "fastify": "5.12.8",

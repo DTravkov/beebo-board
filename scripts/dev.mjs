@@ -3,12 +3,22 @@ import { spawn } from 'node:child_process';
 const children = [
   spawn(
     process.execPath,
-    ['--env-file-if-exists=.env', '--import', 'tsx', 'server/index.ts'],
+    [
+      '--env-file-if-exists=.env',
+      '--watch',
+      '--import',
+      'tsx',
+      'server/index.ts',
+    ],
     { stdio: 'inherit' },
   ),
   spawn(
     process.execPath,
-    ['node_modules/vite/bin/vite.js', '--host', '127.0.0.1'],
+    [
+      'node_modules/vite/bin/vite.js',
+      '--host',
+      process.env.DEV_HOST ?? '127.0.0.1',
+    ],
     { stdio: 'inherit' },
   ),
 ];
