@@ -2,6 +2,7 @@ import * as Y from 'yjs';
 import {
   isShape,
   MAX_OBJECTS,
+  DEFAULT_BOARD_TITLE,
   type BoardFile,
   type BoardShape,
 } from '../shared/board';
@@ -21,7 +22,7 @@ export class BoardDocument {
     // Stable default: never add initial content independently in joining replicas.
   }
   get title() {
-    return this.metadata.get('title') ?? 'Our little idea space';
+    return this.metadata.get('title') ?? DEFAULT_BOARD_TITLE;
   }
   setTitle(title: string) {
     this.doc.transact(

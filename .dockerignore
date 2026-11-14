@@ -1,0 +1,12 @@
+.git
+.env*
+.deploy
+.docker-local
+node_modules
+dist
+dist-server
+coverage
+test-results
+*.log
+*.pem
+*.key

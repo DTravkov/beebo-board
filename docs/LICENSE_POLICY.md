@@ -36,6 +36,8 @@ The npm dependency gate applies to packages introduced by this repository. Exist
 
 `playwright-core` is Apache-2.0 with additional permissive bundled notices. No Playwright browsers, FFmpeg bundle, or browser container image are installed by this project; tests use an operator-supplied existing browser. coturn is a proposed external BSD-3-Clause service, whose chosen distribution and dependencies require their own review. A deployment with a literal no-copyleft policy across all infrastructure needs a separately audited environment.
 
+The Compose topology now requires explicit digest-pinned image inputs and human image-review records; it supplies no automatically approved stock images. Stock coturn containers include additional database/HTTP components, and common container base OS packages include copyleft terms. A top-level project's permissive license does not clear those image contents. See [the image contracts and deployment gate](../deploy/README.md). The npm inventory's lockfile digest normalizes CRLF/LF so Git checkout line endings do not invalidate the same dependency inventory across platforms.
+
 ## Dependency changes and releases
 
 1. Pin a direct version and inspect the full lockfile diff, provenance, advisories, and actual license files.

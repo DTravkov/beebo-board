@@ -16,6 +16,8 @@ The software is open source. Learners' boards remain their content and are not p
 - Pan with middle-mouse drag or the Hand tool; zoom, local undo/redo, editable board titles, and an accessible Objects panel.
 - Cursor tool (V) moves every element. Select several at once with Shift/Ctrl+click, by dragging a box on empty board, or with Ctrl/⌘ A; the group moves, resizes, nudges with arrow keys, and deletes together. Paste a picture (Ctrl/⌘ V) or drop an image file to add it as its own object: it is shrunk and re-encoded in the browser so boards stay small, can be resized from its corners, described for screen readers, and copied back out (Ctrl/⌘ C). Frame (F) adds a background area (white or any color) that carries the objects inside it and exports to PNG from its toolbar. Text (T) and Sticky note (N) are typed right on the board; selecting any object shows handles to resize it and a toolbar for font, size, bold, alignment, color, and thickness. The Pen (P) flyout holds the brushes, sizes, colors, and two erasers: Object eraser (E) removes whole objects along its path, and Partial eraser (X) cuts away only the part of a pen or highlighter line it touches.
 - Versioned JSON import/export and PNG export of the visible view.
+- New boards start as **Board 1** and the display name starts as **User**. The header provides **Save board locally** (opt-in automatic personal saving), **Save board** (an explicit local snapshot), and **Export board** (a portable JSON download). Restore/delete local snapshots in My workspace. Shared boards are saved only when you explicitly choose Save board.
+- Pen and Highlighter have directly visible size sliders in their flyout. Cursor selection gives thin strokes a wider target at every zoom. The Share board dialog stays open until its X is used, including after outside clicks or Escape.
 - Opt-in personal-board storage in IndexedDB; explicit restore and deletion.
 - Think–Pair–Share and Know–Wonder–Learn activity templates.
 - Browser-encrypted document updates and cursors over WebRTC data channels.
@@ -42,6 +44,8 @@ npm start
 ```
 
 Open **http://127.0.0.1:3001**. For deployment beyond localhost, configure HTTPS/WSS, the exact allowed origin, and your TURN service. See [deployment instructions](docs/DEPLOYMENT.md).
+
+For the complete container topology, use the root `docker-compose.yml` and [Compose setup](deploy/README.md). App, Caddy, and coturn run as separate services on one host. Image references are explicit, reviewed, digest-pinned inputs; the npm license gate does not approve whole OS/container images. The default stack supplies HTTPS and TURN/UDP + TURN/TCP; TURN/TLS requires the documented additional certificate configuration.
 
 ### Collaboration setup
 

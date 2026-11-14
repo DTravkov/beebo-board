@@ -1,6 +1,7 @@
 export const MAX_OBJECTS = 1000;
 export const MAX_POINTS = 8000;
 export const MAX_DOCUMENT_BYTES = 2_000_000;
+export const DEFAULT_BOARD_TITLE = 'Board 1';
 export type ShapeKind =
   | 'stroke'
   | 'highlight'

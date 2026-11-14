@@ -13,6 +13,7 @@ import { restyle } from './lib/text';
 import { imagePng, prepareImage } from './lib/image';
 import {
   BrushStyles,
+  BrushSize,
   EraserThickness,
   MAX_COLORS,
   MAX_STYLES,
@@ -32,6 +33,7 @@ import { forgetLocal, loadLocal, saveLocal } from './lib/storage';
 import {
   makeShape,
   MAX_DOCUMENT_BYTES,
+  DEFAULT_BOARD_TITLE,
   parseBoard,
   sampleShapes,
   type BoardShape,
@@ -95,7 +97,7 @@ function initialBoard() {
     board.replace({
       format: 'beebo-board',
       version: 1,
-      title: 'Our little idea space',
+      title: DEFAULT_BOARD_TITLE,
       shapes: sampleShapes,
     });
   board.undo.clear();
@@ -137,7 +139,8 @@ export default function App() {
   const [lowBandwidth, setLowBandwidth] = useState(true);
   const [localSaving, setLocalSaving] = useState(false);
   const [savingLabel, setSavingLabel] = useState('Session only');
-  const [name, setName] = useState('Curious learner');
+  const [saving, setSaving] = useState(false);
+  const [name, setName] = useState('User');
   const nameRef = useRef(name);
   nameRef.current = name;
   const [config, setConfig] = useState<{
@@ -251,6 +254,21 @@ export default function App() {
       }),
     );
     setToast('Board exported. Keep this file to open it again.');
+  }
+  async function saveBoard() {
+    setSaving(true);
+    try {
+      await saveLocal(board.export());
+      setSavingLabel('Saved on this device');
+      setToast('Board saved on this device. Restore it from My workspace.');
+    } catch (error) {
+      setSavingLabel('Save failed');
+      setToast(
+        error instanceof Error ? error.message : 'Could not save this board.',
+      );
+    } finally {
+      setSaving(false);
+    }
   }
   useEffect(() => {
     const keydown = (event: KeyboardEvent) => {
@@ -626,6 +644,44 @@ export default function App() {
           </div>
         </div>
 
+        <div
+          className="header-file-actions"
+          role="group"
+          aria-label="Board saving and export"
+        >
+          <label
+            className="header-local-save"
+            title={
+              invite
+                ? 'Shared boards can be saved explicitly with Save board.'
+                : 'Automatically save this personal board on this device.'
+            }
+          >
+            <input
+              type="checkbox"
+              checked={localSaving}
+              disabled={Boolean(invite)}
+              onChange={(event) => {
+                setLocalSaving(event.target.checked);
+                if (!event.target.checked) setSavingLabel('Session only');
+              }}
+            />
+            <span>Save board locally</span>
+          </label>
+          <button
+            className="header-file-button"
+            title="Save on this device, replacing the previous local snapshot"
+            disabled={saving}
+            onClick={() => void saveBoard()}
+          >
+            <Icon name="save" size={16} />
+            <span>{saving ? 'Saving…' : 'Save board'}</span>
+          </button>
+          <button className="header-file-button" onClick={exportBoard}>
+            <Icon name="download" size={16} />
+            <span>Export board</span>
+          </button>
+        </div>
         <div className="header-actions">
           <div className="history-buttons">
             <button
@@ -837,6 +893,18 @@ export default function App() {
             )}
             {brush && (
               <>
+                <span className="brush-divider" />
+                <BrushSize
+                  label={brush === 'pen' ? 'Pen size' : 'Highlighter size'}
+                  size={brushStyle!.width}
+                  onChange={(width) =>
+                    changeStyles(brush, (styles) =>
+                      styles.map((style, i) =>
+                        i === activeStyle[brush] ? { ...style, width } : style,
+                      ),
+                    )
+                  }
+                />
                 <span className="brush-divider" />
                 <BrushStyles
                   label={brush === 'pen' ? 'Pen' : 'Highlighter'}
@@ -1157,6 +1225,7 @@ export default function App() {
       )}
       {dialog === 'share' && !editor && (
         <Dialog
+          dismissible={false}
           title={
             pendingInvite
               ? 'You’re invited to think together'
@@ -1209,7 +1278,6 @@ export default function App() {
                   className="secondary-button"
                   onClick={() => {
                     leave();
-                    setDialog(null);
                   }}
                 >
                   Leave room
@@ -1343,14 +1411,6 @@ export default function App() {
             a personal board on this device.
           </p>
           <div className="file-actions">
-            <button onClick={exportBoard}>
-              <Icon name="download" />
-              <span>
-                <strong>Export board</strong>
-                <small>Editable .beebo.json file</small>
-              </span>
-              <Icon name="arrow" size={17} />
-            </button>
             <button onClick={() => fileInput.current?.click()}>
               <Icon name="upload" />
               <span>
@@ -1383,25 +1443,11 @@ export default function App() {
             </button>
           </div>
           <div className="local-storage">
-            <label className="checkbox-row">
-              <input
-                type="checkbox"
-                checked={localSaving}
-                disabled={Boolean(invite)}
-                onChange={(event) => {
-                  setLocalSaving(event.target.checked);
-                  if (!event.target.checked) setSavingLabel('Session only');
-                }}
-              />
-              <span>
-                Save personal board on this device
-                <small>
-                  {invite
-                    ? 'Leave the shared room before enabling local saving.'
-                    : 'Off by default. Shared boards are never saved automatically.'}
-                </small>
-              </span>
-            </label>
+            <p className="small muted">
+              Use Save board in the header for a local snapshot, or enable Save
+              board locally for automatic personal-board saving. Shared boards
+              are saved only when you explicitly choose Save board.
+            </p>
             <div className="storage-actions">
               <button
                 className="text-button"
@@ -1452,7 +1498,7 @@ export default function App() {
                 board.replace({
                   format: 'beebo-board',
                   version: 1,
-                  title: 'Untitled board',
+                  title: DEFAULT_BOARD_TITLE,
                   shapes: [],
                 });
                 setSelected([]);

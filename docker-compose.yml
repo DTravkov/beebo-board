@@ -1,0 +1,85 @@
+name: beebo-board
+
+services:
+  app:
+    image: beebo-board:local
+    build:
+      context: .
+      args:
+        NODE_BUILD_IMAGE: ${NODE_BUILD_IMAGE:?Set the reviewed Node build image digest}
+        NODE_RUNTIME_IMAGE: ${NODE_RUNTIME_IMAGE:?Set the reviewed Node runtime image digest}
+    environment:
+      HOST: 0.0.0.0
+      PORT: '3001'
+      PUBLIC_ORIGIN: https://${APP_DOMAIN:?Set the public application hostname}
+      TURN_URLS: turn:${TURN_DOMAIN:?Set the public relay hostname}:3478?transport=udp,turn:${TURN_DOMAIN}:3478?transport=tcp
+      TURN_SECRET_FILE: /run/secrets/turn_secret
+      DIRECT_CONNECTIONS_ENABLED: 'false'
+    secrets:
+      - turn_secret
+    expose:
+      - '3001'
+    read_only: true
+    tmpfs:
+      - /tmp:size=16m,mode=1777
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    restart: unless-stopped
+    logging: &bounded_logs
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: '3'
+
+  https:
+    image: ${CADDY_IMAGE:?Set the reviewed Caddy image digest}
+    entrypoint: [caddy]
+    command: [run, --config, /etc/caddy/Caddyfile, --adapter, caddyfile]
+    environment:
+      APP_DOMAIN: ${APP_DOMAIN}
+    ports:
+      - '80:80/tcp'
+      - '443:443/tcp'
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      app:
+        condition: service_healthy
+    security_opt: [no-new-privileges:true]
+    restart: unless-stopped
+    logging: *bounded_logs
+
+  turn:
+    image: ${COTURN_IMAGE:?Set the reviewed coturn image digest}
+    # Bypass shell-based image entrypoints. The secret is in a protected config.
+    entrypoint: [/usr/bin/turnserver]
+    command: [-c, /etc/coturn/turnserver.conf]
+    user: '65532:65532'
+    ports:
+      - '3478:3478/udp'
+      - '3478:3478/tcp'
+      - '49160-49260:49160-49260/udp'
+    volumes:
+      - type: bind
+        source: ./.deploy/coturn/turnserver.conf
+        target: /etc/coturn/turnserver.conf
+        read_only: true
+        bind:
+          create_host_path: false
+    read_only: true
+    tmpfs:
+      - /tmp:size=16m,mode=1777
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    restart: unless-stopped
+    logging: *bounded_logs
+
+secrets:
+  turn_secret:
+    file: ./.deploy/turn-secret
+
+volumes:
+  caddy_data:
+  caddy_config:

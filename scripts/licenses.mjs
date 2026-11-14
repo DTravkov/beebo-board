@@ -4,7 +4,10 @@ import { createHash } from 'node:crypto';
 import { permitted, ALLOWED_LICENSES } from './license-policy.mjs';
 
 const root = process.cwd();
-const lockBytes = await readFile('package-lock.json');
+// Git may check text out as CRLF on Windows; the inventory must stay portable.
+const lockBytes = Buffer.from(
+  (await readFile('package-lock.json', 'utf8')).replaceAll('\r\n', '\n'),
+);
 const lock = JSON.parse(lockBytes);
 const lockHash = createHash('sha256').update(lockBytes).digest('hex');
 const writing = process.argv.includes('--write');

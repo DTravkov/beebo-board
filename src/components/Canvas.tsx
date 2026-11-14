@@ -100,6 +100,8 @@ const TRAIL_MS = 220;
 const isBrush = (tool: Tool) => tool === 'pen' || tool === 'highlighter';
 const isEraser = (tool: Tool) => tool === 'eraser' || tool === 'eraser-partial';
 const isLine = (kind: ShapeKind) => kind === 'stroke' || kind === 'highlight';
+// Screen-pixel target: brush strokes do not scale; arrows compensate for zoom.
+const SELECTION_HIT_WIDTH = 28;
 
 function ShapeContent({ shape, scale }: { shape: BoardShape; scale: number }) {
   const common = {
@@ -116,7 +118,7 @@ function ShapeContent({ shape, scale }: { shape: BoardShape; scale: number }) {
         strokeScaleEnabled={false}
         lineCap="round"
         lineJoin="round"
-        hitStrokeWidth={14 / scale}
+        hitStrokeWidth={Math.max(SELECTION_HIT_WIDTH, shape.strokeWidth)}
       />
     );
   if (shape.kind === 'highlight')
@@ -129,7 +131,7 @@ function ShapeContent({ shape, scale }: { shape: BoardShape; scale: number }) {
         strokeScaleEnabled={false}
         lineCap="round"
         lineJoin="round"
-        hitStrokeWidth={Math.max(14 / scale, shape.strokeWidth)}
+        hitStrokeWidth={Math.max(SELECTION_HIT_WIDTH, shape.strokeWidth)}
       />
     );
   if (shape.kind === 'image') return <BoardImage shape={shape} />;
@@ -166,7 +168,10 @@ function ShapeContent({ shape, scale }: { shape: BoardShape; scale: number }) {
         strokeWidth={shape.strokeWidth}
         pointerLength={10}
         pointerWidth={9}
-        hitStrokeWidth={14 / scale}
+        hitStrokeWidth={Math.max(
+          SELECTION_HIT_WIDTH / scale,
+          shape.strokeWidth,
+        )}
       />
     );
   if (shape.kind === 'rect')
@@ -923,7 +928,11 @@ export function Canvas(props: Props) {
               onTransform={(event) => {
                 // Side handles reflow text instead of stretching it.
                 const anchor = transformer.current?.getActiveAnchor() ?? '';
-                if (multiple || shape.kind !== 'text' || !SIDES.includes(anchor))
+                if (
+                  multiple ||
+                  shape.kind !== 'text' ||
+                  !SIDES.includes(anchor)
+                )
                   return;
                 const group = event.currentTarget as Konva.Group;
                 const text = group.findOne<Konva.Text>('Text');

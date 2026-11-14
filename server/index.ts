@@ -1,4 +1,11 @@
 import { createApp } from './app.js';
+import { readFile } from 'node:fs/promises';
+
+if (process.env.TURN_SECRET_FILE && process.env.TURN_SECRET)
+  throw new Error('Set TURN_SECRET_FILE or TURN_SECRET, not both.');
+const turnSecret = process.env.TURN_SECRET_FILE
+  ? (await readFile(process.env.TURN_SECRET_FILE, 'utf8')).trim()
+  : process.env.TURN_SECRET;
 
 const port = Number(process.env.PORT ?? 3001);
 if (!Number.isInteger(port) || port < 1 || port > 65535)
@@ -9,12 +16,12 @@ const turnUrls = (process.env.TURN_URLS ?? '')
   .filter(Boolean);
 if (turnUrls.some((url) => !/^turns?:[^\s]+$/.test(url)))
   throw new Error('TURN_URLS must contain turn: or turns: URLs.');
-if (Boolean(turnUrls.length) !== Boolean(process.env.TURN_SECRET))
+if (Boolean(turnUrls.length) !== Boolean(turnSecret))
   throw new Error('Configure both TURN_URLS and TURN_SECRET.');
 const app = createApp({
   origins: process.env.PUBLIC_ORIGIN?.split(',').map((value) => value.trim()),
   turnUrls,
-  turnSecret: process.env.TURN_SECRET,
+  turnSecret,
   directEnabled: process.env.DIRECT_CONNECTIONS_ENABLED === 'true',
 });
 try {

@@ -95,7 +95,7 @@ Limits are defensive starting values, not measured capacity claims. TURN credent
 
 The `.beebo.json` format includes `format: 'beebo-board'`, `version: 1`, title, and ordered shapes. It excludes encryption material, presence, and CRDT internals. Imports validate schema/version, bounded values, and duplicate IDs before replacing board content. A replacement can be undone locally.
 
-IndexedDB stores one explicitly enabled personal board under a local-only key. It is never automatically restored or used for shared rooms. PNG exports show the current viewport and are not editable backups. A service worker, offline application-shell cache, durable room storage, and cloud accounts are outside this implementation.
+IndexedDB stores one local snapshot under a local-only key. Automatic saving is opt-in for personal boards and disabled in shared rooms. The header's Save board button explicitly saves a snapshot of either kind of board; restoration is always explicit in My workspace. Export board produces the portable JSON file. PNG exports show the current viewport and are not editable backups. A service worker, offline application-shell cache, durable room storage, and cloud accounts are outside this implementation.
 
 ## Scaling and next decisions
 

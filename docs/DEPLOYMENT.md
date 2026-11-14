@@ -1,5 +1,11 @@
 # Local operation and self-hosting
 
+## Docker Compose
+
+The root `docker-compose.yml` defines the app, Caddy HTTPS proxy, and coturn relay. Follow [deploy/README.md](../deploy/README.md) for required DNS, protected secrets, explicit reviewed image digests, image contracts, firewall ports, and startup commands. Stock images are not automatically cleared under the project's no-copyleft policy.
+
+The provided stack uses application HTTPS and TURN/UDP + TURN/TCP on 3478. TURN/TLS is a documented extension requiring a separate working certificate/renewal setup; it is not silently advertised. Validate configuration with `node scripts/check-compose.mjs`; this renders only synthetic inputs and does not pull images or test a live relay.
+
 ## Local review
 
 ```sh
@@ -53,7 +59,6 @@ listening-port=3478
 tls-listening-port=5349
 min-port=49160
 max-port=49260
-no-loopback-peers
 no-multicast-peers
 # cert=/operator/path/to/fullchain.pem
 # pkey=/operator/path/to/privkey.pem
