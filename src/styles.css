@@ -353,6 +353,10 @@ button svg {
 .style-preset.chosen {
   border: 2px solid #5f8a3c;
 }
+.eraser-size span {
+  border: 1.5px dashed #6d805f;
+  background: #ffffffa6;
+}
 .style-add {
   border-style: dashed;
   color: #6b7d63;

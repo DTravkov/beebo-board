@@ -10,6 +10,7 @@ import { Dialog } from './components/Dialog';
 import { Icon } from './components/Icon';
 import {
   BrushStyles,
+  EraserThickness,
   MAX_COLORS,
   MAX_STYLES,
   BASE_COLORS,
@@ -109,6 +110,7 @@ export default function App() {
     pen: 0,
     highlighter: 0,
   });
+  const [partialEraserSize, setPartialEraserSize] = useState(24);
   const [customColors, setCustomColors] = useState<string[]>([]);
   const penItem = PEN_GROUP.find((item) => item.id === tool);
   const brush: Brush | null =
@@ -550,6 +552,7 @@ export default function App() {
           tool={tool}
           color={brushStyle?.color ?? color}
           width={brushStyle?.width ?? strokeWidth}
+          partialEraserSize={partialEraserSize}
           selected={selected}
           view={view}
           lowBandwidth={lowBandwidth}
@@ -645,6 +648,15 @@ export default function App() {
                 <Icon name={item.id} size={18} />
               </button>,
             ])}
+            {tool === 'eraser-partial' && (
+              <>
+                <span className="brush-divider" />
+                <EraserThickness
+                  size={partialEraserSize}
+                  onChange={setPartialEraserSize}
+                />
+              </>
+            )}
             {brush && (
               <>
                 <span className="brush-divider" />

@@ -52,6 +52,8 @@ type Props = {
   tool: Tool;
   color: string;
   width: number;
+  /** Diameter of the partial eraser in screen pixels. */
+  partialEraserSize: number;
   selected: string | null;
   view: View;
   lowBandwidth: boolean;
@@ -194,6 +196,10 @@ export function Canvas(props: Props) {
     buttons: number;
   } | null>(null);
   const [eraserCursor, setEraserCursor] = useState<Point | null>(null);
+  const eraserRadius =
+    props.tool === 'eraser-partial'
+      ? props.partialEraserSize / 2
+      : ERASER_RADIUS;
   const [brushCursor, setBrushCursor] = useState<Point | null>(null);
   // Short-lived gray trail behind the eraser, in screen coordinates.
   const trail = useRef<(Point & { t: number })[]>([]);
@@ -284,7 +290,7 @@ export function Canvas(props: Props) {
   function eraseBetween(from: Point, to: Point) {
     const gesture = erasing.current;
     if (!gesture) return;
-    const radius = ERASER_RADIUS / props.view.scale;
+    const radius = eraserRadius / props.view.scale;
     if (props.tool === 'eraser-partial') {
       const changes: { id: string; pieces: BoardShape[] }[] = [];
       for (const shape of props.shapes) {
@@ -311,13 +317,7 @@ export function Canvas(props: Props) {
           textBounds = { ...local, x: shape.x + local.x, y: shape.y + local.y };
       }
       if (
-        eraserHits(
-          shape,
-          from,
-          to,
-          ERASER_RADIUS / props.view.scale,
-          textBounds,
-        )
+        eraserHits(shape, from, to, eraserRadius / props.view.scale, textBounds)
       ) {
         gesture.removed.add(shape.id);
         ids.push(shape.id);
@@ -658,7 +658,7 @@ export function Canvas(props: Props) {
             fill="none"
             stroke="#8a8f88"
             strokeOpacity={0.35}
-            strokeWidth={ERASER_RADIUS * 2}
+            strokeWidth={eraserRadius * 2}
             strokeLinecap="round"
             strokeLinejoin="round"
           />
@@ -668,7 +668,12 @@ export function Canvas(props: Props) {
         <span
           className={`eraser-cursor${props.tool === 'eraser-partial' ? ' partial' : ''}`}
           aria-hidden="true"
-          style={{ left: eraserCursor.x, top: eraserCursor.y }}
+          style={{
+            left: eraserCursor.x,
+            top: eraserCursor.y,
+            width: eraserRadius * 2,
+            height: eraserRadius * 2,
+          }}
         />
       )}
       {isBrush(props.tool) && !panning && brushCursor && (

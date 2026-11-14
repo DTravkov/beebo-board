@@ -204,3 +204,77 @@ export function BrushStyles(props: Props) {
     </>
   );
 }
+
+export const MIN_ERASER = 8;
+export const MAX_ERASER = 80;
+
+/** Size button for the partial eraser; opens a thickness slider. */
+export function EraserThickness(props: {
+  size: number;
+  onChange: (size: number) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const button = useRef<HTMLButtonElement>(null);
+  const popover = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!open) return;
+    const outside = (event: PointerEvent) => {
+      const target = event.target as Node;
+      if (popover.current?.contains(target) || button.current?.contains(target))
+        return;
+      setOpen(false);
+    };
+    const escape = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape') return;
+      event.stopPropagation();
+      setOpen(false);
+      button.current?.focus();
+    };
+    document.addEventListener('pointerdown', outside);
+    document.addEventListener('keydown', escape, true);
+    return () => {
+      document.removeEventListener('pointerdown', outside);
+      document.removeEventListener('keydown', escape, true);
+    };
+  }, [open]);
+  const dot = 6 + ((props.size - MIN_ERASER) / (MAX_ERASER - MIN_ERASER)) * 18;
+  return (
+    <>
+      <button
+        ref={button}
+        className="style-preset chosen eraser-size"
+        aria-label={`Partial eraser thickness: ${props.size}`}
+        title="Eraser thickness"
+        aria-expanded={open}
+        aria-haspopup="dialog"
+        onClick={() => setOpen(!open)}
+      >
+        <span style={{ width: dot, height: dot }} />
+      </button>
+      {open && (
+        <div
+          ref={popover}
+          className="style-popover"
+          role="dialog"
+          aria-label="Partial eraser thickness"
+        >
+          <label className="thickness">
+            <span>Thickness</span>
+            <span className="thickness-row">
+              <output>{props.size}</output>
+              <input
+                type="range"
+                min={MIN_ERASER}
+                max={MAX_ERASER}
+                step={2}
+                value={props.size}
+                aria-label="Eraser thickness"
+                onChange={(event) => props.onChange(Number(event.target.value))}
+              />
+            </span>
+          </label>
+        </div>
+      )}
+    </>
+  );
+}
