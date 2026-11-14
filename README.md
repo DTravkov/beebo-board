@@ -14,7 +14,7 @@ The software is open source. Learners' boards remain their content and are not p
 
 - Pen, rectangles, ellipses, arrows, text, and sticky notes; selection and movement.
 - Pan with middle-mouse drag or the Hand tool; zoom, local undo/redo, editable board titles, and an accessible Objects panel.
-- Cursor tool (V) moves every element; Text (T) and Sticky note (N) are typed right on the board; selecting any object shows handles to resize it and a toolbar for font, size, bold, alignment, color, and thickness. The Pen (P) flyout holds the brushes, sizes, colors, and two erasers: Object eraser (E) removes whole objects along its path, and Partial eraser (X) cuts away only the part of a pen or highlighter line it touches.
+- Cursor tool (V) moves every element; Frame (F) adds a background area (white or any color) that carries the objects inside it and exports to PNG from its toolbar. Text (T) and Sticky note (N) are typed right on the board; selecting any object shows handles to resize it and a toolbar for font, size, bold, alignment, color, and thickness. The Pen (P) flyout holds the brushes, sizes, colors, and two erasers: Object eraser (E) removes whole objects along its path, and Partial eraser (X) cuts away only the part of a pen or highlighter line it touches.
 - Versioned JSON import/export and PNG export of the visible view.
 - Opt-in personal-board storage in IndexedDB; explicit restore and deletion.
 - Think–Pair–Share and Know–Wonder–Learn activity templates.

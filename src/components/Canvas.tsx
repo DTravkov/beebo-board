@@ -32,6 +32,7 @@ import {
 } from '../lib/text';
 import {
   eraserHits,
+  shapeBounds,
   splitStroke,
   ERASER_RADIUS,
   type Bounds,
@@ -47,6 +48,7 @@ export type Tool =
   | 'arrow'
   | 'text'
   | 'sticky'
+  | 'frame'
   | 'hand'
   | 'eraser'
   | 'eraser-partial';
@@ -122,6 +124,30 @@ function ShapeContent({ shape, scale }: { shape: BoardShape; scale: number }) {
         lineJoin="round"
         hitStrokeWidth={Math.max(14 / scale, shape.strokeWidth)}
       />
+    );
+  if (shape.kind === 'frame')
+    return (
+      <>
+        <Text
+          text={shape.text}
+          y={-22 / scale}
+          fontSize={13 / scale}
+          fontFamily="'Segoe UI', sans-serif"
+          fill="#7d897f"
+          listening={false}
+        />
+        <Rect
+          width={shape.width}
+          height={shape.height}
+          fill={shape.fill}
+          stroke={shape.color}
+          strokeWidth={1 / scale}
+          shadowColor="#263b28"
+          shadowOpacity={0.06}
+          shadowBlur={14}
+          shadowOffsetY={3}
+        />
+      </>
     );
   if (shape.kind === 'arrow')
     return (
@@ -249,6 +275,7 @@ export function Canvas(props: Props) {
   } | null>(null);
   const shapeNodes = useRef(new Map<string, Konva.Group>());
   const transformer = useRef<Konva.Transformer>(null);
+  const carry = useRef<BoardShape[]>([]);
   const [editing, setEditingState] = useState<Editing | null>(null);
   const editingRef = useRef<Editing | null>(null);
   const textarea = useRef<HTMLTextAreaElement>(null);
@@ -562,6 +589,8 @@ export function Canvas(props: Props) {
       return;
     }
     if (props.tool === 'text' || props.tool === 'sticky') {
+      // Keep the browser from moving focus back to the canvas after this press.
+      event.evt.preventDefault();
       if (props.tool === 'text') {
         const shape = makeShape('text', p.x, p.y, props.color);
         shape.fontSize = Math.round(DEFAULT_TEXT_SIZE / props.view.scale);
@@ -588,6 +617,12 @@ export function Canvas(props: Props) {
           : (props.tool as ShapeKind);
     const shape = makeShape(kind, p.x, p.y, props.color);
     shape.strokeWidth = props.width;
+    if (kind === 'frame') {
+      shape.fill = '#ffffff';
+      shape.color = '#d5dccd';
+      shape.strokeWidth = 1;
+      shape.text = `Frame ${props.shapes.filter((s) => s.kind === 'frame').length + 1}`;
+    }
     if (isLine(kind)) shape.points = [0, 0];
     draftRef.current = shape;
     setDraft(shape);
@@ -621,9 +656,22 @@ export function Canvas(props: Props) {
     if (!shape) return;
     if (isLine(shape.kind) && shape.points.length === 2)
       shape = { ...shape, points: [0, 0, 0.1, 0.1] };
+    // A plain click with the frame tool places a ready-made frame.
+    if (shape.kind === 'frame' && Math.hypot(shape.width, shape.height) < 20)
+      shape = {
+        ...shape,
+        x: shape.x - 240,
+        y: shape.y - 160,
+        width: 480,
+        height: 320,
+      };
     if (!isLine(shape.kind) && Math.hypot(shape.width, shape.height) < 3)
       return;
-    if (shape.kind === 'rect' || shape.kind === 'ellipse')
+    if (
+      shape.kind === 'rect' ||
+      shape.kind === 'ellipse' ||
+      shape.kind === 'frame'
+    )
       shape = {
         ...shape,
         x: shape.x + Math.min(0, shape.width),
@@ -632,6 +680,10 @@ export function Canvas(props: Props) {
         height: Math.abs(shape.height),
       };
     props.onAdd(shape);
+    if (shape.kind === 'frame') {
+      props.onSelect(shape.id);
+      props.onToolDone();
+    }
   }
   function zoom(event: Konva.KonvaEventObject<WheelEvent>) {
     event.evt.preventDefault();
@@ -692,7 +744,10 @@ export function Canvas(props: Props) {
         onWheel={zoom}
       >
         <Layer>
-          {props.shapes.map((shape) => (
+          {[
+            ...props.shapes.filter((shape) => shape.kind === 'frame'),
+            ...props.shapes.filter((shape) => shape.kind !== 'frame'),
+          ].map((shape) => (
             <Group
               key={shape.id}
               ref={(node) => {
@@ -722,14 +777,35 @@ export function Canvas(props: Props) {
                 )
                   beginEdit(shape, false);
               }}
-              onDragStart={() => setMoving(true)}
+              onDragStart={() => {
+                setMoving(true);
+                carry.current =
+                  shape.kind === 'frame' ? framed(shape, props.shapes) : [];
+              }}
+              onDragMove={(event) => {
+                // A frame carries the objects inside it.
+                const dx = event.currentTarget.x() - shape.x;
+                const dy = event.currentTarget.y() - shape.y;
+                for (const inner of carry.current)
+                  shapeNodes.current
+                    .get(inner.id)
+                    ?.position({ x: inner.x + dx, y: inner.y + dy });
+              }}
               onDragEnd={(event) => {
                 event.cancelBubble = true;
                 setMoving(false);
+                const dx = event.currentTarget.x() - shape.x;
+                const dy = event.currentTarget.y() - shape.y;
                 props.onUpdate(shape.id, {
                   x: event.currentTarget.x(),
                   y: event.currentTarget.y(),
                 });
+                for (const inner of carry.current)
+                  props.onUpdate(inner.id, {
+                    x: inner.x + dx,
+                    y: inner.y + dy,
+                  });
+                carry.current = [];
               }}
               onTransformStart={() => setMoving(true)}
               onTransform={(event) => {
@@ -947,7 +1023,7 @@ function resized(
           Math.round((index % 2 ? value * sy : value * sx) * 100) / 100,
       ),
     };
-  const min = shape.kind === 'sticky' ? 80 : 4;
+  const min = shape.kind === 'sticky' ? 80 : shape.kind === 'frame' ? 40 : 4;
   const sign = (value: number) => (value < 0 ? -1 : 1);
   return {
     width:
@@ -1029,3 +1105,17 @@ const InlineText = function InlineText({
     />
   );
 };
+
+/** Objects lying fully inside a frame; they move with it. */
+function framed(frame: BoardShape, shapes: BoardShape[]) {
+  return shapes.filter((shape) => {
+    if (shape.id === frame.id || shape.kind === 'frame') return false;
+    const box = shapeBounds(shape);
+    return (
+      box.x >= frame.x &&
+      box.y >= frame.y &&
+      box.x + box.width <= frame.x + frame.width &&
+      box.y + box.height <= frame.y + frame.height
+    );
+  });
+}

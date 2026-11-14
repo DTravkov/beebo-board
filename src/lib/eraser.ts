@@ -200,7 +200,9 @@ export function eraserHits(
       { x: bounds.x, y: bounds.y + bounds.height },
     ],
     true,
-    shape.kind !== 'rect' || shape.fill !== 'transparent',
+    shape.kind === 'frame'
+      ? false
+      : shape.kind !== 'rect' || shape.fill !== 'transparent',
   );
 }
 
