@@ -45,6 +45,7 @@ const TOOLS: { id: Tool; label: string; key: string }[] = [
   { id: 'arrow', label: 'Arrow', key: 'A' },
   { id: 'text', label: 'Text', key: 'T' },
   { id: 'sticky', label: 'Sticky note', key: 'N' },
+  { id: 'frame', label: 'Frame', key: 'F' },
 ];
 // Everything in the Pen button's flyout: brushes first, then erasers.
 const PEN_GROUP: { id: Tool; label: string; key: string }[] = [
@@ -376,6 +377,34 @@ export default function App() {
       y: height / 2 - ((height / 2 - view.y) / view.scale) * scale,
     });
   }
+  /** Saves what is inside a frame as a PNG, at twice the board resolution. */
+  function exportFrame(frame: BoardShape) {
+    const current = stage.current;
+    if (!current) return;
+    const hidden = [
+      ...current.find('Transformer'),
+      ...current.getLayers().slice(1),
+    ].filter((node) => node.visible());
+    hidden.forEach((node) => node.visible(false));
+    try {
+      const canvas = current.toCanvas({
+        x: view.x + frame.x * view.scale,
+        y: view.y + frame.y * view.scale,
+        width: frame.width * view.scale,
+        height: frame.height * view.scale,
+        pixelRatio: 2 / view.scale,
+      });
+      const name =
+        (frame.text || 'frame').replace(/[^\p{L}\p{N} _-]+/gu, '').trim() ||
+        'frame';
+      canvas.toBlob((blob) => {
+        if (blob) download(`${name}.png`, blob);
+        else setToast('This frame could not be exported.');
+      }, 'image/png');
+    } finally {
+      hidden.forEach((node) => node.visible(true));
+    }
+  }
   function fit() {
     if (!shapes.length) {
       setView({ x: 0, y: 0, scale: 1 });
@@ -466,9 +495,26 @@ export default function App() {
           <span>My workspace</span>
           <Icon name="chevron" size={14} />
         </button>
-        <span className="header-badge">
-          <span className="tiny-dot" /> A little space for big ideas
-        </span>
+        <div className="board-heading header-board">
+          <div className="board-title-row">
+            <input
+              aria-label="Board title"
+              value={board.title}
+              maxLength={120}
+              onChange={(event) => board.setTitle(event.target.value)}
+            />
+            <Icon name="pen" size={13} />
+          </div>
+          <div className="board-subtitle">
+            <Icon name={localSaving ? 'check' : 'lock'} size={12} />
+            <span>
+              {invite ? 'Private room · up to 8 people' : savingLabel}
+            </span>
+            <span className="separator-dot">·</span>
+            <span>{shapes.length} objects</span>
+          </div>
+        </div>
+
         <div className="header-actions">
           <div className="history-buttons">
             <button
@@ -525,83 +571,6 @@ export default function App() {
         >
           <Icon name="book" />
         </button>
-        <div className="rail-bottom">
-          <button
-            className={`rail-button ${panel ? 'active' : ''}`}
-            aria-label="Toggle Objects panel"
-            title="Objects & keyboard editing"
-            aria-pressed={panel}
-            onClick={() => setPanel(!panel)}
-          >
-            <Icon name="layers" />
-          </button>
-          <button
-            className="rail-button"
-            aria-label="Help and keyboard shortcuts"
-            title="Help & shortcuts"
-            onClick={() => setDialog('help')}
-          >
-            <Icon name="info" />
-          </button>
-          <span className="rail-avatar" title="An open space for everyone">
-            b.
-          </span>
-        </div>
-      </aside>
-      <main className="board-area" aria-label="Board workspace">
-        <Canvas
-          shapes={shapes}
-          tool={tool}
-          color={brushStyle?.color ?? color}
-          width={brushStyle?.width ?? strokeWidth}
-          partialEraserSize={partialEraserSize}
-          selected={selected}
-          view={view}
-          lowBandwidth={lowBandwidth}
-          presence={people}
-          stageRef={stage}
-          onView={setView}
-          onSelect={setSelected}
-          onAdd={add}
-          onUpdate={update}
-          onErase={erase}
-          onSplice={splice}
-          onToolDone={() => setTool('select')}
-          renderToolbar={(shape) => (
-            <ObjectToolbar
-              shape={shape}
-              onUpdate={(patch) => update(shape.id, restyle(shape, patch))}
-              onDelete={() => remove(shape.id)}
-            />
-          )}
-          onCursor={(x, y) => session.current?.cursor(x, y, lowBandwidth)}
-        />
-        <div className="board-heading">
-          <div className="board-title-row">
-            <input
-              aria-label="Board title"
-              value={board.title}
-              maxLength={120}
-              onChange={(event) => board.setTitle(event.target.value)}
-            />
-            <Icon name="pen" size={13} />
-          </div>
-          <div className="board-subtitle">
-            <Icon name={localSaving ? 'check' : 'lock'} size={12} />
-            <span>
-              {invite ? 'Private room · up to 8 people' : savingLabel}
-            </span>
-            <span className="separator-dot">·</span>
-            <span>{shapes.length} objects</span>
-          </div>
-        </div>
-        <div className="canvas-note">
-          <span className="note-spark">✳</span>
-          <span>
-            A blank canvas.
-            <br />A fresh perspective.
-          </span>
-        </div>
         <div
           className="tool-dock"
           role="toolbar"
@@ -635,6 +604,55 @@ export default function App() {
             <span style={{ background: color }} />
           </label>
         </div>
+        <div className="rail-bottom">
+          <button
+            className={`rail-button ${panel ? 'active' : ''}`}
+            aria-label="Toggle Objects panel"
+            title="Objects & keyboard editing"
+            aria-pressed={panel}
+            onClick={() => setPanel(!panel)}
+          >
+            <Icon name="layers" />
+          </button>
+          <button
+            className="rail-button"
+            aria-label="Help and keyboard shortcuts"
+            title="Help & shortcuts"
+            onClick={() => setDialog('help')}
+          >
+            <Icon name="info" />
+          </button>
+        </div>
+      </aside>
+      <main className="board-area" aria-label="Board workspace">
+        <Canvas
+          shapes={shapes}
+          tool={tool}
+          color={brushStyle?.color ?? color}
+          width={brushStyle?.width ?? strokeWidth}
+          partialEraserSize={partialEraserSize}
+          selected={selected}
+          view={view}
+          lowBandwidth={lowBandwidth}
+          presence={people}
+          stageRef={stage}
+          onView={setView}
+          onSelect={setSelected}
+          onAdd={add}
+          onUpdate={update}
+          onErase={erase}
+          onSplice={splice}
+          onToolDone={() => setTool('select')}
+          renderToolbar={(shape) => (
+            <ObjectToolbar
+              shape={shape}
+              onUpdate={(patch) => update(shape.id, restyle(shape, patch))}
+              onDelete={() => remove(shape.id)}
+              onExport={() => exportFrame(shape)}
+            />
+          )}
+          onCursor={(x, y) => session.current?.cursor(x, y, lowBandwidth)}
+        />
         {penItem && (
           <div
             className="brush-panel"
@@ -740,7 +758,10 @@ export default function App() {
             </label>
           </div>
         )}
-        <div className={`connection-pill ${status.state}`} role="status">
+        <div
+          className={`connection-pill ${status.state}${invite ? '' : ' sr-only'}`}
+          role="status"
+        >
           <span className="connection-dot" />
           <span>{status.message}</span>
           {invite && (
@@ -751,12 +772,6 @@ export default function App() {
               <Icon name="chevron" size={13} />
             </button>
           )}
-        </div>
-        <div className="canvas-hint">
-          <Icon name="hand" size={14} />
-          <span>Middle mouse + drag to move</span>
-          <span className="separator-dot">·</span>
-          <span>Scroll to zoom</span>
         </div>
         <div className="zoom-controls">
           <button
@@ -916,20 +931,6 @@ export default function App() {
           </aside>
         )}
       </main>
-      <footer className="app-footer">
-        <span>
-          <Icon name="leaf" size={13} />
-          Your ideas stay yours.
-        </span>
-        <span>
-          Made for learning. Open to everyone.
-          <span className="footer-license">Apache 2.0</span>
-        </span>
-        <button onClick={() => setDialog('help')}>
-          <Icon name="keyboard" size={14} />
-          <span>Shortcuts</span>
-        </button>
-      </footer>
       <input
         ref={fileInput}
         type="file"
@@ -1394,6 +1395,18 @@ export default function App() {
               <kbd>Middle mouse + drag</kbd>
             </div>
             <div>
+              <span>Zoom</span>
+              <kbd>Scroll</kbd>
+            </div>
+            <div>
+              <span>Edit text</span>
+              <kbd>Double-click</kbd>
+            </div>
+            <div>
+              <span>Finish typing</span>
+              <kbd>Esc / Ctrl+Enter</kbd>
+            </div>
+            <div>
               <span>Undo / redo</span>
               <kbd>Ctrl/⌘ Z / ⇧ Z</kbd>
             </div>
@@ -1420,6 +1433,14 @@ export default function App() {
                 connection metadata.
               </p>
             </div>
+          </div>
+          <div className="license-card">
+            <Icon name="leaf" size={16} />
+            <p>
+              Made for learning. Open to everyone. Beebo is free software under
+              the <strong>Apache License 2.0</strong>; third-party notices ship
+              with the source.
+            </p>
           </div>
           <p className="small muted">
             For keyboard editing, open Objects in the left rail. Add notes, edit

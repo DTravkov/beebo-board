@@ -17,19 +17,30 @@ const NOTE_COLORS = [
   '#f6d5cf',
   '#ffffff',
 ];
+const FRAME_COLORS = [
+  '#ffffff',
+  '#f6f8f2',
+  '#fdf6dc',
+  '#e9f2e0',
+  '#e4eef5',
+  '#f3e9f5',
+  '#34483e',
+];
 const ALIGNS: TextAlign[] = ['left', 'center', 'right'];
 
 type Props = {
   shape: BoardShape;
   onUpdate: (patch: Partial<BoardShape>) => void;
   onDelete: () => void;
+  onExport: () => void;
 };
 
 /** Context controls for the selected object, shown above it on the canvas. */
-export function ObjectToolbar({ shape, onUpdate, onDelete }: Props) {
+export function ObjectToolbar({ shape, onUpdate, onDelete, onExport }: Props) {
   const [open, setOpen] = useState<'color' | 'fill' | null>(null);
   const root = useRef<HTMLDivElement>(null);
   const textual = shape.kind === 'text' || shape.kind === 'sticky';
+  const frame = shape.kind === 'frame';
   const style = textStyle(shape);
   const [sizeDraft, setSizeDraft] = useState(String(style.fontSize));
   useEffect(() => setSizeDraft(String(style.fontSize)), [style.fontSize]);
@@ -146,7 +157,36 @@ export function ObjectToolbar({ shape, onUpdate, onDelete }: Props) {
           </button>
         </>
       )}
-      {!textual && (
+      {frame && (
+        <>
+          <input
+            className="frame-title"
+            aria-label="Frame name"
+            value={shape.text}
+            maxLength={80}
+            onChange={(event) => onUpdate({ text: event.target.value })}
+          />
+          <span className="toolbar-divider" />
+          <button
+            className="toolbar-button"
+            aria-label="Frame background"
+            aria-expanded={open === 'fill'}
+            title="Background"
+            onClick={() => setOpen(open === 'fill' ? null : 'fill')}
+          >
+            <span className="color-dot" style={{ background: shape.fill }} />
+          </button>
+          <button
+            className="toolbar-button export-button"
+            title="Export this frame as PNG"
+            onClick={onExport}
+          >
+            <Icon name="image" size={17} />
+            <span>Export PNG</span>
+          </button>
+        </>
+      )}
+      {!textual && !frame && (
         <label className="toolbar-thickness" title="Thickness">
           <span className="sr-only">Thickness</span>
           <input
@@ -161,22 +201,24 @@ export function ObjectToolbar({ shape, onUpdate, onDelete }: Props) {
           />
         </label>
       )}
-      <span className="toolbar-divider" />
-      <button
-        className="toolbar-button"
-        aria-label={textual ? 'Text color' : 'Color'}
-        aria-expanded={open === 'color'}
-        title={textual ? 'Text color' : 'Color'}
-        onClick={() => setOpen(open === 'color' ? null : 'color')}
-      >
-        {textual ? (
-          <span className="text-color-icon">
-            A<span style={{ background: shape.color }} />
-          </span>
-        ) : (
-          <span className="color-dot" style={{ background: shape.color }} />
-        )}
-      </button>
+      {!frame && <span className="toolbar-divider" />}
+      {!frame && (
+        <button
+          className="toolbar-button"
+          aria-label={textual ? 'Text color' : 'Color'}
+          aria-expanded={open === 'color'}
+          title={textual ? 'Text color' : 'Color'}
+          onClick={() => setOpen(open === 'color' ? null : 'color')}
+        >
+          {textual ? (
+            <span className="text-color-icon">
+              A<span style={{ background: shape.color }} />
+            </span>
+          ) : (
+            <span className="color-dot" style={{ background: shape.color }} />
+          )}
+        </button>
+      )}
       {shape.kind === 'sticky' && (
         <button
           className="toolbar-button"
@@ -201,10 +243,21 @@ export function ObjectToolbar({ shape, onUpdate, onDelete }: Props) {
         <div
           className="toolbar-popover"
           role="dialog"
-          aria-label={open === 'fill' ? 'Note color' : 'Color'}
+          aria-label={
+            open === 'fill'
+              ? frame
+                ? 'Frame background'
+                : 'Note color'
+              : 'Color'
+          }
         >
           <div className="popover-colors">
-            {(open === 'fill' ? NOTE_COLORS : BASE_COLORS).map((value) => {
+            {(open === 'fill'
+              ? frame
+                ? FRAME_COLORS
+                : NOTE_COLORS
+              : BASE_COLORS
+            ).map((value) => {
               const current = open === 'fill' ? shape.fill : shape.color;
               return (
                 <button
