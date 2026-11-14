@@ -9,7 +9,8 @@ export type ShapeKind =
   | 'arrow'
   | 'text'
   | 'sticky'
-  | 'frame';
+  | 'frame'
+  | 'image';
 export type BoardShape = {
   id: string;
   kind: ShapeKind;
@@ -27,7 +28,11 @@ export type BoardShape = {
   fontSize?: number;
   bold?: boolean;
   align?: TextAlign;
+  /** Picture data for image objects: a base64 PNG, JPEG or WebP data URL. */
+  src?: string;
 };
+export const MAX_IMAGE_CHARS = 700_000;
+const imageSource = /^data:image\/(png|jpeg|webp);base64,[A-Za-z0-9+/]+={0,2}$/;
 export type FontFamily = 'sans' | 'serif' | 'mono' | 'hand';
 export type TextAlign = 'left' | 'center' | 'right';
 export const MIN_FONT_SIZE = 8;
@@ -42,7 +47,13 @@ export const FONTS: Record<FontFamily, { label: string; css: string }> = {
     css: "'Segoe Print', 'Comic Sans MS', 'Chalkboard SE', cursive",
   },
 };
-const optionalKeys = new Set(['fontFamily', 'fontSize', 'bold', 'align']);
+const optionalKeys = new Set([
+  'fontFamily',
+  'fontSize',
+  'bold',
+  'align',
+  'src',
+]);
 export type BoardFile = {
   format: 'beebo-board';
   version: 1;
@@ -58,6 +69,7 @@ const kinds = new Set([
   'text',
   'sticky',
   'frame',
+  'image',
 ]);
 const shapeKeys = new Set([
   'id',
@@ -99,6 +111,12 @@ export function isShape(value: unknown): value is BoardShape {
       s.align === 'left' ||
       s.align === 'center' ||
       s.align === 'right') &&
+    // Only image objects carry picture data, and they must.
+    (s.kind === 'image'
+      ? typeof s.src === 'string' &&
+        s.src.length <= MAX_IMAGE_CHARS &&
+        imageSource.test(s.src)
+      : s.src === undefined) &&
     typeof s.id === 'string' &&
     /^[a-zA-Z0-9_-]{1,80}$/.test(s.id) &&
     typeof s.kind === 'string' &&
