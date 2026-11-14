@@ -167,3 +167,58 @@ test('highlighter strokes round-trip through the board format and stay size-limi
     ),
   );
 });
+
+test('text styling fields are optional, validated, and round-trip', () => {
+  const text = makeShape('text', 0, 0);
+  text.text = 'Мама';
+  const file = { format: 'beebo-board', version: 1, title: 'Fonts' };
+  const styled = {
+    ...text,
+    fontFamily: 'serif',
+    fontSize: 64,
+    bold: true,
+    align: 'center',
+  };
+  const parsed = parseBoard(JSON.stringify({ ...file, shapes: [styled] }));
+  assert.equal(parsed.shapes[0].fontSize, 64);
+  assert.equal(parsed.shapes[0].fontFamily, 'serif');
+  // Boards saved before styling existed still load.
+  assert.equal(
+    parseBoard(JSON.stringify({ ...file, shapes: [text] })).shapes.length,
+    1,
+  );
+  for (const bad of [
+    { fontFamily: 'toString' },
+    { fontFamily: 'Comic Sans' },
+    { fontSize: 2 },
+    { fontSize: 999 },
+    { bold: 'yes' },
+    { align: 'justify' },
+    { extra: 1 },
+  ])
+    assert.throws(() =>
+      parseBoard(JSON.stringify({ ...file, shapes: [{ ...text, ...bad }] })),
+    );
+});
+
+test('image objects carry only base64 raster data and nothing else does', () => {
+  const file = { format: 'beebo-board', version: 1, title: 'Pictures' };
+  const image = makeShape('image', 0, 0);
+  image.width = 120;
+  image.height = 80;
+  image.src = 'data:image/webp;base64,UklGRhYAAABXRUJQ';
+  assert.equal(
+    parseBoard(JSON.stringify({ ...file, shapes: [image] })).shapes[0].kind,
+    'image',
+  );
+  const note = { ...makeShape('sticky', 0, 0), src: image.src };
+  for (const bad of [
+    { ...image, src: undefined },
+    { ...image, src: 'https://example.com/tracker.png' },
+    { ...image, src: 'data:image/svg+xml;base64,PHN2Zz4=' },
+    { ...image, src: 'data:image/png;base64,<script>' },
+    { ...image, src: `data:image/png;base64,${'A'.repeat(700_001)}` },
+    note,
+  ])
+    assert.throws(() => parseBoard(JSON.stringify({ ...file, shapes: [bad] })));
+});

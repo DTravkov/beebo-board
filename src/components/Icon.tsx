@@ -45,6 +45,23 @@ export function Icon({ name, size = 20 }: { name: string; size?: number }) {
         <path d="M14 20h1M18 20h1M22 20h.01" />
       </>
     ),
+    'align-left': <path d="M4 6h16M4 10h10M4 14h16M4 18h10" />,
+    'align-center': <path d="M4 6h16M7 10h10M4 14h16M7 18h10" />,
+    'align-right': <path d="M4 6h16M10 10h10M4 14h16M10 18h10" />,
+    frame: <path d="M7 3v18M17 3v18M3 7h18M3 17h18" />,
+    image: (
+      <>
+        <rect x="3" y="4" width="18" height="16" rx="2" />
+        <circle cx="9" cy="10" r="2" />
+        <path d="m21 16-5-5-9 9" />
+      </>
+    ),
+    copy: (
+      <>
+        <rect x="8" y="8" width="13" height="13" rx="2" />
+        <path d="M16 8V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h3" />
+      </>
+    ),
     undo: (
       <>
         <path d="m9 5-5 5 5 5" />

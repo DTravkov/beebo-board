@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import type { ReactNode } from 'react';
 import {
   Stage,
   Layer,
@@ -9,6 +10,8 @@ import {
   Arrow,
   Text,
   Circle,
+  Transformer,
+  Image as KonvaImage,
 } from 'react-konva';
 import type Konva from 'konva';
 import type { PointerEvent as ReactPointerEvent } from 'react';
@@ -20,7 +23,17 @@ import {
 } from '../shared/board';
 import type { Presence } from '../lib/room';
 import {
+  clampFontSize,
+  DEFAULT_TEXT_SIZE,
+  fitText,
+  hugsContent,
+  measureText,
+  STICKY_PADDING,
+  textStyle,
+} from '../lib/text';
+import {
   eraserHits,
+  shapeBounds,
   splitStroke,
   ERASER_RADIUS,
   type Bounds,
@@ -36,6 +49,7 @@ export type Tool =
   | 'arrow'
   | 'text'
   | 'sticky'
+  | 'frame'
   | 'hand'
   | 'eraser'
   | 'eraser-partial';
@@ -64,10 +78,16 @@ type Props = {
   onUpdate: (id: string, patch: Partial<BoardShape>) => void;
   onErase: (ids: string[]) => void;
   onSplice: (changes: { id: string; pieces: BoardShape[] }[]) => void;
-  onEditText: (editor: TextEditor) => void;
   onCursor: (x: number, y: number) => void;
   stageRef: React.RefObject<Konva.Stage | null>;
+  /** Called after a new text or note is placed, so the app can switch back to Select. */
+  onToolDone: () => void;
+  /** Floating controls shown above the selected object. */
+  renderToolbar: (shape: BoardShape) => ReactNode;
 };
+type Editing = { shape: BoardShape; before: BoardShape | null };
+const CORNERS = ['top-left', 'top-right', 'bottom-left', 'bottom-right'];
+const SIDES = ['middle-left', 'middle-right'];
 
 const HIGHLIGHT_OPACITY = 0.35;
 const TRAIL_MS = 220;
@@ -87,6 +107,7 @@ function ShapeContent({ shape, scale }: { shape: BoardShape; scale: number }) {
         points={shape.points}
         stroke={shape.color}
         strokeWidth={shape.strokeWidth}
+        strokeScaleEnabled={false}
         lineCap="round"
         lineJoin="round"
         hitStrokeWidth={14 / scale}
@@ -99,10 +120,36 @@ function ShapeContent({ shape, scale }: { shape: BoardShape; scale: number }) {
         stroke={shape.color}
         strokeWidth={shape.strokeWidth}
         opacity={HIGHLIGHT_OPACITY}
+        strokeScaleEnabled={false}
         lineCap="round"
         lineJoin="round"
         hitStrokeWidth={Math.max(14 / scale, shape.strokeWidth)}
       />
+    );
+  if (shape.kind === 'image') return <BoardImage shape={shape} />;
+  if (shape.kind === 'frame')
+    return (
+      <>
+        <Text
+          text={shape.text}
+          y={-22 / scale}
+          fontSize={13 / scale}
+          fontFamily="'Segoe UI', sans-serif"
+          fill="#7d897f"
+          listening={false}
+        />
+        <Rect
+          width={shape.width}
+          height={shape.height}
+          fill={shape.fill}
+          stroke={shape.color}
+          strokeWidth={1 / scale}
+          shadowColor="#263b28"
+          shadowOpacity={0.06}
+          shadowBlur={14}
+          shadowOffsetY={3}
+        />
+      </>
     );
   if (shape.kind === 'arrow')
     return (
@@ -135,6 +182,7 @@ function ShapeContent({ shape, scale }: { shape: BoardShape; scale: number }) {
         {...common}
       />
     );
+  const sticky = textStyle(shape);
   if (shape.kind === 'sticky')
     return (
       <>
@@ -158,26 +206,29 @@ function ShapeContent({ shape, scale }: { shape: BoardShape; scale: number }) {
         />
         <Text
           text={shape.text}
-          x={20}
-          y={23}
-          width={shape.width - 40}
-          height={shape.height - 36}
-          fontSize={16}
-          lineHeight={1.45}
-          fontFamily="'Segoe UI', sans-serif"
+          x={STICKY_PADDING.x}
+          y={STICKY_PADDING.top}
+          width={shape.width - STICKY_PADDING.x * 2}
+          height={shape.height - STICKY_PADDING.top - STICKY_PADDING.bottom}
+          fontSize={sticky.fontSize}
+          fontStyle={sticky.fontStyle}
+          align={sticky.align}
+          lineHeight={sticky.lineHeight}
+          fontFamily={sticky.fontFamily}
           fill={shape.color}
         />
       </>
     );
-  const heading = shape.id === 'welcome';
+  const style = textStyle(shape);
   return (
     <Text
       text={shape.text}
       width={shape.width || 360}
-      fontSize={heading ? 38 : shape.id === 'subtitle' ? 16 : 22}
-      fontStyle={heading ? 'bold' : 'normal'}
-      lineHeight={1.35}
-      fontFamily={heading ? 'Georgia, serif' : "'Segoe UI', sans-serif"}
+      fontSize={style.fontSize}
+      fontStyle={style.fontStyle}
+      align={style.align}
+      lineHeight={style.lineHeight}
+      fontFamily={style.fontFamily}
       fill={shape.color}
     />
   );
@@ -225,6 +276,58 @@ export function Canvas(props: Props) {
     removed: Set<string>;
   } | null>(null);
   const shapeNodes = useRef(new Map<string, Konva.Group>());
+  const transformer = useRef<Konva.Transformer>(null);
+  const carry = useRef<BoardShape[]>([]);
+  const [editing, setEditingState] = useState<Editing | null>(null);
+  const editingRef = useRef<Editing | null>(null);
+  const textarea = useRef<HTMLTextAreaElement>(null);
+  // Set when a press on the canvas ended an edit, so that press does nothing else.
+  const pressEndedEdit = useRef(false);
+  const [moving, setMoving] = useState(false);
+  const [toolbarAt, setToolbarAt] = useState<{
+    x: number;
+    y: number;
+    below: boolean;
+  } | null>(null);
+  function setEditing(next: Editing | null) {
+    editingRef.current = next;
+    setEditingState(next);
+  }
+  function beginEdit(shape: BoardShape, isNew: boolean) {
+    props.onSelect(isNew ? null : shape.id);
+    setEditing({ shape, before: isNew ? null : shape });
+  }
+  function commitEdit() {
+    const current = editingRef.current;
+    if (!current) return;
+    setEditing(null);
+    const shape = { ...current.shape, text: current.shape.text.trimEnd() };
+    if (shape.kind === 'text') {
+      if (!shape.text.trim()) {
+        if (current.before) props.onErase([shape.id]);
+        return;
+      }
+      Object.assign(shape, fitText(current.before, shape));
+    }
+    if (current.before)
+      props.onUpdate(shape.id, {
+        text: shape.text,
+        width: shape.width,
+        height: shape.height,
+      });
+    else {
+      props.onAdd(shape);
+      props.onToolDone();
+    }
+    props.onSelect(shape.id);
+  }
+  const selectedShape =
+    props.shapes.find((shape) => shape.id === props.selected) ?? null;
+  const showHandles =
+    props.tool === 'select' &&
+    !middlePanning &&
+    !!selectedShape &&
+    editing?.shape.id !== selectedShape.id;
   const panning = props.tool === 'hand' || middlePanning;
   function stopPanning() {
     const gesture = panGesture.current;
@@ -239,6 +342,56 @@ export function Canvas(props: Props) {
     if (gesture && host.current?.hasPointerCapture(gesture.pointerId))
       host.current.releasePointerCapture(gesture.pointerId);
   }
+  useEffect(() => {
+    if (!editing) return;
+    const input = textarea.current;
+    if (input && editing.shape.kind === 'text') {
+      input.style.height = '0px';
+      input.style.height = `${input.scrollHeight}px`;
+    }
+    if (!input || document.activeElement === input) return;
+    const focus = () => {
+      if (document.activeElement === input) return;
+      input.focus({ preventScroll: true });
+      input.setSelectionRange(input.value.length, input.value.length);
+    };
+    focus();
+    // The browser's own mouse-down handling can move focus back to the canvas.
+    const timer = setTimeout(focus);
+    return () => clearTimeout(timer);
+  }, [editing]);
+  useEffect(() => {
+    const tr = transformer.current;
+    if (!tr) return;
+    const node =
+      showHandles && props.selected
+        ? shapeNodes.current.get(props.selected)
+        : undefined;
+    tr.nodes(node ? [node] : []);
+    tr.getLayer()?.batchDraw();
+  }, [showHandles, props.selected, props.shapes]);
+  useLayoutEffect(() => {
+    const node =
+      showHandles && props.selected
+        ? shapeNodes.current.get(props.selected)
+        : undefined;
+    if (!node) {
+      setToolbarAt(null);
+      return;
+    }
+    const box = node.getClientRect();
+    const below = box.y < 70;
+    const next = {
+      x: Math.round(box.x + box.width / 2),
+      y: Math.round(below ? box.y + box.height : box.y),
+      below,
+    };
+    setToolbarAt((old) =>
+      old && old.x === next.x && old.y === next.y && old.below === next.below
+        ? old
+        : next,
+    );
+  }, [showHandles, props.selected, props.shapes, props.view, size, moving]);
   useEffect(() => {
     const observer = new ResizeObserver(([entry]) =>
       setSize({
@@ -267,6 +420,7 @@ export function Canvas(props: Props) {
     stopErasing();
     setEraserCursor(null);
     setBrushCursor(null);
+    if (props.tool !== 'text' && props.tool !== 'sticky') commitEdit();
   }, [props.tool]);
   function pointer(event: ReactPointerEvent<HTMLDivElement>) {
     const rect = event.currentTarget.getBoundingClientRect();
@@ -326,6 +480,11 @@ export function Canvas(props: Props) {
     if (ids.length) props.onErase(ids);
   }
   function pointerDown(event: ReactPointerEvent<HTMLDivElement>) {
+    if ((event.target as HTMLElement).closest('.object-toolbar, .inline-text'))
+      return;
+    // Any press on the canvas ends text editing before it does anything else.
+    pressEndedEdit.current = !!editingRef.current;
+    commitEdit();
     host.current?.focus({ preventScroll: true });
     if (!event.isPrimary) return;
     if (event.button === 1 || (props.tool === 'hand' && event.button === 0)) {
@@ -420,6 +579,11 @@ export function Canvas(props: Props) {
   }
   function start(event: Konva.KonvaEventObject<PointerEvent>) {
     if (panning || event.evt.button > 0) return;
+    // The press that ended a text edit does nothing else.
+    if (pressEndedEdit.current) {
+      pressEndedEdit.current = false;
+      return;
+    }
     const p = point();
     if (!p) return;
     if (props.tool === 'select' || isEraser(props.tool)) {
@@ -427,7 +591,24 @@ export function Canvas(props: Props) {
       return;
     }
     if (props.tool === 'text' || props.tool === 'sticky') {
-      props.onEditText({ kind: props.tool, x: p.x, y: p.y, text: '' });
+      // Keep the browser from moving focus back to the canvas after this press.
+      event.evt.preventDefault();
+      if (props.tool === 'text') {
+        const shape = makeShape('text', p.x, p.y, props.color);
+        shape.fontSize = Math.round(DEFAULT_TEXT_SIZE / props.view.scale);
+        shape.fontSize = clampFontSize(shape.fontSize);
+        shape.fontFamily = 'sans';
+        shape.y -= (shape.fontSize * 1.35) / 2;
+        shape.width = 0;
+        beginEdit(shape, true);
+      } else {
+        const shape = makeShape('sticky', p.x - 102, p.y - 87, '#34483e');
+        shape.width = 205;
+        shape.height = 175;
+        shape.fill = '#f5e7a1';
+        shape.fontSize = 16;
+        beginEdit(shape, true);
+      }
       return;
     }
     const kind: ShapeKind =
@@ -438,6 +619,12 @@ export function Canvas(props: Props) {
           : (props.tool as ShapeKind);
     const shape = makeShape(kind, p.x, p.y, props.color);
     shape.strokeWidth = props.width;
+    if (kind === 'frame') {
+      shape.fill = '#ffffff';
+      shape.color = '#d5dccd';
+      shape.strokeWidth = 1;
+      shape.text = `Frame ${props.shapes.filter((s) => s.kind === 'frame').length + 1}`;
+    }
     if (isLine(kind)) shape.points = [0, 0];
     draftRef.current = shape;
     setDraft(shape);
@@ -471,9 +658,22 @@ export function Canvas(props: Props) {
     if (!shape) return;
     if (isLine(shape.kind) && shape.points.length === 2)
       shape = { ...shape, points: [0, 0, 0.1, 0.1] };
+    // A plain click with the frame tool places a ready-made frame.
+    if (shape.kind === 'frame' && Math.hypot(shape.width, shape.height) < 20)
+      shape = {
+        ...shape,
+        x: shape.x - 240,
+        y: shape.y - 160,
+        width: 480,
+        height: 320,
+      };
     if (!isLine(shape.kind) && Math.hypot(shape.width, shape.height) < 3)
       return;
-    if (shape.kind === 'rect' || shape.kind === 'ellipse')
+    if (
+      shape.kind === 'rect' ||
+      shape.kind === 'ellipse' ||
+      shape.kind === 'frame'
+    )
       shape = {
         ...shape,
         x: shape.x + Math.min(0, shape.width),
@@ -482,6 +682,10 @@ export function Canvas(props: Props) {
         height: Math.abs(shape.height),
       };
     props.onAdd(shape);
+    if (shape.kind === 'frame') {
+      props.onSelect(shape.id);
+      props.onToolDone();
+    }
   }
   function zoom(event: Konva.KonvaEventObject<WheelEvent>) {
     event.evt.preventDefault();
@@ -542,7 +746,10 @@ export function Canvas(props: Props) {
         onWheel={zoom}
       >
         <Layer>
-          {props.shapes.map((shape) => (
+          {[
+            ...props.shapes.filter((shape) => shape.kind === 'frame'),
+            ...props.shapes.filter((shape) => shape.kind !== 'frame'),
+          ].map((shape) => (
             <Group
               key={shape.id}
               ref={(node) => {
@@ -563,32 +770,66 @@ export function Canvas(props: Props) {
                   props.tool === 'select' &&
                   (shape.kind === 'text' || shape.kind === 'sticky')
                 )
-                  props.onEditText({
-                    id: shape.id,
-                    kind: shape.kind,
-                    x: shape.x,
-                    y: shape.y,
-                    text: shape.text,
-                  });
+                  beginEdit(shape, false);
               }}
               onDblTap={() => {
                 if (
                   props.tool === 'select' &&
                   (shape.kind === 'text' || shape.kind === 'sticky')
                 )
-                  props.onEditText({
-                    id: shape.id,
-                    kind: shape.kind,
-                    x: shape.x,
-                    y: shape.y,
-                    text: shape.text,
-                  });
+                  beginEdit(shape, false);
+              }}
+              onDragStart={() => {
+                setMoving(true);
+                carry.current =
+                  shape.kind === 'frame' ? framed(shape, props.shapes) : [];
+              }}
+              onDragMove={(event) => {
+                // A frame carries the objects inside it.
+                const dx = event.currentTarget.x() - shape.x;
+                const dy = event.currentTarget.y() - shape.y;
+                for (const inner of carry.current)
+                  shapeNodes.current
+                    .get(inner.id)
+                    ?.position({ x: inner.x + dx, y: inner.y + dy });
               }}
               onDragEnd={(event) => {
                 event.cancelBubble = true;
+                setMoving(false);
+                const dx = event.currentTarget.x() - shape.x;
+                const dy = event.currentTarget.y() - shape.y;
                 props.onUpdate(shape.id, {
                   x: event.currentTarget.x(),
                   y: event.currentTarget.y(),
+                });
+                for (const inner of carry.current)
+                  props.onUpdate(inner.id, {
+                    x: inner.x + dx,
+                    y: inner.y + dy,
+                  });
+                carry.current = [];
+              }}
+              onTransformStart={() => setMoving(true)}
+              onTransform={(event) => {
+                // Side handles reflow text instead of stretching it.
+                const anchor = transformer.current?.getActiveAnchor() ?? '';
+                if (shape.kind !== 'text' || !SIDES.includes(anchor)) return;
+                const group = event.currentTarget as Konva.Group;
+                const text = group.findOne<Konva.Text>('Text');
+                text?.width(Math.max(20, text.width() * group.scaleX()));
+                group.scale({ x: 1, y: 1 });
+              }}
+              onTransformEnd={(event) => {
+                setMoving(false);
+                const group = event.currentTarget as Konva.Group;
+                const sx = group.scaleX();
+                const sy = group.scaleY();
+                group.scale({ x: 1, y: 1 });
+                const anchor = transformer.current?.getActiveAnchor() ?? '';
+                props.onUpdate(shape.id, {
+                  x: group.x(),
+                  y: group.y(),
+                  ...resized(shape, group, sx, sy, CORNERS.includes(anchor)),
                 });
               }}
             >
@@ -600,21 +841,60 @@ export function Canvas(props: Props) {
                     fill="transparent"
                   />
                 )}
-              <ShapeContent shape={shape} scale={props.view.scale} />
-              {props.selected === shape.id && (
-                <Rect
-                  x={-6}
-                  y={-6}
-                  width={Math.max(20, Math.abs(shape.width) || 360) + 12}
-                  height={Math.max(24, Math.abs(shape.height) || 40) + 12}
-                  stroke="#71944d"
-                  strokeWidth={1.5 / props.view.scale}
-                  dash={[5, 4]}
-                  listening={false}
-                />
-              )}
+              <ShapeContent
+                shape={
+                  editing?.shape.id === shape.id
+                    ? { ...shape, text: '' }
+                    : shape
+                }
+                scale={props.view.scale}
+              />
             </Group>
           ))}
+          {editing && !editing.before && editing.shape.kind === 'sticky' && (
+            <Group x={editing.shape.x} y={editing.shape.y} listening={false}>
+              <ShapeContent
+                shape={{ ...editing.shape, text: '' }}
+                scale={props.view.scale}
+              />
+            </Group>
+          )}
+          <Transformer
+            ref={transformer}
+            rotateEnabled={false}
+            flipEnabled={false}
+            ignoreStroke
+            padding={4}
+            borderStroke="#5f8a3c"
+            borderStrokeWidth={1.5}
+            keepRatio={
+              selectedShape?.kind === 'text' || selectedShape?.kind === 'image'
+            }
+            enabledAnchors={
+              selectedShape?.kind === 'image'
+                ? CORNERS
+                : selectedShape?.kind === 'text'
+                  ? [...CORNERS, ...SIDES]
+                  : [...CORNERS, ...SIDES, 'top-center', 'bottom-center']
+            }
+            anchorStyleFunc={(anchor) => {
+              const corner = CORNERS.some((name) => anchor.hasName(name));
+              const size = corner ? 12 : 9;
+              anchor.width(size);
+              anchor.height(size);
+              anchor.offsetX(size / 2);
+              anchor.offsetY(size / 2);
+              anchor.cornerRadius(size);
+              anchor.fill(corner ? '#ffffff' : '#5f8a3c');
+              anchor.stroke(corner ? '#7d8a78' : '#ffffff');
+              anchor.strokeWidth(1.5);
+            }}
+            boundBoxFunc={(oldBox, newBox) =>
+              Math.abs(newBox.width) < 12 || Math.abs(newBox.height) < 8
+                ? oldBox
+                : newBox
+            }
+          />
           {draft && (
             <Group x={draft.x} y={draft.y} listening={false}>
               <ShapeContent shape={draft} scale={props.view.scale} />
@@ -651,6 +931,35 @@ export function Canvas(props: Props) {
           <Circle x={-100} y={-100} radius={0} />
         </Layer>
       </Stage>
+      {editing && (
+        <InlineText
+          ref={textarea}
+          editing={editing}
+          view={props.view}
+          onChange={(text) =>
+            setEditing({ ...editing, shape: { ...editing.shape, text } })
+          }
+          onCommit={commitEdit}
+        />
+      )}
+      {toolbarAt && selectedShape && !moving && !editing && (
+        <div
+          ref={(node) => {
+            // Keep the toolbar fully inside the canvas.
+            if (!node) return;
+            const half = node.offsetWidth / 2;
+            const left = Math.min(
+              Math.max(toolbarAt.x, half + 8),
+              Math.max(half + 8, size.width - half - 8),
+            );
+            node.style.left = `${left}px`;
+          }}
+          className={`object-toolbar-anchor${toolbarAt.below ? ' below' : ''}`}
+          style={{ left: toolbarAt.x, top: toolbarAt.y }}
+        >
+          {props.renderToolbar(selectedShape)}
+        </div>
+      )}
       {trailPoints.length > 1 && (
         <svg className="eraser-trail" aria-hidden="true">
           <polyline
@@ -693,4 +1002,176 @@ export function Canvas(props: Props) {
       )}
     </div>
   );
+}
+
+/** New geometry after a handle drag, given the group's temporary scale. */
+function resized(
+  shape: BoardShape,
+  group: Konva.Group,
+  sx: number,
+  sy: number,
+  corner: boolean,
+): Partial<BoardShape> {
+  if (shape.kind === 'text') {
+    const text = group.findOne<Konva.Text>('Text');
+    const width = Math.round(
+      (text?.width() ?? shape.width) * (corner ? sx : 1),
+    );
+    if (!corner) return { width, height: measureText(shape, width).height };
+    const fontSize = clampFontSize(textStyle(shape).fontSize * sy);
+    const next = { ...shape, fontSize, width };
+    return { fontSize, width, height: measureText(next, width).height };
+  }
+  if (shape.kind === 'stroke' || shape.kind === 'highlight')
+    return {
+      points: shape.points.map(
+        (value, index) =>
+          Math.round((index % 2 ? value * sy : value * sx) * 100) / 100,
+      ),
+    };
+  const min =
+    shape.kind === 'sticky'
+      ? 80
+      : shape.kind === 'frame'
+        ? 40
+        : shape.kind === 'image'
+          ? 16
+          : 4;
+  const sign = (value: number) => (value < 0 ? -1 : 1);
+  return {
+    width:
+      sign(shape.width) * Math.max(min, Math.round(Math.abs(shape.width * sx))),
+    height:
+      sign(shape.height) *
+      Math.max(min, Math.round(Math.abs(shape.height * sy))),
+  };
+}
+
+type InlineProps = {
+  editing: Editing;
+  view: View;
+  onChange: (text: string) => void;
+  onCommit: () => void;
+};
+/** A textarea laid exactly over the text being edited on the canvas. */
+const InlineText = function InlineText({
+  ref,
+  editing,
+  view,
+  onChange,
+  onCommit,
+}: InlineProps & { ref: React.Ref<HTMLTextAreaElement> }) {
+  const shape = editing.shape;
+  const style = textStyle(shape);
+  const sticky = shape.kind === 'sticky';
+  const x = shape.x + (sticky ? STICKY_PADDING.x : 0);
+  const y = shape.y + (sticky ? STICKY_PADDING.top : 0);
+  const fixedWidth = sticky
+    ? shape.width - STICKY_PADDING.x * 2
+    : hugsContent(editing.before)
+      ? 0
+      : shape.width;
+  const width = fixedWidth || Math.max(40, measureText(shape).width + 24);
+  return (
+    <textarea
+      ref={ref}
+      className={`inline-text${sticky ? ' sticky' : ''}`}
+      aria-label={sticky ? 'Note text' : 'Text'}
+      value={shape.text}
+      spellCheck
+      onChange={(event) => onChange(event.target.value)}
+      onBlur={(event) => {
+        // Canvas presses commit through the pointer handler instead.
+        if (!event.relatedTarget?.closest('.canvas-host')) onCommit();
+      }}
+      onKeyDown={(event) => {
+        event.stopPropagation();
+        if (
+          event.key === 'Escape' ||
+          (event.key === 'Enter' && (event.ctrlKey || event.metaKey))
+        ) {
+          event.preventDefault();
+          onCommit();
+        }
+      }}
+      onInput={(event) => {
+        if (sticky) return;
+        const input = event.currentTarget;
+        input.style.height = '0px';
+        input.style.height = `${input.scrollHeight}px`;
+      }}
+      style={{
+        left: view.x + x * view.scale,
+        top: view.y + y * view.scale,
+        width: width * view.scale,
+        height: sticky
+          ? (shape.height - STICKY_PADDING.top - STICKY_PADDING.bottom) *
+            view.scale
+          : undefined,
+        fontSize: style.fontSize * view.scale,
+        fontFamily: style.fontFamily,
+        fontWeight: style.bold ? 700 : 400,
+        textAlign: style.align,
+        lineHeight: style.lineHeight,
+        color: shape.color,
+      }}
+    />
+  );
+};
+
+/** Objects lying fully inside a frame; they move with it. */
+function framed(frame: BoardShape, shapes: BoardShape[]) {
+  return shapes.filter((shape) => {
+    if (shape.id === frame.id || shape.kind === 'frame') return false;
+    const box = shapeBounds(shape);
+    return (
+      box.x >= frame.x &&
+      box.y >= frame.y &&
+      box.x + box.width <= frame.x + frame.width &&
+      box.y + box.height <= frame.y + frame.height
+    );
+  });
+}
+
+// Decoded pictures, shared by every render of the same image data.
+const decoded = new Map<string, HTMLImageElement>();
+function BoardImage({ shape }: { shape: BoardShape }) {
+  const src = shape.src ?? '';
+  const [image, setImage] = useState(() => {
+    const cached = decoded.get(src);
+    return cached?.complete ? cached : null;
+  });
+  useEffect(() => {
+    let cached = decoded.get(src);
+    if (cached?.complete) {
+      setImage(cached);
+      return;
+    }
+    if (!cached) {
+      cached = new window.Image();
+      cached.src = src;
+      if (decoded.size > 200) decoded.clear();
+      decoded.set(src, cached);
+    }
+    const element = cached;
+    let live = true;
+    element
+      .decode()
+      .then(() => live && setImage(element))
+      .catch(() => live && setImage(null));
+    return () => {
+      live = false;
+    };
+  }, [src]);
+  if (!image)
+    return (
+      <Rect
+        width={shape.width}
+        height={shape.height}
+        fill="#eef2ea"
+        stroke="#d5dccd"
+        strokeWidth={1}
+      />
+    );
+  return <KonvaImage image={image} width={shape.width} height={shape.height} />;
 }

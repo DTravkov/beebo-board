@@ -8,6 +8,9 @@ import {
 } from './components/Canvas';
 import { Dialog } from './components/Dialog';
 import { Icon } from './components/Icon';
+import { ObjectToolbar } from './components/ObjectToolbar';
+import { restyle } from './lib/text';
+import { imagePng, prepareImage } from './lib/image';
 import {
   BrushStyles,
   EraserThickness,
@@ -43,6 +46,7 @@ const TOOLS: { id: Tool; label: string; key: string }[] = [
   { id: 'arrow', label: 'Arrow', key: 'A' },
   { id: 'text', label: 'Text', key: 'T' },
   { id: 'sticky', label: 'Sticky note', key: 'N' },
+  { id: 'frame', label: 'Frame', key: 'F' },
 ];
 // Everything in the Pen button's flyout: brushes first, then erasers.
 const PEN_GROUP: { id: Tool; label: string; key: string }[] = [
@@ -257,6 +261,13 @@ export default function App() {
           event.preventDefault();
           exportBoard();
         }
+        if (event.key.toLowerCase() === 'c' && selected) {
+          const shape = board.getShapes().find((item) => item.id === selected);
+          if (shape?.kind === 'image') {
+            event.preventDefault();
+            void copyImage(shape);
+          }
+        }
         return;
       }
       if (event.key === 'Escape') {
@@ -300,6 +311,25 @@ export default function App() {
     window.addEventListener('keydown', keydown);
     return () => window.removeEventListener('keydown', keydown);
   }, [board, selected]);
+  useEffect(() => {
+    // Pictures pasted anywhere outside a text field land on the board.
+    const paste = (event: ClipboardEvent) => {
+      const target = event.target as HTMLElement | null;
+      if (
+        target?.closest?.('input, textarea, [contenteditable]') ||
+        document.querySelector('dialog[open]')
+      )
+        return;
+      const files = [...(event.clipboardData?.files ?? [])].filter((file) =>
+        file.type.startsWith('image/'),
+      );
+      if (!files.length) return;
+      event.preventDefault();
+      void addImages(files);
+    };
+    window.addEventListener('paste', paste);
+    return () => window.removeEventListener('paste', paste);
+  });
   async function startSession(
     value: { room: string; secret: string },
     joining: boolean,
@@ -373,6 +403,94 @@ export default function App() {
       x: width / 2 - ((width / 2 - view.x) / view.scale) * scale,
       y: height / 2 - ((height / 2 - view.y) / view.scale) * scale,
     });
+  }
+  /** Adds pasted or dropped pictures as image objects, centred on a point. */
+  async function addImages(files: Blob[], at?: { x: number; y: number }) {
+    const pictures = files.filter((file) => file.type.startsWith('image/'));
+    if (!pictures.length) return;
+    if (pictures.length > 5) setToast('Only the first 5 pictures were added.');
+    const width = stage.current?.width() ?? 800;
+    const height = stage.current?.height() ?? 600;
+    const center = at ?? {
+      x: (width / 2 - view.x) / view.scale,
+      y: (height / 2 - view.y) / view.scale,
+    };
+    let offset = 0;
+    for (const file of pictures.slice(0, 5)) {
+      try {
+        const picture = await prepareImage(file);
+        if (board.byteSize() + picture.src.length > MAX_DOCUMENT_BYTES)
+          throw new Error(
+            'This board has no room for another picture. Boards are limited to 2 MB.',
+          );
+        const fit = Math.min(1, 480 / Math.max(picture.width, picture.height));
+        const shape = makeShape('image', 0, 0);
+        shape.width = Math.round(picture.width * fit);
+        shape.height = Math.round(picture.height * fit);
+        shape.x = Math.round(center.x - shape.width / 2 + offset);
+        shape.y = Math.round(center.y - shape.height / 2 + offset);
+        shape.src = picture.src;
+        const name = file instanceof File ? file.name : '';
+        // Clipboard pictures arrive as "image.png"; that is not a description.
+        shape.text = /^image\.\w+$/i.test(name)
+          ? ''
+          : name.replace(/\.\w+$/, '').slice(0, 300);
+        board.add(shape);
+        setSelected(shape.id);
+        setTool('select');
+        offset += 24;
+      } catch (error) {
+        setToast(
+          error instanceof Error ? error.message : 'The picture was not added.',
+        );
+      }
+    }
+  }
+  async function copyImage(shape: BoardShape) {
+    try {
+      if (
+        !shape.src ||
+        !navigator.clipboard?.write ||
+        !('ClipboardItem' in window)
+      )
+        throw new Error('This browser cannot copy pictures.');
+      await navigator.clipboard.write([
+        new ClipboardItem({ 'image/png': imagePng(shape.src) }),
+      ]);
+      setToast('Picture copied.');
+    } catch (error) {
+      setToast(
+        error instanceof Error ? error.message : 'The picture was not copied.',
+      );
+    }
+  }
+  /** Saves what is inside a frame as a PNG, at twice the board resolution. */
+  function exportFrame(frame: BoardShape) {
+    const current = stage.current;
+    if (!current) return;
+    const hidden = [
+      ...current.find('Transformer'),
+      ...current.getLayers().slice(1),
+    ].filter((node) => node.visible());
+    hidden.forEach((node) => node.visible(false));
+    try {
+      const canvas = current.toCanvas({
+        x: view.x + frame.x * view.scale,
+        y: view.y + frame.y * view.scale,
+        width: frame.width * view.scale,
+        height: frame.height * view.scale,
+        pixelRatio: 2 / view.scale,
+      });
+      const name =
+        (frame.text || 'frame').replace(/[^\p{L}\p{N} _-]+/gu, '').trim() ||
+        'frame';
+      canvas.toBlob((blob) => {
+        if (blob) download(`${name}.png`, blob);
+        else setToast('This frame could not be exported.');
+      }, 'image/png');
+    } finally {
+      hidden.forEach((node) => node.visible(true));
+    }
   }
   function fit() {
     if (!shapes.length) {
@@ -464,9 +582,26 @@ export default function App() {
           <span>My workspace</span>
           <Icon name="chevron" size={14} />
         </button>
-        <span className="header-badge">
-          <span className="tiny-dot" /> A little space for big ideas
-        </span>
+        <div className="board-heading header-board">
+          <div className="board-title-row">
+            <input
+              aria-label="Board title"
+              value={board.title}
+              maxLength={120}
+              onChange={(event) => board.setTitle(event.target.value)}
+            />
+            <Icon name="pen" size={13} />
+          </div>
+          <div className="board-subtitle">
+            <Icon name={localSaving ? 'check' : 'lock'} size={12} />
+            <span>
+              {invite ? 'Private room · up to 8 people' : savingLabel}
+            </span>
+            <span className="separator-dot">·</span>
+            <span>{shapes.length} objects</span>
+          </div>
+        </div>
+
         <div className="header-actions">
           <div className="history-buttons">
             <button
@@ -523,76 +658,6 @@ export default function App() {
         >
           <Icon name="book" />
         </button>
-        <div className="rail-bottom">
-          <button
-            className={`rail-button ${panel ? 'active' : ''}`}
-            aria-label="Toggle Objects panel"
-            title="Objects & keyboard editing"
-            aria-pressed={panel}
-            onClick={() => setPanel(!panel)}
-          >
-            <Icon name="layers" />
-          </button>
-          <button
-            className="rail-button"
-            aria-label="Help and keyboard shortcuts"
-            title="Help & shortcuts"
-            onClick={() => setDialog('help')}
-          >
-            <Icon name="info" />
-          </button>
-          <span className="rail-avatar" title="An open space for everyone">
-            b.
-          </span>
-        </div>
-      </aside>
-      <main className="board-area" aria-label="Board workspace">
-        <Canvas
-          shapes={shapes}
-          tool={tool}
-          color={brushStyle?.color ?? color}
-          width={brushStyle?.width ?? strokeWidth}
-          partialEraserSize={partialEraserSize}
-          selected={selected}
-          view={view}
-          lowBandwidth={lowBandwidth}
-          presence={people}
-          stageRef={stage}
-          onView={setView}
-          onSelect={setSelected}
-          onAdd={add}
-          onUpdate={update}
-          onErase={erase}
-          onSplice={splice}
-          onEditText={setEditor}
-          onCursor={(x, y) => session.current?.cursor(x, y, lowBandwidth)}
-        />
-        <div className="board-heading">
-          <div className="board-title-row">
-            <input
-              aria-label="Board title"
-              value={board.title}
-              maxLength={120}
-              onChange={(event) => board.setTitle(event.target.value)}
-            />
-            <Icon name="pen" size={13} />
-          </div>
-          <div className="board-subtitle">
-            <Icon name={localSaving ? 'check' : 'lock'} size={12} />
-            <span>
-              {invite ? 'Private room · up to 8 people' : savingLabel}
-            </span>
-            <span className="separator-dot">·</span>
-            <span>{shapes.length} objects</span>
-          </div>
-        </div>
-        <div className="canvas-note">
-          <span className="note-spark">✳</span>
-          <span>
-            A blank canvas.
-            <br />A fresh perspective.
-          </span>
-        </div>
         <div
           className="tool-dock"
           role="toolbar"
@@ -626,6 +691,75 @@ export default function App() {
             <span style={{ background: color }} />
           </label>
         </div>
+        <div className="rail-bottom">
+          <button
+            className={`rail-button ${panel ? 'active' : ''}`}
+            aria-label="Toggle Objects panel"
+            title="Objects & keyboard editing"
+            aria-pressed={panel}
+            onClick={() => setPanel(!panel)}
+          >
+            <Icon name="layers" />
+          </button>
+          <button
+            className="rail-button"
+            aria-label="Help and keyboard shortcuts"
+            title="Help & shortcuts"
+            onClick={() => setDialog('help')}
+          >
+            <Icon name="info" />
+          </button>
+        </div>
+      </aside>
+      <main
+        className="board-area"
+        aria-label="Board workspace"
+        onDragOver={(event) => {
+          if (event.dataTransfer.types.includes('Files'))
+            event.preventDefault();
+        }}
+        onDrop={(event) => {
+          const files = [...event.dataTransfer.files].filter((file) =>
+            file.type.startsWith('image/'),
+          );
+          if (!files.length) return;
+          event.preventDefault();
+          const box = event.currentTarget.getBoundingClientRect();
+          void addImages(files, {
+            x: (event.clientX - box.left - view.x) / view.scale,
+            y: (event.clientY - box.top - view.y) / view.scale,
+          });
+        }}
+      >
+        <Canvas
+          shapes={shapes}
+          tool={tool}
+          color={brushStyle?.color ?? color}
+          width={brushStyle?.width ?? strokeWidth}
+          partialEraserSize={partialEraserSize}
+          selected={selected}
+          view={view}
+          lowBandwidth={lowBandwidth}
+          presence={people}
+          stageRef={stage}
+          onView={setView}
+          onSelect={setSelected}
+          onAdd={add}
+          onUpdate={update}
+          onErase={erase}
+          onSplice={splice}
+          onToolDone={() => setTool('select')}
+          renderToolbar={(shape) => (
+            <ObjectToolbar
+              shape={shape}
+              onUpdate={(patch) => update(shape.id, restyle(shape, patch))}
+              onDelete={() => remove(shape.id)}
+              onExport={() => exportFrame(shape)}
+              onCopy={() => void copyImage(shape)}
+            />
+          )}
+          onCursor={(x, y) => session.current?.cursor(x, y, lowBandwidth)}
+        />
         {penItem && (
           <div
             className="brush-panel"
@@ -704,7 +838,7 @@ export default function App() {
             )}
           </div>
         )}
-        {['rect', 'ellipse', 'arrow', 'text', 'sticky'].includes(tool) && (
+        {['rect', 'ellipse', 'arrow', 'text'].includes(tool) && (
           <div className="style-bar" aria-label="Drawing style">
             {COLORS.map((value) => (
               <button
@@ -731,7 +865,10 @@ export default function App() {
             </label>
           </div>
         )}
-        <div className={`connection-pill ${status.state}`} role="status">
+        <div
+          className={`connection-pill ${status.state}${invite ? '' : ' sr-only'}`}
+          role="status"
+        >
           <span className="connection-dot" />
           <span>{status.message}</span>
           {invite && (
@@ -742,12 +879,6 @@ export default function App() {
               <Icon name="chevron" size={13} />
             </button>
           )}
-        </div>
-        <div className="canvas-hint">
-          <Icon name="hand" size={14} />
-          <span>Middle mouse + drag to move</span>
-          <span className="separator-dot">·</span>
-          <span>Scroll to zoom</span>
         </div>
         <div className="zoom-controls">
           <button
@@ -907,20 +1038,6 @@ export default function App() {
           </aside>
         )}
       </main>
-      <footer className="app-footer">
-        <span>
-          <Icon name="leaf" size={13} />
-          Your ideas stay yours.
-        </span>
-        <span>
-          Made for learning. Open to everyone.
-          <span className="footer-license">Apache 2.0</span>
-        </span>
-        <button onClick={() => setDialog('help')}>
-          <Icon name="keyboard" size={14} />
-          <span>Shortcuts</span>
-        </button>
-      </footer>
       <input
         ref={fileInput}
         type="file"
@@ -1385,6 +1502,18 @@ export default function App() {
               <kbd>Middle mouse + drag</kbd>
             </div>
             <div>
+              <span>Zoom</span>
+              <kbd>Scroll</kbd>
+            </div>
+            <div>
+              <span>Edit text</span>
+              <kbd>Double-click</kbd>
+            </div>
+            <div>
+              <span>Finish typing</span>
+              <kbd>Esc / Ctrl+Enter</kbd>
+            </div>
+            <div>
               <span>Undo / redo</span>
               <kbd>Ctrl/⌘ Z / ⇧ Z</kbd>
             </div>
@@ -1411,6 +1540,14 @@ export default function App() {
                 connection metadata.
               </p>
             </div>
+          </div>
+          <div className="license-card">
+            <Icon name="leaf" size={16} />
+            <p>
+              Made for learning. Open to everyone. Beebo is free software under
+              the <strong>Apache License 2.0</strong>; third-party notices ship
+              with the source.
+            </p>
           </div>
           <p className="small muted">
             For keyboard editing, open Objects in the left rail. Add notes, edit

@@ -119,6 +119,10 @@ export class BoardDocument {
       }
     }, this.localOrigin);
   }
+  /** Encoded size of the whole board, as it is shared with peers. */
+  byteSize() {
+    return Y.encodeStateAsUpdate(this.doc).length;
+  }
   export(): BoardFile {
     return {
       format: 'beebo-board',

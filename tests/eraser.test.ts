@@ -115,3 +115,18 @@ test('partial eraser cuts a line into the pieces outside the eraser path', () =>
   rect.height = 50;
   assert.equal(splitStroke(rect, { x: 0, y: 25 }, { x: 0, y: 25 }, 10), null);
 });
+
+test('frames are erased only along their edge, never by sweeping their inside', () => {
+  const frame = makeShape('frame', 0, 0);
+  frame.width = 400;
+  frame.height = 300;
+  frame.fill = '#ffffff';
+  assert.equal(
+    eraserHits(frame, { x: 100, y: 100 }, { x: 300, y: 200 }, 12),
+    false,
+  );
+  assert.equal(
+    eraserHits(frame, { x: 200, y: -5 }, { x: 200, y: 5 }, 12),
+    true,
+  );
+});
