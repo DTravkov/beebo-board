@@ -3,10 +3,17 @@ name: beebo-board
 services:
   dev:
     profiles: [dev]
-    image: node:22.23.5-bookworm-slim
+    build:
+      context: .
+      target: dev
     working_dir: /app
     init: true
-    command: [sh, -c, 'npm ci --ignore-scripts && npm run dev']
+    command:
+      [
+        sh,
+        -c,
+        'npm ci --ignore-scripts && python -m venv /app/.venv && /app/.venv/bin/python -m pip install --require-hashes -r server/requirements.txt && npm run dev',
+      ]
     environment:
       HOST: 0.0.0.0
       PORT: '3001'
@@ -24,6 +31,7 @@ services:
     volumes:
       - .:/app
       - dev_node_modules:/app/node_modules
+      - dev_venv:/app/.venv
 
   app:
     profiles: [production]
@@ -134,5 +142,6 @@ configs:
 
 volumes:
   dev_node_modules:
+  dev_venv:
   caddy_data:
   caddy_config:

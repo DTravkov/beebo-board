@@ -8,9 +8,11 @@ Keep each PR focused. Describe the problem, resulting behavior, actual checks ru
 
 ## Development and testing
 
-Use Node.js 22.12+ and npm. Run `npm ci` and `npm run dev`; see [README.md](README.md) and [architecture](docs/ARCHITECTURE.md).
+Use Node.js 22.12+, npm, and Python 3.10+ (CI uses 3.12). Install the npm lockfile and hash-locked `server/requirements.txt` in a virtual environment before running `npm run dev`; see [README.md](README.md) and [architecture](docs/ARCHITECTURE.md).
 
 Use strict TypeScript, descriptive names, two spaces, semicolons, and single quotes. Format changed files with Prettier. Keep the shared schema, rendering, transport, and server separate.
+
+Python uses type annotations, descriptive names, four spaces, and single quotes. Keep each backend feature under `server/src/<feature>/` and mirror it in `server/tests/`; see [BACKEND.md](docs/BACKEND.md). Domain services must remain independent of FastAPI and WebSockets.
 
 Run `npm run check` before review. For canvas, room, or transport changes, also run `npm run test:browser` against the built app using an installed Chromium browser. Focus tests on behavior that can fail: concurrent edits, imports, admission, malformed peers, and interaction. Report live TURN testing separately from local direct-mode tests.
 
@@ -20,7 +22,7 @@ Contributions are Apache-2.0. Confirm you have the rights to contributed code an
 
 Application dependencies must offer a permissive license such as MIT, Apache-2.0, BSD, or ISC. Copyleft-only packages (including GPL, AGPL, LGPL, and MPL), proprietary terms, and unknown licenses are excluded. Inspect direct, transitive, development, optional, platform-specific, and bundled components; a package badge alone is insufficient. Review dual-license expressions and bundled notices against the actual terms.
 
-Pin direct versions, inspect the lockfile diff, and update `THIRD_PARTY_NOTICES.txt` when dependencies change. The production build includes the project license and third-party notices. License review is a contributor responsibility; there is no automated license gate. Standard infrastructure images are allowed under their own component licenses and are outside the application's permissive-only dependency rule.
+Pin direct versions, inspect lockfile diffs, and update `THIRD_PARTY_NOTICES.txt` when dependencies change. Python direct versions live in `server/requirements.in`; regenerate `server/requirements.txt` with `uv pip compile server/requirements.in --universal --python-version 3.10 --generate-hashes --output-file server/requirements.txt --no-header`. Review environment markers and bundled native-library dependencies as well as Python distributions. The production build includes the project license and third-party notices. License review is a contributor responsibility; there is no automated license gate. Standard infrastructure images are allowed under their own component licenses and are outside the application's permissive-only dependency rule.
 
 ## Privacy and conduct
 

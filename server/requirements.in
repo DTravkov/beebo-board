@@ -1,0 +1,6 @@
+# Direct imports; regenerate requirements.txt with uv pip compile --universal --generate-hashes.
+fastapi==0.162.5
+pydantic==2.14.3
+pydantic-settings==2.15.0
+uvicorn==0.54.0
+websockets==16.1.1

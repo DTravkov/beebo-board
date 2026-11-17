@@ -10,3 +10,7 @@ test-results/
 .sites-local/
 .deploy/
 .docker-local/
+.venv/
+.uv-cache/
+__pycache__/
+*.py[cod]
