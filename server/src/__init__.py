@@ -1,0 +1,1 @@
+"""Feature-first FastAPI application."""

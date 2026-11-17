@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { mkdir } from 'node:fs/promises';
 import { readFile } from 'node:fs/promises';
 import { chromium, type Page } from 'playwright-core';
-import { createApp } from '../server/app';
+import { createApp } from './helpers/server';
 import {
   makeShape,
   type BoardFile,

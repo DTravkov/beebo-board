@@ -1,17 +1,8 @@
 import { spawn } from 'node:child_process';
+import { pythonExecutable } from './python.mjs';
 
 const children = [
-  spawn(
-    process.execPath,
-    [
-      '--env-file-if-exists=.env',
-      '--watch',
-      '--import',
-      'tsx',
-      'server/index.ts',
-    ],
-    { stdio: 'inherit' },
-  ),
+  spawn(pythonExecutable(), ['-m', 'server', '--reload'], { stdio: 'inherit' }),
   spawn(
     process.execPath,
     [

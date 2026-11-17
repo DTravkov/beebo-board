@@ -1,30 +1,38 @@
 # Architecture
 
-Beebo targets groups of up to eight participants. React renders the UI, Konva draws the canvas, Yjs holds shared content, and native WebRTC data channels synchronize peers. Fastify and `ws` handle admission and signaling. coturn relays traffic by default.
+Beebo targets groups of up to eight participants. React renders the UI, Konva draws the canvas, Yjs holds shared content, and native WebRTC data channels synchronize peers. FastAPI and Uvicorn handle admission and signaling. coturn relays traffic by default.
 
 ```mermaid
 flowchart LR
-  A[Browser A] <-->|HTTPS / WSS| S[Node signaling]
+  A[Browser A] <-->|HTTPS / WSS| S[FastAPI signaling]
   B[Browser B] <-->|HTTPS / WSS| S
   A <-->|Encrypted WebRTC| T[coturn]
   T <-->|Encrypted WebRTC| B
 ```
 
-The production Compose profile places Caddy in front of Node for HTTPS. Node and coturn never hold the invitation encryption key or a plaintext board. Explicit direct mode connects browsers without requiring a relay; no public STUN service is built in.
+The production Compose profile places Caddy in front of FastAPI for HTTPS. FastAPI and coturn never hold the invitation encryption key or a plaintext board. Explicit direct mode connects browsers without requiring a relay; no public STUN service is built in.
 
 ## Code boundaries
 
-| Location                           | Responsibility                                            |
-| ---------------------------------- | --------------------------------------------------------- |
-| `src/App.tsx`, `src/components/`   | Workspace, controls, canvas interaction                   |
-| `src/shared/board.ts`              | Portable schema, validation, resource limits              |
-| `src/lib/document.ts`              | Yjs state and local undo                                  |
-| `src/lib/crypto.ts`                | Key derivation and payload encryption                     |
-| `src/lib/room.ts`                  | Signaling client, peer mesh, synchronization              |
-| `src/lib/storage.ts`               | Explicit browser-local persistence                        |
-| `server/app.ts`, `server/index.ts` | Admission, quotas, configuration, static serving          |
-| `scripts/dev.mjs`                  | Starts/stops the development server and Vite together     |
-| `tests/`                           | Document, security, signaling, and browser behavior tests |
+| Location                                   | Responsibility                                            |
+| ------------------------------------------ | --------------------------------------------------------- |
+| `src/App.tsx`, `src/components/`           | Workspace, controls, canvas interaction                   |
+| `src/shared/board.ts`                      | Portable schema, validation, resource limits              |
+| `src/lib/document.ts`                      | Yjs state and local undo                                  |
+| `src/lib/crypto.ts`                        | Key derivation and payload encryption                     |
+| `src/lib/room.ts`                          | Signaling client, peer mesh, synchronization              |
+| `src/lib/storage.ts`                       | Explicit browser-local persistence                        |
+| `server/src/main.py`, `server/__main__.py` | FastAPI app, middleware, lifecycle, process entry         |
+| `server/src/config.py`                     | Pydantic environment settings and TURN secret loading     |
+| `server/src/rooms/`                        | Room domain, admission, repository, HTTP creation         |
+| `server/src/signaling/`                    | WebSocket adapter, peer routing, TURN credentials         |
+| `server/src/system/`                       | Public configuration and health                           |
+| `server/src/shared/`                       | Shared dependencies, security headers, origin/IP policy   |
+| `server/tests/`                            | Python tests mirroring server features                    |
+| `scripts/dev.mjs`                          | Starts/stops the development server and Vite together     |
+| `tests/`                                   | Document, security, signaling, and browser behavior tests |
+
+See [the backend guide](BACKEND.md) for the feature boundaries, bootstrap lifecycle, and an end-to-end room-creation reading order.
 
 ## Document and storage
 
@@ -38,11 +46,11 @@ Portable `.beebo.json` files contain format/version, title, and ordered shapes, 
 
 1. The creator generates a random room UUID and 32-byte invitation secret in the browser.
 2. HKDF-SHA-256 derives separate AES-256-GCM encryption and admission keys using the room ID as salt.
-3. Room creation sends the ID, connection policy, and SHA-256 admission-token verifier to Node. Invitations keep the ID and secret in the URL fragment.
-4. A WebSocket must supply its admission token within five seconds. After verification, Node returns peers, room policy, expiry, and one-hour TURN credentials.
+3. Room creation sends the ID, connection policy, and SHA-256 admission-token verifier to FastAPI. Invitations keep the ID and secret in the URL fragment.
+4. A WebSocket must supply its admission token within five seconds. After verification, FastAPI returns peers, room policy, expiry, and one-hour TURN credentials.
 5. Only members of the same room can exchange SDP/ICE signaling. A room's connection policy cannot change. Default relay mode requires TURN; direct mode requires operator enablement and the creator's explicit choice.
 
-This authenticates a shared invitation, not individual identities. Every invitation holder is an editor. Node can observe membership and connectivity metadata; the host can also replace served JavaScript. See [SECURITY.md](../SECURITY.md).
+This authenticates a shared invitation, not individual identities. Every invitation holder is an editor. FastAPI can observe membership and connectivity metadata; the host can also replace served JavaScript. See [SECURITY.md](../SECURITY.md).
 
 ## Synchronization and bounds
 

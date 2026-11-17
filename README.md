@@ -1,6 +1,6 @@
 # Beebo Board
 
-A privacy-first collaborative whiteboard for tutoring and small groups of up to **eight people**. Built with React, Konva, Yjs, native WebRTC, and a Node.js signaling server.
+A privacy-first collaborative whiteboard for tutoring and small groups of up to **eight people**. Built with React, Konva, Yjs, native WebRTC, and a Python FastAPI signaling server.
 
 Draw, write notes, add images and frames, move and resize objects, and export JSON or PNG. Boards stay in browser memory unless you explicitly save or export them. The header provides local saving and export; saved boards can be restored or deleted in My workspace.
 
@@ -8,17 +8,24 @@ Collaboration uses encrypted WebRTC data channels. TURN-only networking is the d
 
 ## Run locally
 
-Use Node.js 22.12+ and npm.
+Use Node.js 22.12+, npm, and Python 3.10+ (3.12 is used in Docker and CI).
 
 ```sh
 npm ci
+python -m venv .venv
+# Activate: .venv\Scripts\Activate.ps1 on Windows, or source .venv/bin/activate on Unix.
+python -m pip install --require-hashes -r server/requirements.txt
 # Copy .env.example to .env and configure it if collaboration is needed.
 npm run dev
 ```
 
 Open **http://localhost:5173**. To test rooms without TURN, set `DIRECT_CONNECTIONS_ENABLED=true` in `.env`, restart, and select direct connections in Share board. This can expose participants' IP addresses to one another.
 
+The npm commands automatically use `.venv` when present; set `PYTHON` to select another interpreter. If shell policy blocks activation on Windows, run `.venv\Scripts\python.exe -m pip install --require-hashes -r server/requirements.txt` directly.
+
 For a local production build, run `npm run build` then `npm start` and open **http://localhost:3001**.
+
+FastAPI serves the built `dist/` directory through its native `app.frontend()` support. During development, Vite serves the frontend and proxies API and signaling requests to FastAPI.
 
 ## Docker
 
@@ -37,7 +44,7 @@ Production runs the app, Caddy for HTTPS, and coturn on one host. It requires tw
 ## Development
 
 ```sh
-npm run check          # TypeScript, unit/server tests, production build
+npm run check          # TypeScript, client tests, Python server tests, production build
 npm run test:browser   # Browser smoke tests; build first, requires installed Edge
 ```
 
@@ -49,6 +56,6 @@ Beebo supports **SDG 4: Quality Education** through free small-group collaborati
 
 This is an early implementation. Invitation holders can edit and copy all room content. There are no teacher roles or participant revocation, and rooms have no server-side board storage. Read [security and privacy limits](SECURITY.md) before hosting for learners.
 
-Beebo is [Apache-2.0](LICENSE). Application dependencies must be permissively licensed; retain [third-party notices](THIRD_PARTY_NOTICES.txt). Standard Node, Caddy, and coturn infrastructure images are allowed and retain their own component licenses.
+Beebo is [Apache-2.0](LICENSE). Application dependencies must be permissively licensed; retain [third-party notices](THIRD_PARTY_NOTICES.txt). Infrastructure images retain their own component licenses.
 
 [Architecture](docs/ARCHITECTURE.md) describes the document, encryption, and transport boundaries.

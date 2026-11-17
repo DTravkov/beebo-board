@@ -11,3 +11,7 @@ test-results
 *.log
 *.pem
 *.key
+.venv
+.uv-cache
+__pycache__
+*.py[cod]
