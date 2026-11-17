@@ -12,6 +12,17 @@ test-results
 *.pem
 *.key
 .venv
+**/.venv
+**/__pycache__
+**/*.pyc
+**/node_modules
+**/dist
+**/test-results
+**/.venv*
+**/.uv-cache
+**/coverage
+**/.vite
+**/.vite
 .uv-cache
 __pycache__
 *.py[cod]

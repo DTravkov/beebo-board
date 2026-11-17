@@ -18,14 +18,20 @@ jobs:
         with:
           node-version: '22'
           cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm install --global npm@11.10.0
       - run: npm ci --ignore-scripts
+        working-directory: frontend
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
           cache: pip
-          cache-dependency-path: server/requirements.txt
-      - run: python -m pip install --require-hashes -r server/requirements.txt
+          cache-dependency-path: backend/requirements.txt
+      - run: python -m pip install --require-hashes -r backend/requirements.txt
+      - run: python -m unittest discover -s backend/tests -t .
       - run: npm run check
+        working-directory: frontend
       - run: npm audit --audit-level=high
+        working-directory: frontend
       # Browser tests use an operator-installed browser; no downloaded browser bundle.
       # Run locally with npm run test:browser, or provision an audited CI browser first.

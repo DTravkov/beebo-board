@@ -1,0 +1,198 @@
+export const MAX_OBJECTS = 1000;
+export const MAX_POINTS = 8000;
+export const MAX_DOCUMENT_BYTES = 104_857_600;
+export const DEFAULT_BOARD_TITLE = 'Board 1';
+export type ShapeKind =
+  | 'stroke'
+  | 'highlight'
+  | 'rect'
+  | 'ellipse'
+  | 'arrow'
+  | 'text'
+  | 'sticky'
+  | 'frame'
+  | 'image';
+export type BoardShape = {
+  id: string;
+  kind: ShapeKind;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  points: number[];
+  color: string;
+  fill: string;
+  strokeWidth: number;
+  text: string;
+  /** Optional text styling for text and sticky notes. */
+  fontFamily?: FontFamily;
+  fontSize?: number;
+  bold?: boolean;
+  align?: TextAlign;
+  /** Picture data for image objects: a base64 PNG, JPEG or WebP data URL. */
+  src?: string;
+};
+
+export const MAX_IMAGE_CHARS = 700_000;
+const imageSource = /^data:image\/(png|jpeg|webp);base64,[A-Za-z0-9+/]+={0,2}$/;
+
+export type FontFamily = 'sans' | 'serif' | 'mono' | 'hand';
+export type TextAlign = 'left' | 'center' | 'right';
+export const MIN_FONT_SIZE = 8;
+export const MAX_FONT_SIZE = 200;
+// System fonts only: the project avoids loading remote assets.
+export const FONTS: Record<FontFamily, { label: string; css: string }> = {
+  sans: { label: 'Sans', css: "'Segoe UI', system-ui, sans-serif" },
+  serif: { label: 'Serif', css: 'Georgia, serif' },
+  mono: { label: 'Mono', css: "Consolas, 'Courier New', monospace" },
+  hand: {
+    label: 'Hand',
+    css: "'Segoe Print', 'Comic Sans MS', 'Chalkboard SE', cursive",
+  },
+};
+const optionalKeys = new Set([
+  'fontFamily',
+  'fontSize',
+  'bold',
+  'align',
+  'src',
+]);
+
+
+
+
+export type BoardFile = {
+  format: 'beebo-board';
+  version: 1;
+  title: string;
+  shapes: BoardShape[];
+};
+const kinds = new Set([
+  'stroke',
+  'highlight',
+  'rect',
+  'ellipse',
+  'arrow',
+  'text',
+  'sticky',
+  'frame',
+  'image',
+]);
+const shapeKeys = new Set([
+  'id',
+  'kind',
+  'x',
+  'y',
+  'width',
+  'height',
+  'points',
+  'color',
+  'fill',
+  'strokeWidth',
+  'text',
+]);
+
+const coordinate = (value: unknown): value is number =>
+  typeof value === 'number' &&
+  Number.isFinite(value) &&
+  Math.abs(value) <= 1_000_000;
+
+const color = (value: unknown): value is string =>
+  typeof value === 'string' && /^(#[a-f0-9]{6}|transparent)$/i.test(value);
+
+export function isShape(value: unknown): value is BoardShape {
+  if (!value || typeof value !== 'object') return false;
+  const s = value as Record<string, unknown>;
+  return (
+    [...shapeKeys].every((key) => key in s) &&
+    Object.keys(s).every(
+      (key) => shapeKeys.has(key) || optionalKeys.has(key),
+    ) &&
+    (s.fontFamily === undefined ||
+      (typeof s.fontFamily === 'string' &&
+        Object.hasOwn(FONTS, s.fontFamily))) &&
+    (s.fontSize === undefined ||
+      (typeof s.fontSize === 'number' &&
+        s.fontSize >= MIN_FONT_SIZE &&
+        s.fontSize <= MAX_FONT_SIZE)) &&
+    (s.bold === undefined || typeof s.bold === 'boolean') &&
+    (s.align === undefined ||
+      s.align === 'left' ||
+      s.align === 'center' ||
+      s.align === 'right') &&
+    // Only image objects carry picture data, and they must.
+    (s.kind === 'image'
+      ? typeof s.src === 'string' &&
+        s.src.length <= MAX_IMAGE_CHARS &&
+        imageSource.test(s.src)
+      : s.src === undefined) &&
+    typeof s.id === 'string' &&
+    /^[a-zA-Z0-9_-]{1,80}$/.test(s.id) &&
+    typeof s.kind === 'string' &&
+    kinds.has(s.kind) &&
+    coordinate(s.x) &&
+    coordinate(s.y) &&
+    coordinate(s.width) &&
+    coordinate(s.height) &&
+    Array.isArray(s.points) &&
+    s.points.length <= MAX_POINTS &&
+    s.points.length % 2 === 0 &&
+    s.points.every(coordinate) &&
+    color(s.color) &&
+    color(s.fill) &&
+    typeof s.strokeWidth === 'number' &&
+    s.strokeWidth >= 1 &&
+    s.strokeWidth <= 24 &&
+    typeof s.text === 'string' &&
+    s.text.length <= 2000
+  );
+}
+
+export function parseBoard(input: string): BoardFile {
+  if (new TextEncoder().encode(input).length > MAX_DOCUMENT_BYTES)
+    throw new Error('This file is too large. The limit is 100 MB.');
+  let board: Partial<BoardFile>;
+  try {
+    board = JSON.parse(input);
+  } catch {
+    throw new Error('Choose a valid Beebo JSON board file.');
+  }
+  if (!board || board.format !== 'beebo-board' || board.version !== 1)
+    throw new Error('This board format or version is not supported.');
+  if (typeof board.title !== 'string' || board.title.length > 120)
+    throw new Error('Board titles must be at most 120 characters.');
+  if (
+    !Array.isArray(board.shapes) ||
+    board.shapes.length > MAX_OBJECTS ||
+    !board.shapes.every(isShape)
+  )
+    throw new Error(
+      'The board contains invalid objects or exceeds 1,000 objects.',
+    );
+  if (
+    new Set(board.shapes.map((shape) => shape.id)).size !== board.shapes.length
+  )
+    throw new Error('The board contains duplicate object IDs.');
+  return board as BoardFile;
+}
+
+export function makeShape(
+  kind: ShapeKind,
+  x: number,
+  y: number,
+  colorValue = '#34483e',
+): BoardShape {
+  return {
+    id: crypto.randomUUID(),
+    kind,
+    x,
+    y,
+    width: 0,
+    height: 0,
+    points: [],
+    color: colorValue,
+    fill: 'transparent',
+    strokeWidth: 3,
+    text: '',
+  };
+}

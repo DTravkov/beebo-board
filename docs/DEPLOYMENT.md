@@ -1,26 +1,26 @@
 # Deployment
 
-The root `docker-compose.yml` has two profiles. Both use the same `.env`; there is no setup generator or image-approval file. Use Docker with Linux containers and Compose **2.23.1+**, which supports the inline Caddy and coturn configurations.
+`docker-compose.yml` runs production; `docker-compose.dev.yml` is a standalone development stack. Both use `.env` for interpolation. Use Linux containers and Compose 2.23.1+.
 
 ## Local development
 
 ```sh
-docker compose --profile dev up
+docker compose -f docker-compose.dev.yml up --build
 ```
 
-Open **http://localhost:5173**. The `dev` service builds a Node/Python development image, installs the locked dependencies, starts Vite and FastAPI with file watching, and mounts the source for editing. Separate Docker volumes hold Linux `node_modules` and `.venv`; they do not overwrite host dependencies. Stop with Ctrl+C or `docker compose --profile dev down`.
+Open http://localhost:5173. Vite and Uvicorn run in separate containers. Source directories are mounted read-only; dependencies stay in cached image layers. Rebuild after lockfile or package changes. Normal restarts install nothing. Stop with `docker compose -f docker-compose.dev.yml down`.
 
-This profile binds ports 5173 and 3001 to localhost and enables the direct-connection option. Choose **Allow direct connections** in Share board to test a room between tabs or browsers on this machine. TURN-only remains the default room policy; there is no silent fallback. Direct connections can reveal peers' IP addresses.
+Vite polls every 500 ms on Windows mounts and ignores Python environments and caches. Set `DEV_POLLING=false` when native events work. Backend reload checks `backend/src` once per second. The dev stack enables the direct option; select it explicitly in Share. The room default remains TURN-only. `PUBLIC_ORIGIN` in `.env` must include the exact browser origin, including scheme and port.
 
 ## Public hosting
 
 One Linux host with a public IPv4 address runs three services:
 
-| Service | Purpose                                | Public ports                    |
-| ------- | -------------------------------------- | ------------------------------- |
-| `app`   | Built client, API, WebSocket signaling | None; Caddy connects internally |
-| `https` | Caddy HTTPS and certificate renewal    | TCP 80, 443                     |
-| `turn`  | Authenticated coturn relay             | TCP/UDP 3478, UDP 49160-49260   |
+| Service    | Purpose                                       | Public ports                    |
+| ---------- | --------------------------------------------- | ------------------------------- |
+| `backend`  | API and WebSocket signaling                   | None; Caddy connects internally |
+| `frontend` | Built frontend, HTTPS and certificate renewal | TCP 80, 443                     |
+| `turn`     | Authenticated coturn relay                    | TCP/UDP 3478, UDP 49160-49260   |
 
 1. Point `board.your-domain.org` and `relay.your-domain.org` DNS A records to the host. The relay record must resolve directly to it, without an HTTP proxy. Open the listed firewall ports; if behind NAT, forward them without changing relay ports.
 2. Copy `.env.example` to `.env` and set these four values:
@@ -37,15 +37,15 @@ One Linux host with a public IPv4 address runs three services:
 3. Start the stack:
 
    ```sh
-   docker compose --profile production up -d --build
-   docker compose --profile production ps
+   docker compose up -d --build
+   docker compose ps
    ```
 
 4. Open `https://board.your-domain.org`. Caddy obtains certificates automatically when DNS and ports are reachable. Create a room and share the complete invitation, including its fragment. Independent groups use separate rooms on the same deployment, with up to eight participants per room.
 
 The Compose file passes the same TURN secret to FastAPI and coturn. FastAPI issues temporary credentials after room admission; browsers never receive the long-term secret. Missing relay settings stop coturn at startup. Docker administrators can inspect container configuration and secrets; avoid sharing expanded `docker compose config` output.
 
-Caddy certificate state survives container restarts in named volumes. Restarting FastAPI loses in-memory rooms and invalidates their admission; participants need a new invitation. Rebuild after pulling changes with the same `up -d --build` command. Stop with `docker compose --profile production down`.
+Caddy certificate state survives container restarts in named volumes. Restarting FastAPI loses in-memory rooms and invalidates their admission; participants need a new invitation. Rebuild after pulling changes with the same `up -d --build` command. Stop with `docker compose down`.
 
 ## Test across machines
 
@@ -57,8 +57,8 @@ The supplied relay offers TURN over UDP and TCP on 3478, with UDP relay allocati
 
 ## Without Docker
 
-Install Node.js 22.12+ and Python 3.10+. Run `npm ci`, create `.venv`, install `server/requirements.txt` with `python -m pip install --require-hashes -r server/requirements.txt`, then run `npm run build` and `npm start`. See [README.md](../README.md) for Windows activation alternatives. Set `HOST`, `PORT`, and the exact `PUBLIC_ORIGIN` in `.env`; forward HTTPS and WebSocket upgrades to FastAPI with your reverse proxy. Configure an external coturn with matching `TURN_SECRET` and `TURN_URLS`, or use `TURN_SECRET_FILE` instead of `TURN_SECRET`. This requires managing the proxy, certificates, relay configuration, and process supervision yourself.
+Use npm for the frontend and a Python virtual environment with pip for the backend; see the direct Vite and Uvicorn commands in [README.md](../README.md). Run `npm --prefix frontend run build` for static assets. Production Caddy serves `dist` and proxies `/api` and `/signal` to Uvicorn; `frontend/Caddyfile` is the supplied configuration. `npm --prefix frontend start` is a development preview, not the production server.
 
-`npm start` invokes `python -m server` with bounded WebSocket settings and disabled access logs and proxy-header trust. Run exactly one worker and one app instance: room membership, quotas, and connections live in memory. Multiple workers or replicas require a shared coordination design. The runtime image contains Python and the built client; Node is used only for development and client builds. Observed-IP quotas behind Caddy apply to the proxy IP.
+Run exactly one backend worker and one backend instance: rooms, quotas, and connections are in memory. Proxy-header trust remains disabled. The two-stage `backend/Dockerfile` installs locked requirements in a virtual environment and copies it into a non-root Python runtime. `frontend/Dockerfile` builds with Node and copies only static output into Caddy. Node is absent from both production runtimes. Live TURN verification still requires two networks.
 
 See [SECURITY.md](../SECURITY.md) for retention, permissions, and hosting limits. Standard infrastructure images are allowed under their own licenses; Beebo's application dependency policy is in [CONTRIBUTING.md](../CONTRIBUTING.md).

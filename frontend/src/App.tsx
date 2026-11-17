@@ -1,0 +1,1481 @@
+import { useEffect, useRef, useState } from 'react';
+import type Konva from 'konva';
+import { Canvas } from './features/canvas/Canvas';
+import type { TextEditor, Tool, View } from './features/canvas/types';
+import { ObjectsPanel } from './features/board/ObjectsPanel';
+import { TextEditorDialog } from './features/board/TextEditorDialog';
+import { useBoardDocument } from './features/board/useBoardDocument';
+import { useBoardSaving } from './features/board/useBoardSaving';
+import { useServerConfig } from './features/room/useServerConfig';
+import { Dialog } from './components/Dialog';
+import { Icon } from './components/Icon';
+import { ObjectToolbar } from './components/ObjectToolbar';
+import { restyle } from './lib/text';
+import { imagePng, prepareImage } from './lib/image';
+import {
+  BrushStyles,
+  BrushSize,
+  EraserThickness,
+  MAX_COLORS,
+  MAX_STYLES,
+  BASE_COLORS,
+  type BrushStyle,
+} from './components/BrushStyles';
+import { BoardDocument } from './lib/document';
+import {
+  createRoom,
+  invitationUrl,
+  readInvite,
+  RoomSession,
+  type Presence,
+  type RoomStatus,
+} from './lib/room';
+import { loadLocal } from './lib/storage';
+import {
+  makeShape,
+  MAX_DOCUMENT_BYTES,
+  DEFAULT_BOARD_TITLE,
+  parseBoard,
+  type BoardShape,
+} from './shared/board';
+
+const TOOLS: { id: Tool; label: string; key: string }[] = [
+  { id: 'select', label: 'Cursor', key: 'V' },
+  { id: 'hand', label: 'Hand', key: 'H' },
+  { id: 'pen', label: 'Pen', key: 'P' },
+  { id: 'rect', label: 'Rectangle', key: 'R' },
+  { id: 'ellipse', label: 'Ellipse', key: 'O' },
+  { id: 'arrow', label: 'Arrow', key: 'A' },
+  { id: 'text', label: 'Text', key: 'T' },
+  { id: 'sticky', label: 'Sticky note', key: 'N' },
+  { id: 'frame', label: 'Frame', key: 'F' },
+];
+// Everything in the Pen button's flyout: brushes first, then erasers.
+const PEN_GROUP: { id: Tool; label: string; key: string }[] = [
+  { id: 'pen', label: 'Pen brush', key: 'P' },
+  { id: 'highlighter', label: 'Highlighter', key: 'L' },
+  { id: 'eraser', label: 'Object eraser', key: 'E' },
+  { id: 'eraser-partial', label: 'Partial eraser', key: 'X' },
+];
+type Brush = 'pen' | 'highlighter';
+const DEFAULT_STYLES: Record<Brush, BrushStyle[]> = {
+  pen: [
+    { color: '#34483e', width: 3 },
+    { color: '#c84b3c', width: 3 },
+    { color: '#3d5fa8', width: 6 },
+  ],
+  highlighter: [
+    { color: '#f2c94c', width: 16 },
+    { color: '#768f54', width: 16 },
+  ],
+};
+const COLORS = [
+  '#34483e',
+  '#768f54',
+  '#c58a48',
+  '#c06e72',
+  '#907cb3',
+  '#668fa4',
+];
+const OFFLINE: RoomStatus = {
+  state: 'offline',
+  peers: 0,
+  message: 'Only on your device',
+};
+function download(name: string, data: Blob) {
+  const url = URL.createObjectURL(data);
+  const anchor = document.createElement('a');
+  anchor.href = url;
+  anchor.download = name;
+  anchor.click();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+export default function App() {
+  const { board, setBoard, shapes, revision } = useBoardDocument();
+  const [tool, setTool] = useState<Tool>('select');
+  const [color, setColor] = useState(COLORS[0]);
+  const [strokeWidth, setStrokeWidth] = useState(3);
+  const [brushStyles, setBrushStyles] = useState(DEFAULT_STYLES);
+  const [activeStyle, setActiveStyle] = useState<Record<Brush, number>>({
+    pen: 0,
+    highlighter: 0,
+  });
+  const [partialEraserSize, setPartialEraserSize] = useState(24);
+  const [customColors, setCustomColors] = useState<string[]>([]);
+  const penItem = PEN_GROUP.find((item) => item.id === tool);
+  const brush: Brush | null =
+    tool === 'pen' || tool === 'highlighter' ? tool : null;
+  const brushStyle = brush ? brushStyles[brush][activeStyle[brush]] : null;
+  function changeStyles(
+    target: Brush,
+    update: (styles: BrushStyle[]) => BrushStyle[],
+  ) {
+    setBrushStyles((all) => ({ ...all, [target]: update(all[target]) }));
+  }
+  const [selected, setSelected] = useState<string[]>([]);
+  const [view, setView] = useState<View>({ x: 0, y: 0, scale: 1 });
+  const [panel, setPanel] = useState(false);
+  const [dialog, setDialog] = useState<
+    'share' | 'files' | 'help' | 'template' | null
+  >(null);
+  const [editor, setEditor] = useState<TextEditor | null>(null);
+  const [toast, setToast] = useState('');
+  const [name, setName] = useState('User');
+  const nameRef = useRef(name);
+  nameRef.current = name;
+  const config = useServerConfig();
+  const [policy, setPolicy] = useState<'relay' | 'all'>('relay');
+  const [status, setStatus] = useState<RoomStatus>(OFFLINE);
+  const [people, setPeople] = useState<Presence[]>([]);
+  const [invite, setInvite] = useState<{ room: string; secret: string } | null>(
+    null,
+  );
+  const [pendingInvite, setPendingInvite] = useState<{
+    room: string;
+    secret: string;
+  } | null>(null);
+  const [busy, setBusy] = useState(false);
+  const shareError = useRef<HTMLParagraphElement>(null);
+  const notificationRef = useRef<HTMLDivElement>(null);
+  const session = useRef<RoomSession | null>(null);
+  const stage = useRef<Konva.Stage | null>(null);
+  const fileInput = useRef<HTMLInputElement>(null);
+  const {
+    localSaving,
+    setLocalSaving,
+    savingLabel,
+    saving,
+    saveBoard,
+    forgetSavedBoard,
+  } = useBoardSaving(board, revision, Boolean(invite), setToast);
+
+  useEffect(() => {
+    try {
+      const invitation = readInvite();
+      if (invitation) {
+        setPendingInvite(invitation);
+        setDialog('share');
+      }
+    } catch (error) {
+      setToast((error as Error).message);
+    }
+    return () => session.current?.close();
+  }, []);
+  useEffect(() => {
+    if (dialog === 'share' && status.state === 'error')
+      shareError.current?.scrollIntoView({ block: 'nearest' });
+  }, [dialog, status]);
+  useEffect(() => {
+    if (!toast) return;
+    if (dialog === 'share')
+      notificationRef.current?.scrollIntoView({ block: 'nearest' });
+    const timer = setTimeout(() => setToast(''), 6500);
+    return () => clearTimeout(timer);
+  }, [toast, dialog]);
+  function safely(action: () => void) {
+    try {
+      action();
+    } catch (error) {
+      setToast(
+        error instanceof Error ? error.message : 'Something went wrong.',
+      );
+    }
+  }
+  function add(shape: BoardShape) {
+    safely(() => board.add(shape));
+  }
+  function update(id: string, patch: Partial<BoardShape>) {
+    safely(() => board.update(id, patch));
+  }
+  function remove(ids: string[]) {
+    safely(() => board.removeMany(ids));
+    setSelected([]);
+  }
+  function move(changes: { id: string; x: number; y: number }[]) {
+    safely(() =>
+      board.updateMany(
+        changes.map(({ id, x, y }) => ({ id, patch: { x, y } })),
+      ),
+    );
+  }
+  function erase(ids: string[]) {
+    safely(() => board.removeMany(ids));
+    setSelected((chosen) => chosen.filter((id) => !ids.includes(id)));
+  }
+  function splice(changes: { id: string; pieces: BoardShape[] }[]) {
+    safely(() => board.splice(changes));
+    setSelected((chosen) =>
+      chosen.filter((id) => !changes.some((change) => change.id === id)),
+    );
+  }
+  function exportBoard() {
+    download(
+      `${board.title.replace(/[^a-z0-9_-]/gi, '-').slice(0, 60) || 'beebo'}.beebo.json`,
+      new Blob([JSON.stringify(board.export(), null, 2)], {
+        type: 'application/json',
+      }),
+    );
+    setToast('Board exported. Keep this file to open it again.');
+  }
+  useEffect(() => {
+    const keydown = (event: KeyboardEvent) => {
+      if (
+        (event.target as HTMLElement).closest(
+          'input, textarea, select, button, dialog, [contenteditable]',
+        ) ||
+        document.querySelector('dialog[open]')
+      )
+        return;
+      if (event.ctrlKey || event.metaKey) {
+        if (event.key.toLowerCase() === 'z') {
+          event.preventDefault();
+          if (event.shiftKey) board.undo.redo();
+          else board.undo.undo();
+        }
+        if (event.key.toLowerCase() === 's') {
+          event.preventDefault();
+          exportBoard();
+        }
+        if (event.key.toLowerCase() === 'a') {
+          event.preventDefault();
+          setTool('select');
+          setSelected(board.getShapes().map((shape) => shape.id));
+        }
+        if (event.key.toLowerCase() === 'c' && selected.length === 1) {
+          const shape = board
+            .getShapes()
+            .find((item) => item.id === selected[0]);
+          if (shape?.kind === 'image') {
+            event.preventDefault();
+            void copyImage(shape);
+          }
+        }
+        return;
+      }
+      if (event.key === 'Escape') {
+        setSelected([]);
+        setTool('select');
+      }
+      if (
+        (event.key === 'Delete' || event.key === 'Backspace') &&
+        selected.length
+      ) {
+        event.preventDefault();
+        remove(selected);
+      }
+      const found = [...TOOLS, ...PEN_GROUP].find(
+        (item) => item.key.toLowerCase() === event.key.toLowerCase(),
+      );
+      if (found) setTool(found.id);
+      if (
+        selected.length &&
+        ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(event.key)
+      ) {
+        event.preventDefault();
+        const distance = event.shiftKey ? 10 : 1;
+        const dx =
+          event.key === 'ArrowRight'
+            ? distance
+            : event.key === 'ArrowLeft'
+              ? -distance
+              : 0;
+        const dy =
+          event.key === 'ArrowDown'
+            ? distance
+            : event.key === 'ArrowUp'
+              ? -distance
+              : 0;
+        move(
+          board
+            .getShapes()
+            .filter((shape) => selected.includes(shape.id))
+            .map((shape) => ({
+              id: shape.id,
+              x: shape.x + dx,
+              y: shape.y + dy,
+            })),
+        );
+      }
+    };
+    window.addEventListener('keydown', keydown);
+    return () => window.removeEventListener('keydown', keydown);
+  }, [board, selected]);
+  useEffect(() => {
+    // Pictures pasted anywhere outside a text field land on the board.
+    const paste = (event: ClipboardEvent) => {
+      const target = event.target as HTMLElement | null;
+      if (
+        target?.closest?.('input, textarea, [contenteditable]') ||
+        document.querySelector('dialog[open]')
+      )
+        return;
+      const files = [...(event.clipboardData?.files ?? [])].filter((file) =>
+        file.type.startsWith('image/'),
+      );
+      if (!files.length) return;
+      event.preventDefault();
+      void addImages(files);
+    };
+    window.addEventListener('paste', paste);
+    return () => window.removeEventListener('paste', paste);
+  });
+  async function startSession(
+    value: { room: string; secret: string },
+    joining: boolean,
+  ) {
+    session.current?.close();
+    let target = board;
+    if (joining) {
+      target = new BoardDocument();
+      setBoard(target);
+      setSelected([]);
+    }
+    setLocalSaving(false);
+    setInvite(value);
+    setPendingInvite(null);
+    history.replaceState(null, '', invitationUrl(value.room, value.secret));
+    setStatus({
+      state: 'connecting',
+      peers: 0,
+      message: 'Connecting to your room…',
+    });
+    const next = new RoomSession(
+      target,
+      value.room,
+      value.secret,
+      setStatus,
+      setPeople,
+      () => nameRef.current,
+      COLORS[1],
+    );
+    session.current = next;
+    await next.connect();
+  }
+  async function share() {
+    setBusy(true);
+    setStatus({
+      state: 'connecting',
+      peers: 0,
+      message: 'Connecting to your room…',
+    });
+    try {
+      await startSession(
+        pendingInvite ?? (await createRoom(policy)),
+        Boolean(pendingInvite),
+      );
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : 'Could not connect.';
+      setStatus({
+        state: 'error',
+        peers: 0,
+        message,
+      });
+    } finally {
+      setBusy(false);
+    }
+  }
+  function leave() {
+    session.current?.close();
+    session.current = null;
+    setInvite(null);
+    setPendingInvite(null);
+    setStatus(OFFLINE);
+    setPeople([]);
+    history.replaceState(null, '', location.pathname + location.search);
+    setToast('You left the room. A copy of the board stays in this tab.');
+  }
+  function zoom(delta: number) {
+    const scale = Math.max(
+      0.2,
+      Math.min(3, Math.round((view.scale + delta) * 100) / 100),
+    );
+    const width = stage.current?.width() ?? 1000;
+    const height = stage.current?.height() ?? 700;
+    setView({
+      scale,
+      x: width / 2 - ((width / 2 - view.x) / view.scale) * scale,
+      y: height / 2 - ((height / 2 - view.y) / view.scale) * scale,
+    });
+  }
+  /** Adds pasted or dropped pictures as image objects, centred on a point. */
+  async function addImages(files: Blob[], at?: { x: number; y: number }) {
+    const pictures = files.filter((file) => file.type.startsWith('image/'));
+    if (!pictures.length) return;
+    if (pictures.length > 5) setToast('Only the first 5 pictures were added.');
+    const width = stage.current?.width() ?? 800;
+    const height = stage.current?.height() ?? 600;
+    const center = at ?? {
+      x: (width / 2 - view.x) / view.scale,
+      y: (height / 2 - view.y) / view.scale,
+    };
+    let offset = 0;
+    for (const file of pictures.slice(0, 5)) {
+      try {
+        const picture = await prepareImage(file);
+        if (board.byteSize() + picture.src.length > MAX_DOCUMENT_BYTES)
+          throw new Error(
+            'This board has no room for another picture. Boards are limited to 2 MB.',
+          );
+        const fit = Math.min(1, 480 / Math.max(picture.width, picture.height));
+        const shape = makeShape('image', 0, 0);
+        shape.width = Math.round(picture.width * fit);
+        shape.height = Math.round(picture.height * fit);
+        shape.x = Math.round(center.x - shape.width / 2 + offset);
+        shape.y = Math.round(center.y - shape.height / 2 + offset);
+        shape.src = picture.src;
+        const name = file instanceof File ? file.name : '';
+        // Clipboard pictures arrive as "image.png"; that is not a description.
+        shape.text = /^image\.\w+$/i.test(name)
+          ? ''
+          : name.replace(/\.\w+$/, '').slice(0, 300);
+        board.add(shape);
+        setSelected([shape.id]);
+        setTool('select');
+        offset += 24;
+      } catch (error) {
+        setToast(
+          error instanceof Error ? error.message : 'The picture was not added.',
+        );
+      }
+    }
+  }
+  async function copyImage(shape: BoardShape) {
+    try {
+      if (
+        !shape.src ||
+        !navigator.clipboard?.write ||
+        !('ClipboardItem' in window)
+      )
+        throw new Error('This browser cannot copy pictures.');
+      await navigator.clipboard.write([
+        new ClipboardItem({ 'image/png': imagePng(shape.src) }),
+      ]);
+      setToast('Picture copied.');
+    } catch (error) {
+      setToast(
+        error instanceof Error ? error.message : 'The picture was not copied.',
+      );
+    }
+  }
+  /** Saves what is inside a frame as a PNG, at twice the board resolution. */
+  function exportFrame(frame: BoardShape) {
+    const current = stage.current;
+    if (!current) return;
+    const hidden = [
+      ...current.find('Transformer'),
+      ...current.getLayers().slice(1),
+    ].filter((node) => node.visible());
+    hidden.forEach((node) => node.visible(false));
+    try {
+      const canvas = current.toCanvas({
+        x: view.x + frame.x * view.scale,
+        y: view.y + frame.y * view.scale,
+        width: frame.width * view.scale,
+        height: frame.height * view.scale,
+        pixelRatio: 2 / view.scale,
+      });
+      const name =
+        (frame.text || 'frame').replace(/[^\p{L}\p{N} _-]+/gu, '').trim() ||
+        'frame';
+      canvas.toBlob((blob) => {
+        if (blob) download(`${name}.png`, blob);
+        else setToast('This frame could not be exported.');
+      }, 'image/png');
+    } finally {
+      hidden.forEach((node) => node.visible(true));
+    }
+  }
+  function fit() {
+    if (!shapes.length) {
+      setView({ x: 0, y: 0, scale: 1 });
+      return;
+    }
+    const width = stage.current?.width() ?? 1000;
+    const height = stage.current?.height() ?? 700;
+    const left = Math.min(...shapes.map((s) => s.x + Math.min(0, s.width)));
+    const top = Math.min(...shapes.map((s) => s.y + Math.min(0, s.height)));
+    const right = Math.max(
+      ...shapes.map(
+        (s) => s.x + Math.max(s.width, s.kind === 'text' ? 360 : 20),
+      ),
+    );
+    const bottom = Math.max(...shapes.map((s) => s.y + Math.max(s.height, 60)));
+    const scale = Math.max(
+      0.2,
+      Math.min(
+        1.5,
+        (width - 220) / (right - left + 40),
+        (height - 200) / (bottom - top + 40),
+      ),
+    );
+    setView({
+      scale,
+      x: (width - (right - left) * scale) / 2 - left * scale,
+      y: (height - (bottom - top) * scale) / 2 - top * scale,
+    });
+  }
+  async function importFile(file: File) {
+    if (file.size > MAX_DOCUMENT_BYTES) {
+      setToast('Choose a board file smaller than 2 MB.');
+      return;
+    }
+    try {
+      const data = parseBoard(await file.text());
+      board.replace(data);
+      setSelected([]);
+      setToast('Board opened. Undo will restore your previous canvas.');
+      setDialog(null);
+    } catch (error) {
+      setToast((error as Error).message);
+    }
+  }
+  function saveText(value: TextEditor) {
+    if (!value.text.trim()) return;
+    if (value.id) update(value.id, { text: value.text });
+    else {
+      const shape = makeShape(value.kind, value.x, value.y, color);
+      shape.text = value.text;
+      shape.width = value.kind === 'sticky' ? 205 : 360;
+      shape.height = value.kind === 'sticky' ? 175 : 60;
+      shape.fill = value.kind === 'sticky' ? '#f5e7a1' : 'transparent';
+      add(shape);
+    }
+    setEditor(null);
+    setTool('select');
+  }
+
+  const notification = toast && (
+    <div ref={notificationRef} className="toast" role="status">
+      <Icon name="info" size={18} />
+      <span>{toast}</span>
+      <button aria-label="Dismiss notification" onClick={() => setToast('')}>
+        <Icon name="close" size={15} />
+      </button>
+    </div>
+  );
+
+  return (
+    <div className="app-shell">
+      <a href="#objects" className="skip-link" onClick={() => setPanel(true)}>
+        Skip to accessible object editor
+      </a>
+      <header className="header">
+        <a
+          className="brand"
+          href="/"
+          aria-label="Beebo home"
+          onClick={(event) => {
+            event.preventDefault();
+            setDialog('help');
+          }}
+        >
+          <span className="brand-mark">
+            b<span />
+          </span>
+          <span>
+            beebo<span className="brand-dot">.</span>
+          </span>
+        </a>
+        <div className="header-divider" />
+        <button className="workspace-button" onClick={() => setDialog('files')}>
+          <span className="workspace-icon">
+            <Icon name="grid" size={16} />
+          </span>
+          <span>My workspace</span>
+          <Icon name="chevron" size={14} />
+        </button>
+        <div className="board-heading header-board">
+          <div className="board-title-row">
+            <input
+              aria-label="Board title"
+              value={board.title}
+              maxLength={120}
+              onChange={(event) => board.setTitle(event.target.value)}
+            />
+            <Icon name="pen" size={13} />
+          </div>
+          <div className="board-subtitle">
+            <Icon name={localSaving ? 'check' : 'lock'} size={12} />
+            <span>
+              {invite ? 'Private room · up to 8 people' : savingLabel}
+            </span>
+            <span className="separator-dot">·</span>
+            <span>{shapes.length} objects</span>
+          </div>
+        </div>
+
+        <div
+          className="header-file-actions"
+          role="group"
+          aria-label="Board saving and export"
+        >
+          <label
+            className="header-local-save"
+            title={
+              invite
+                ? 'Shared boards can be saved explicitly with Save board.'
+                : 'Automatically save this personal board on this device.'
+            }
+          >
+            <input
+              type="checkbox"
+              checked={localSaving}
+              disabled={Boolean(invite)}
+              onChange={(event) => {
+                setLocalSaving(event.target.checked);
+              }}
+            />
+            <span>Save board locally</span>
+          </label>
+          <button
+            className="header-file-button"
+            aria-label="Save board"
+            title="Save on this device, replacing the previous local snapshot"
+            disabled={saving}
+            onClick={() => void saveBoard()}
+          >
+            <Icon name="save" size={16} />
+            <span>{saving ? 'Saving…' : 'Save board'}</span>
+          </button>
+          <button
+            className="header-file-button"
+            aria-label="Export board"
+            title="Export board"
+            onClick={exportBoard}
+          >
+            <Icon name="download" size={16} />
+            <span>Export board</span>
+          </button>
+        </div>
+        <div className="header-actions">
+          <div className="history-buttons">
+            <button
+              className="icon-button"
+              title="Undo (Ctrl/⌘ Z)"
+              aria-label="Undo"
+              disabled={!board.undo.canUndo()}
+              onClick={() => board.undo.undo()}
+            >
+              <Icon name="undo" size={18} />
+            </button>
+            <button
+              className="icon-button"
+              title="Redo (Ctrl/⌘ Shift Z)"
+              aria-label="Redo"
+              disabled={!board.undo.canRedo()}
+              onClick={() => board.undo.redo()}
+            >
+              <Icon name="redo" size={18} />
+            </button>
+          </div>
+          <span className="header-divider" />
+          <div
+            className="avatar-stack"
+            aria-label={`${status.peers + 1} participants`}
+          >
+            <span className="avatar me" title={name}>
+              {name.charAt(0).toUpperCase()}
+            </span>
+            {status.peers > 0 && (
+              <span className="avatar others">+{status.peers}</span>
+            )}
+          </div>
+          <button
+            className="share-button"
+            aria-label="Share board"
+            onClick={() => setDialog('share')}
+          >
+            <Icon name="share" size={17} />
+            <span>Share board</span>
+          </button>
+        </div>
+      </header>
+      <aside className="navigation-rail" aria-label="Workspace navigation">
+        <button
+          className="rail-button active"
+          aria-label="Board files"
+          title="Board files"
+          onClick={() => setDialog('files')}
+        >
+          <Icon name="grid" />
+        </button>
+        <button
+          className="rail-button"
+          aria-label="Learning templates"
+          title="Learning templates"
+          onClick={() => setDialog('template')}
+        >
+          <Icon name="book" />
+        </button>
+        <div
+          className="tool-dock"
+          role="toolbar"
+          aria-label="Drawing tools"
+          aria-orientation="vertical"
+        >
+          {TOOLS.map((item, index) => (
+            <div key={item.id} className={index === 2 ? 'tool-divider' : ''}>
+              <button
+                className={`tool-button ${tool === item.id || (item.id === 'pen' && penItem) ? 'selected' : ''}`}
+                aria-label={`${item.label} (${item.key})`}
+                title={`${item.label} · ${item.key}`}
+                aria-pressed={
+                  tool === item.id || (item.id === 'pen' && !!penItem)
+                }
+                onClick={() => setTool(item.id)}
+              >
+                <Icon name={item.id} />
+                <span className="tool-key">{item.key}</span>
+              </button>
+            </div>
+          ))}
+          <div className="color-divider" />
+          <label className="active-color" title="Drawing color">
+            <input
+              type="color"
+              aria-label="Drawing color"
+              value={color}
+              onChange={(event) => setColor(event.target.value)}
+            />
+            <span style={{ background: color }} />
+          </label>
+        </div>
+        <div className="rail-bottom">
+          <button
+            className={`rail-button ${panel ? 'active' : ''}`}
+            aria-label="Toggle Objects panel"
+            title="Objects & keyboard editing"
+            aria-pressed={panel}
+            onClick={() => setPanel(!panel)}
+          >
+            <Icon name="layers" />
+          </button>
+          <button
+            className="rail-button"
+            aria-label="Help and keyboard shortcuts"
+            title="Help & shortcuts"
+            onClick={() => setDialog('help')}
+          >
+            <Icon name="info" />
+          </button>
+        </div>
+      </aside>
+      <main
+        className="board-area"
+        aria-label="Board workspace"
+        onDragOver={(event) => {
+          if (event.dataTransfer.types.includes('Files'))
+            event.preventDefault();
+        }}
+        onDrop={(event) => {
+          const files = [...event.dataTransfer.files].filter((file) =>
+            file.type.startsWith('image/'),
+          );
+          if (!files.length) return;
+          event.preventDefault();
+          const box = event.currentTarget.getBoundingClientRect();
+          void addImages(files, {
+            x: (event.clientX - box.left - view.x) / view.scale,
+            y: (event.clientY - box.top - view.y) / view.scale,
+          });
+        }}
+      >
+        <Canvas
+          shapes={shapes}
+          tool={tool}
+          color={brushStyle?.color ?? color}
+          width={brushStyle?.width ?? strokeWidth}
+          partialEraserSize={partialEraserSize}
+          selected={selected}
+          view={view}
+          presence={people}
+          stageRef={stage}
+          onView={setView}
+          onSelect={setSelected}
+          onAdd={add}
+          onUpdate={update}
+          onMove={move}
+          onErase={erase}
+          onSplice={splice}
+          onToolDone={() => setTool('select')}
+          renderToolbar={(shape) => (
+            <ObjectToolbar
+              shape={shape}
+              onUpdate={(patch) => update(shape.id, restyle(shape, patch))}
+              onDelete={() => remove([shape.id])}
+              onExport={() => exportFrame(shape)}
+              onCopy={() => void copyImage(shape)}
+            />
+          )}
+          renderGroupToolbar={(group) => (
+            <div
+              className="object-toolbar"
+              role="toolbar"
+              aria-label="Selected objects"
+              onPointerDown={(event) => event.stopPropagation()}
+            >
+              <span className="toolbar-count">{group.length} selected</span>
+              <span className="toolbar-divider" />
+              <button
+                className="toolbar-button"
+                title="Delete selected objects (Delete)"
+                aria-label="Delete selected objects"
+                onClick={() => remove(group.map((shape) => shape.id))}
+              >
+                <Icon name="trash" size={17} />
+              </button>
+            </div>
+          )}
+          onCursor={(x, y) => session.current?.cursor(x, y)}
+        />
+        {penItem && (
+          <div
+            className="brush-panel"
+            role="toolbar"
+            aria-label="Pen tools"
+            aria-orientation="vertical"
+          >
+            {PEN_GROUP.map((item, index) => [
+              index === 2 && (
+                <span key="eraser-divider" className="brush-divider" />
+              ),
+              <button
+                key={item.id}
+                className={`tool-button ${tool === item.id ? 'selected' : ''}`}
+                aria-label={`${item.label} (${item.key})`}
+                title={`${item.label} · ${item.key}`}
+                aria-pressed={tool === item.id}
+                onClick={() => setTool(item.id)}
+              >
+                <Icon name={item.id} size={18} />
+              </button>,
+            ])}
+            {tool === 'eraser-partial' && (
+              <>
+                <span className="brush-divider" />
+                <EraserThickness
+                  size={partialEraserSize}
+                  onChange={setPartialEraserSize}
+                />
+              </>
+            )}
+            {brush && (
+              <>
+                <span className="brush-divider" />
+                <BrushSize
+                  label={brush === 'pen' ? 'Pen size' : 'Highlighter size'}
+                  size={brushStyle!.width}
+                  onChange={(width) =>
+                    changeStyles(brush, (styles) =>
+                      styles.map((style, i) =>
+                        i === activeStyle[brush] ? { ...style, width } : style,
+                      ),
+                    )
+                  }
+                />
+                <span className="brush-divider" />
+                <BrushStyles
+                  label={brush === 'pen' ? 'Pen' : 'Highlighter'}
+                  styles={brushStyles[brush]}
+                  active={activeStyle[brush]}
+                  customColors={customColors}
+                  onSelect={(index) =>
+                    setActiveStyle((all) => ({ ...all, [brush]: index }))
+                  }
+                  onChange={(index, next) =>
+                    changeStyles(brush, (styles) =>
+                      styles.map((item, i) => (i === index ? next : item)),
+                    )
+                  }
+                  onAdd={() => {
+                    const count = brushStyles[brush].length;
+                    if (count >= MAX_STYLES) return;
+                    changeStyles(brush, (styles) => [
+                      ...styles,
+                      { ...styles[activeStyle[brush]] },
+                    ]);
+                    setActiveStyle((all) => ({ ...all, [brush]: count }));
+                  }}
+                  onRemove={(index) => {
+                    changeStyles(brush, (styles) =>
+                      styles.length > 1
+                        ? styles.filter((_, i) => i !== index)
+                        : styles,
+                    );
+                    setActiveStyle((all) => ({ ...all, [brush]: 0 }));
+                  }}
+                  onAddColor={(value) =>
+                    setCustomColors((list) =>
+                      BASE_COLORS.includes(value) ||
+                      list.includes(value) ||
+                      BASE_COLORS.length + list.length >= MAX_COLORS
+                        ? list
+                        : [...list, value],
+                    )
+                  }
+                />
+              </>
+            )}
+          </div>
+        )}
+        {['rect', 'ellipse', 'arrow', 'text'].includes(tool) && (
+          <div className="style-bar" aria-label="Drawing style">
+            {COLORS.map((value) => (
+              <button
+                key={value}
+                className={`swatch ${color === value ? 'chosen' : ''}`}
+                style={{ background: value }}
+                aria-label={`Use color ${value}`}
+                aria-pressed={color === value}
+                onClick={() => setColor(value)}
+              />
+            ))}
+            <span className="style-divider" />
+            <label>
+              Width{' '}
+              <select
+                aria-label="Stroke width"
+                value={strokeWidth}
+                onChange={(event) => setStrokeWidth(Number(event.target.value))}
+              >
+                <option value={2}>Fine</option>
+                <option value={3}>Medium</option>
+                <option value={6}>Bold</option>
+              </select>
+            </label>
+          </div>
+        )}
+        <div
+          className={`connection-pill ${status.state}${invite ? '' : ' sr-only'}`}
+          role="status"
+        >
+          <span className="connection-dot" />
+          <span>{status.message}</span>
+          {invite && (
+            <button
+              aria-label="Room connection settings"
+              onClick={() => setDialog('share')}
+            >
+              <Icon name="chevron" size={13} />
+            </button>
+          )}
+        </div>
+        <div className="zoom-controls">
+          <button
+            className="icon-button"
+            aria-label="Zoom out"
+            onClick={() => zoom(-0.1)}
+            disabled={view.scale <= 0.2}
+          >
+            <Icon name="minus" size={17} />
+          </button>
+          <button
+            className="zoom-value"
+            aria-label="Reset zoom to 100 percent"
+            onClick={() => setView({ x: 0, y: 0, scale: 1 })}
+          >
+            {Math.round(view.scale * 100)}
+            <span>%</span>
+          </button>
+          <button
+            className="icon-button"
+            aria-label="Zoom in"
+            onClick={() => zoom(0.1)}
+            disabled={view.scale >= 3}
+          >
+            <Icon name="plus" size={17} />
+          </button>
+          <span className="zoom-divider" />
+          <button
+            className="icon-button"
+            aria-label="Fit board to screen"
+            title="Fit board"
+            onClick={fit}
+          >
+            <Icon name="fit" size={17} />
+          </button>
+        </div>
+        {panel && (
+          <ObjectsPanel
+            shapes={shapes}
+            selected={selected}
+            onSelect={(id, additive) =>
+              setSelected((chosen) =>
+                additive
+                  ? chosen.includes(id)
+                    ? chosen.filter((chosenId) => chosenId !== id)
+                    : [...chosen, id]
+                  : [id],
+              )
+            }
+            onUpdate={update}
+            onRemove={remove}
+            onClose={() => setPanel(false)}
+            onAddNote={() =>
+              setEditor({
+                kind: 'sticky',
+                x:
+                  ((stage.current?.width() ?? 1000) / 2 - view.x) / view.scale -
+                  102.5,
+                y:
+                  ((stage.current?.height() ?? 700) / 2 - view.y) / view.scale -
+                  87.5,
+                text: '',
+              })
+            }
+          />
+        )}
+      </main>
+      <input
+        ref={fileInput}
+        type="file"
+        accept=".json,.beebo.json,application/json"
+        hidden
+        onChange={(event) => {
+          const file = event.target.files?.[0];
+          if (file) void importFile(file);
+          event.target.value = '';
+        }}
+      />
+      {dialog === 'share' && !editor ? null : notification}
+      {editor && (
+        <TextEditorDialog
+          editor={editor}
+          onSave={saveText}
+          onClose={() => setEditor(null)}
+        />
+      )}
+      {dialog === 'share' && !editor && (
+        <Dialog
+          dismissible={false}
+          title={
+            pendingInvite
+              ? 'You’re invited to think together'
+              : 'Good ideas are better together'
+          }
+          onClose={() => setDialog(null)}
+        >
+          <p className="muted">
+            A private space for tutoring, study groups, and your next shared
+            lightbulb moment. Up to 8 people.
+          </p>
+          <label className="field-label" htmlFor="your-name">
+            What should we call you?
+          </label>
+          <input
+            className="text-input"
+            id="your-name"
+            maxLength={32}
+            value={name}
+            onChange={(event) => setName(event.target.value)}
+          />
+          {status.state === 'error' && (
+            <p ref={shareError} className="error-text share-error" role="alert">
+              {status.message}
+              {invite && ' Leave, then open the invitation again to retry.'}
+            </p>
+          )}
+          {invite ? (
+            <>
+              <div className="privacy-card">
+                <Icon name="shield" />
+                <div>
+                  <strong>
+                    {status.policy === 'all'
+                      ? 'Direct connections enabled'
+                      : 'Relay-only connections'}
+                  </strong>
+                  <p>
+                    Everyone with the invitation can view and edit this board.
+                    Share it with people you trust.
+                  </p>
+                </div>
+              </div>
+              <label className="field-label" htmlFor="invitation">
+                Private invitation link
+              </label>
+              <input
+                id="invitation"
+                className="text-input invitation-input"
+                readOnly
+                value={invitationUrl(invite.room, invite.secret)}
+                onFocus={(event) => event.target.select()}
+              />
+              <div className="dialog-actions">
+                <button
+                  className="secondary-button"
+                  onClick={() => {
+                    leave();
+                  }}
+                >
+                  Leave room
+                </button>
+                <button
+                  className="primary-button"
+                  onClick={() => {
+                    navigator.clipboard
+                      ?.writeText(invitationUrl(invite.room, invite.secret))
+                      .then(() =>
+                        setToast('Invitation copied. Share it privately.'),
+                      )
+                      .catch(() =>
+                        setToast('Select and copy the invitation link above.'),
+                      );
+                  }}
+                >
+                  Copy invitation
+                </button>
+              </div>
+            </>
+          ) : (
+            <>
+              {!pendingInvite && (
+                <>
+                  <fieldset className="connection-options">
+                    <legend>Connection privacy</legend>
+                    <label>
+                      <input
+                        type="radio"
+                        name="policy"
+                        checked={policy === 'relay'}
+                        onChange={() => setPolicy('relay')}
+                      />
+                      <span>
+                        <strong>
+                          Relay only{' '}
+                          <span className="recommended">Default</span>
+                        </strong>
+                        <small>
+                          Hides your IP address from other participants.
+                        </small>
+                      </span>
+                    </label>
+                    <label>
+                      <input
+                        type="radio"
+                        name="policy"
+                        checked={policy === 'all'}
+                        disabled={!config?.directEnabled}
+                        onChange={() => setPolicy('all')}
+                      />
+                      <span>
+                        <strong>Allow direct connections</strong>
+                        <small>
+                          Other participants may learn your IP address.
+                          {!config?.directEnabled &&
+                            ' Disabled by this operator.'}
+                        </small>
+                      </span>
+                    </label>
+                  </fieldset>
+                  {!config?.turnConfigured && policy === 'relay' && (
+                    <div className="notice">
+                      <Icon name="info" size={17} />
+                      <span>
+                        {config
+                          ? 'Relay sharing needs TURN configuration by the operator. Your local board works without it.'
+                          : 'The signaling service is unavailable. Start both services with npm run dev.'}
+                      </span>
+                    </div>
+                  )}
+                </>
+              )}
+              {pendingInvite && (
+                <div className="notice">
+                  <Icon name="info" size={17} />
+                  <span>
+                    Joining opens the shared board in this tab. Its creator
+                    chose the connection policy. Anyone with this invitation can
+                    edit.
+                  </span>
+                </div>
+              )}
+              <div className="dialog-actions">
+                <span className="small muted">No account. No tracking.</span>
+                <button
+                  className="primary-button"
+                  disabled={
+                    busy ||
+                    (!pendingInvite &&
+                      (policy === 'relay'
+                        ? !config?.turnConfigured
+                        : !config?.directEnabled))
+                  }
+                  onClick={() => void share()}
+                >
+                  {busy
+                    ? 'Connecting…'
+                    : pendingInvite
+                      ? 'Join shared board'
+                      : 'Create private room'}
+                  <Icon name="arrow" size={15} />
+                </button>
+              </div>
+            </>
+          )}
+          {notification}
+        </Dialog>
+      )}
+      {dialog === 'files' && (
+        <Dialog title="Your little workspace" onClose={() => setDialog(null)}>
+          <p className="muted">
+            A board is yours to keep. Export a portable file, or choose to save
+            a personal board on this device.
+          </p>
+          <div className="file-actions">
+            <button onClick={() => fileInput.current?.click()}>
+              <Icon name="upload" />
+              <span>
+                <strong>Open board file</strong>
+                <small>Replaces this canvas · undo to restore</small>
+              </span>
+              <Icon name="arrow" size={17} />
+            </button>
+            <button
+              onClick={() => {
+                try {
+                  const url = stage.current?.toDataURL({ pixelRatio: 2 });
+                  if (url) {
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = 'beebo-board.png';
+                    a.click();
+                  }
+                } catch {
+                  setToast('Could not export an image. Try the JSON export.');
+                }
+              }}
+            >
+              <Icon name="download" />
+              <span>
+                <strong>Export view as PNG</strong>
+                <small>The visible canvas at twice the resolution</small>
+              </span>
+              <Icon name="arrow" size={17} />
+            </button>
+          </div>
+          <div className="local-storage">
+            <p className="small muted">
+              Use Save board in the header for a local snapshot, or enable Save
+              board locally for automatic personal-board saving. Shared boards
+              are saved only when you explicitly choose Save board.
+            </p>
+            <div className="storage-actions">
+              <button
+                className="text-button"
+                onClick={() => {
+                  if (invite) {
+                    setToast(
+                      'Leave the shared room before restoring a personal board.',
+                    );
+                    return;
+                  }
+                  void loadLocal()
+                    .then((saved) => {
+                      if (saved) {
+                        board.replace(saved);
+                        setToast('Saved board restored.');
+                        setDialog(null);
+                      } else
+                        setToast('No personal board is saved on this device.');
+                    })
+                    .catch((error) => setToast(error.message));
+                }}
+              >
+                Restore saved board
+              </button>
+              <button
+                className="text-button danger"
+                onClick={() => void forgetSavedBoard()}
+              >
+                Forget saved board
+              </button>
+            </div>
+          </div>
+          <div className="dialog-actions">
+            <span className="small muted">An open format. A fresh start.</span>
+            <button
+              className="secondary-button"
+              onClick={() => {
+                board.replace({
+                  format: 'beebo-board',
+                  version: 1,
+                  title: DEFAULT_BOARD_TITLE,
+                  shapes: [],
+                });
+                setSelected([]);
+                setView({ x: 0, y: 0, scale: 1 });
+                setDialog(null);
+                setToast(
+                  'Fresh canvas ready. Undo restores your previous board.',
+                );
+              }}
+            >
+              <Icon name="plus" size={16} /> New blank board
+            </button>
+          </div>
+        </Dialog>
+      )}
+      {dialog === 'template' && (
+        <Dialog
+          title="A starting point for learning"
+          onClose={() => setDialog(null)}
+        >
+          <p className="muted">
+            Add a small activity to your board. Everything is editable, and undo
+            removes it.
+          </p>
+          <div className="template-list">
+            {[
+              {
+                title: 'Think · Pair · Share',
+                detail:
+                  'Make room for individual ideas and shared discoveries.',
+                notes: [
+                  'THINK\nWhat do you notice?\nWrite one idea.',
+                  'PAIR\nCompare your ideas.\nWhat connects them?',
+                  'SHARE\nWhat did you learn?\nTell the group.',
+                ],
+              },
+              {
+                title: 'Know · Wonder · Learn',
+                detail: 'Turn curiosity into a simple learning journey.',
+                notes: [
+                  'KNOW\nWhat do we already know?',
+                  'WONDER\nWhat would we like to find out?',
+                  'LEARN\nWhat have we discovered?',
+                ],
+              },
+            ].map((template) => (
+              <button
+                key={template.title}
+                className="template-card"
+                onClick={() => {
+                  safely(() => {
+                    template.notes.forEach((text, index) => {
+                      const shape = makeShape(
+                        'sticky',
+                        235 + index * 245 - view.x / view.scale,
+                        180 - view.y / view.scale,
+                      );
+                      shape.width = 205;
+                      shape.height = 175;
+                      shape.text = text;
+                      shape.fill = ['#f5e7a1', '#dce8cf', '#eadff0'][index];
+                      board.add(shape);
+                    });
+                  });
+                  setDialog(null);
+                  setToast('Activity added. Make it your own.');
+                }}
+              >
+                <span className="template-preview">
+                  <i />
+                  <i />
+                  <i />
+                </span>
+                <strong>{template.title}</strong>
+                <span>{template.detail}</span>
+              </button>
+            ))}
+          </div>
+        </Dialog>
+      )}
+      {dialog === 'help' && (
+        <Dialog
+          title="A little room for everyone"
+          onClose={() => setDialog(null)}
+        >
+          <p className="muted">
+            Beebo is an open-source whiteboard for learning and thinking
+            together. Start sketching, add a note, or invite your small group.
+          </p>
+          <div className="shortcut-grid">
+            {TOOLS.map((item) => (
+              <div key={item.id}>
+                <span>{item.label}</span>
+                <kbd>{item.key}</kbd>
+              </div>
+            ))}
+            <div>
+              <span>Move around</span>
+              <kbd>Middle mouse + drag</kbd>
+            </div>
+            <div>
+              <span>Zoom</span>
+              <kbd>Scroll</kbd>
+            </div>
+            <div>
+              <span>Select several</span>
+              <kbd>Shift+click / drag a box</kbd>
+            </div>
+            <div>
+              <span>Select all</span>
+              <kbd>Ctrl/⌘ A</kbd>
+            </div>
+            <div>
+              <span>Edit text</span>
+              <kbd>Double-click</kbd>
+            </div>
+            <div>
+              <span>Finish typing</span>
+              <kbd>Esc / Ctrl+Enter</kbd>
+            </div>
+            <div>
+              <span>Undo / redo</span>
+              <kbd>Ctrl/⌘ Z / ⇧ Z</kbd>
+            </div>
+            <div>
+              <span>Export board</span>
+              <kbd>Ctrl/⌘ S</kbd>
+            </div>
+            <div>
+              <span>Move selection</span>
+              <kbd>Arrow keys</kbd>
+            </div>
+            <div>
+              <span>Move by 10</span>
+              <kbd>Shift + arrows</kbd>
+            </div>
+          </div>
+          <div className="privacy-card">
+            <Icon name="shield" />
+            <div>
+              <strong>Your ideas stay yours.</strong>
+              <p>
+                Local saving is optional. Room content is encrypted in the
+                browser. Invited editors can keep copies; operators still see
+                connection metadata.
+              </p>
+            </div>
+          </div>
+          <div className="license-card">
+            <Icon name="leaf" size={16} />
+            <p>
+              Made for learning. Open to everyone. Beebo is free software under
+              the <strong>Apache License 2.0</strong>; third-party notices ship
+              with the source.
+            </p>
+          </div>
+          <p className="small muted">
+            For keyboard editing, open Objects in the left rail. Add notes, edit
+            text and positions, and delete objects there. Accessibility and
+            classroom permission controls are still under development.
+          </p>
+          <button
+            className="primary-button"
+            onClick={() => {
+              setPanel(true);
+              setDialog(null);
+              setTimeout(() => document.getElementById('objects')?.focus(), 0);
+            }}
+          >
+            Open Objects
+            <Icon name="layers" size={16} />
+          </button>
+        </Dialog>
+      )}
+    </div>
+  );
+}

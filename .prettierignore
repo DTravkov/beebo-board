@@ -7,4 +7,10 @@ THIRD_PARTY_NOTICES.txt
 LICENSE
 .venv/
 .uv-cache/
-server/requirements.txt
+backend/requirements.txt
+
+**/node_modules/
+**/dist/
+**/test-results/
+**/.venv*/
+**/package-lock.json
