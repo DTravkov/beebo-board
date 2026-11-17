@@ -10,33 +10,45 @@ flowchart LR
   T <-->|Encrypted WebRTC| B
 ```
 
-The production Compose profile places Caddy in front of FastAPI for HTTPS. FastAPI and coturn never hold the invitation encryption key or a plaintext board. Explicit direct mode connects browsers without requiring a relay; no public STUN service is built in.
+Production Caddy serves static frontend files and proxies API and signaling requests to FastAPI. FastAPI and coturn never hold the invitation encryption key or a plaintext board. Explicit direct mode connects browsers without requiring a relay; no public STUN service is built in.
 
 ## Code boundaries
 
-| Location                                   | Responsibility                                            |
-| ------------------------------------------ | --------------------------------------------------------- |
-| `src/App.tsx`, `src/components/`           | Workspace, controls, canvas interaction                   |
-| `src/shared/board.ts`                      | Portable schema, validation, resource limits              |
-| `src/lib/document.ts`                      | Yjs state and local undo                                  |
-| `src/lib/crypto.ts`                        | Key derivation and payload encryption                     |
-| `src/lib/room.ts`                          | Signaling client, peer mesh, synchronization              |
-| `src/lib/storage.ts`                       | Explicit browser-local persistence                        |
-| `server/src/main.py`, `server/__main__.py` | FastAPI app, middleware, lifecycle, process entry         |
-| `server/src/config.py`                     | Pydantic environment settings and TURN secret loading     |
-| `server/src/rooms/`                        | Room domain, admission, repository, HTTP creation         |
-| `server/src/signaling/`                    | WebSocket adapter, peer routing, TURN credentials         |
-| `server/src/system/`                       | Public configuration and health                           |
-| `server/src/shared/`                       | Shared dependencies, security headers, origin/IP policy   |
-| `server/tests/`                            | Python tests mirroring server features                    |
-| `scripts/dev.mjs`                          | Starts/stops the development server and Vite together     |
-| `tests/`                                   | Document, security, signaling, and browser behavior tests |
+| Location                                           | Responsibility                                             |
+| -------------------------------------------------- | ---------------------------------------------------------- |
+| `frontend/src/App.tsx`, `frontend/src/components/` | Workspace composition and shared UI controls               |
+| `frontend/src/features/board/`                     | Board lifecycle, local saving, Objects panel, text dialog  |
+| `frontend/src/features/canvas/`                    | Pointer interaction, shape rendering, inline text, cursors |
+| `frontend/src/features/room/useServerConfig.ts`    | Room capability loading and request cleanup                |
+| `frontend/src/shared/board.ts`                     | Portable schema, validation, resource limits               |
+| `frontend/src/lib/document.ts`                     | Yjs state and local undo                                   |
+| `frontend/src/lib/crypto.ts`                       | Key derivation and payload encryption                      |
+| `frontend/src/lib/room.ts`                         | Signaling client, peer mesh, synchronization               |
+| `frontend/src/lib/storage.ts`                      | Explicit browser-local persistence                         |
+| `backend/src/main.py`                              | FastAPI app, middleware, lifecycle, process entry          |
+| `backend/src/config.py`                            | Pydantic environment settings and TURN secret loading      |
+| `backend/src/rooms/`                               | Room domain, admission, repository, HTTP creation          |
+| `backend/src/signaling/`                           | WebSocket adapter, peer routing, TURN credentials          |
+| `backend/src/system/`                              | Public configuration and health                            |
+| `backend/src/shared/`                              | Shared dependencies, security headers, origin/IP policy    |
+| `backend/tests/`                                   | Python tests mirroring server features                     |
+| `frontend/tests/`                                  | Document, security, signaling, and browser behavior tests  |
 
-See [the backend guide](BACKEND.md) for the feature boundaries, bootstrap lifecycle, and an end-to-end room-creation reading order.
+See [the backend guide](../backend/README.md) for the feature boundaries, bootstrap lifecycle, and an end-to-end room-creation reading order.
+
+Frontend feature modules use direct imports. Canvas types and geometry are separate from the renderer; shape content, image decoding, inline text, and remote cursor animation have their own components. The board hooks own document subscriptions and saving, while the keyboard text dialog owns its uncommitted draft. `App` coordinates these features through explicit props and actions.
+
+Pen and highlighter widths are stored in board pixels: an 8 px stroke renders at 8 screen pixels at 100% zoom, 4 at 50%, and 16 at 200%. Brush previews follow the same scale. Selection hit areas retain a minimum screen size so thin strokes remain easy to select.
+
+Canvas layers refresh their bitmap density when browser zoom or display density changes. Headers and object controls wrap on smaller viewports, the navigation rail scrolls on short screens, and floating editors stay within the visible board. Browser smoke tests cover narrow and landscape layouts, fractional pixel densities, and density changes without reloading.
+
+Sharing failures render as persistent alerts inside the Share dialog, including creation failures before an invitation exists. Retrying clears the previous error. Sharing notifications also render inside the modal so they remain visible in the browser's dialog top layer.
 
 ## Document and storage
 
 A board has three Yjs roots: `objects` maps shape IDs to independently editable properties, `order` stores stacking order, and `metadata` stores the title. Selection, viewport, tool settings, and dialogs stay local. Cursors use transient presence messages. Undo tracks local edits and excludes remote transactions.
+
+Remote cursor positions interpolate on the cursor layer between received updates. Animation duration follows the arrival interval, bounded to 70–200 ms, and each new target starts from the displayed position. The animation stops on arrival or when the peer disappears; smoothing adds no presence traffic or shared document state.
 
 Yjs resolves concurrent property writes deterministically. Text is stored as a whole-string property, so simultaneous typing in one note does not merge character by character. Joining peers exchange state vectors and missing updates. There is no server replica or durable shared room; at least one peer must retain the board for others to recover it.
 

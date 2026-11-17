@@ -1,147 +1,35 @@
 name: beebo-board
 
 services:
-  dev:
-    profiles: [dev]
+  backend:
     build:
       context: .
-      target: dev
-    working_dir: /app
-    init: true
-    command:
-      [
-        sh,
-        -c,
-        'npm ci --ignore-scripts && python -m venv /app/.venv && /app/.venv/bin/python -m pip install --require-hashes -r server/requirements.txt && npm run dev',
-      ]
+      dockerfile: backend/Dockerfile
     environment:
-      HOST: 0.0.0.0
-      PORT: '3001'
-      DEV_HOST: 0.0.0.0
-      DEV_POLLING: 'true'
-      PUBLIC_ORIGIN: http://localhost:5173,http://127.0.0.1:5173
-      # Local testing still requires choosing direct mode in Share board.
-      DIRECT_CONNECTIONS_ENABLED: 'true'
-      TURN_URLS: ''
-      TURN_SECRET: ''
-      TURN_SECRET_FILE: ''
-    ports:
-      - '127.0.0.1:5173:5173'
-      - '127.0.0.1:3001:3001'
-    volumes:
-      - .:/app
-      - dev_node_modules:/app/node_modules
-      - dev_venv:/app/.venv
-
-  app:
-    profiles: [production]
-    image: beebo-board:local
-    build: .
-    environment:
-      HOST: 0.0.0.0
-      PORT: '3001'
-      PUBLIC_ORIGIN: https://${APP_DOMAIN:-}
+      PUBLIC_ORIGIN: https://${APP_DOMAIN:-localhost}
       TURN_URLS: turn:${TURN_DOMAIN:-}:3478?transport=udp,turn:${TURN_DOMAIN:-}:3478?transport=tcp
       TURN_SECRET: ${TURN_SECRET:-}
       DIRECT_CONNECTIONS_ENABLED: 'false'
-    expose: ['3001']
     read_only: true
     tmpfs: ['/tmp:size=16m,mode=1777']
     cap_drop: [ALL]
     security_opt: [no-new-privileges:true]
     restart: unless-stopped
-    logging: &bounded_logs
-      driver: json-file
-      options:
-        max-size: 10m
-        max-file: '3'
 
-  https:
-    profiles: [production]
-    image: caddy:2.11.9-alpine
-    configs:
-      - source: caddy
-        target: /etc/caddy/Caddyfile
-    ports:
-      - '80:80/tcp'
-      - '443:443/tcp'
-    volumes:
-      - caddy_data:/data
-      - caddy_config:/config
-    depends_on:
-      app:
-        condition: service_healthy
-      turn:
-        condition: service_started
-    security_opt: [no-new-privileges:true]
-    restart: unless-stopped
-    logging: *bounded_logs
-
-  turn:
-    profiles: [production]
-    image: coturn/coturn:4.19.0-r0
-    # Bypass the image's shell-evaluating entrypoint and require relay settings.
-    entrypoint: [sh, -ec]
-    command:
-      - |
-        : "$${TURN_DOMAIN:?Set TURN_DOMAIN in .env}"
-        : "$${TURN_PUBLIC_IP:?Set TURN_PUBLIC_IP in .env}"
-        : "$${TURN_SECRET:?Set TURN_SECRET in .env}"
-        exec /usr/bin/turnserver -c /etc/coturn/turnserver.conf
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
     environment:
-      TURN_DOMAIN: ${TURN_DOMAIN:-}
-      TURN_PUBLIC_IP: ${TURN_PUBLIC_IP:-}
-      TURN_SECRET: ${TURN_SECRET:-}
-    configs:
-      - source: coturn
-        target: /etc/coturn/turnserver.conf
-    ports:
-      - '3478:3478/udp'
-      - '3478:3478/tcp'
-      - '49160-49260:49160-49260/udp'
-    tmpfs:
-      - /tmp:size=16m,mode=1777
-      - /var/lib/coturn:size=16m,mode=1777
-    security_opt: [no-new-privileges:true]
+      APP_DOMAIN: ${APP_DOMAIN:-localhost}
+    ports: ['80:80', '443:443']
+    volumes: ['caddy_data:/data', 'caddy_config:/config']
+    depends_on:
+      backend:
+        condition: service_healthy
     restart: unless-stopped
-    logging: *bounded_logs
-
-configs:
-  caddy:
-    content: |
-      ${APP_DOMAIN:-} {
-        encode zstd gzip
-        reverse_proxy app:3001
-      }
-  coturn:
-    content: |
-      fingerprint
-      use-auth-secret
-      static-auth-secret=${TURN_SECRET:-}
-      realm=${TURN_DOMAIN:-}
-      external-ip=${TURN_PUBLIC_IP:-}
-      listening-port=3478
-      min-port=49160
-      max-port=49260
-      no-tls
-      no-dtls
-      no-cli
-      no-multicast-peers
-      no-tcp-relay
-      userdb=/tmp/turndb
-      user-quota=32
-      total-quota=256
-      max-bps=1000000
-      denied-peer-ip=10.0.0.0-10.255.255.255
-      denied-peer-ip=172.16.0.0-172.31.255.255
-      denied-peer-ip=192.168.0.0-192.168.255.255
-      denied-peer-ip=169.254.0.0-169.254.255.255
-      log-file=stdout
-      simple-log
-      pidfile=/tmp/turnserver.pid
+    security_opt: [no-new-privileges:true]
 
 volumes:
-  dev_node_modules:
-  dev_venv:
   caddy_data:
   caddy_config:
