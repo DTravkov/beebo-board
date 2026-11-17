@@ -1,31 +1,30 @@
 # Contributing
 
+Keep changes focused, readable, and easy to review. See the [README](README.md) to get started.
+
 ## Workflow
 
-Create a new `feature/short-description` or `fix/short-description` branch for each change, including documentation and tooling. All changes enter `main` through a human-reviewed Pull Request. Never commit or push directly to `main`, merge your own PR, or rewrite shared history without authorization.
+1. Create a fresh `feature/short-description` or `fix/short-description` branch.
+2. Make your changes and preserve unrelated work.
+3. Run the relevant checks and update affected documentation.
+4. Open a pull request describing the change and how you tested it. Include screenshots for UI changes.
 
-Keep each PR focused. Describe the problem, resulting behavior, actual checks run, and remaining limits. Include screenshots for UI changes. Preserve unrelated working-tree changes.
+All changes need human review. Never push directly to `main` or merge your own pull request.
 
-## Development and testing
+## Checks
 
-Use Node.js 22.12+, npm, and Python 3.10+ (CI uses 3.12). Install the npm lockfile and hash-locked `backend/requirements.txt` in a virtual environment before running `npm --prefix frontend run dev`; see [README.md](README.md) and [architecture](docs/ARCHITECTURE.md).
+```sh
+npm --prefix frontend run check
+```
 
-Use strict TypeScript, descriptive names, two spaces, semicolons, and single quotes. Format changed files with Prettier. Keep the shared schema, rendering, transport, and server separate.
+Run browser tests for UI or sharing changes, and backend tests for backend changes. Follow the existing code style and format changed files.
 
-Python uses type annotations, descriptive names, four spaces, and single quotes. Keep each backend feature under `backend/src/<feature>/` and mirror it in `backend/tests/`; see [BACKEND.md](backend/README.md). Domain services must remain independent of FastAPI and WebSockets.
+## Licensing and privacy
 
-Run `npm --prefix frontend run check` and `python -m unittest discover -s backend/tests -t .` before review. For canvas, room, or transport changes, also run `npm --prefix frontend run test:browser` against the built app using an installed Chromium browser. Focus tests on behavior that can fail: concurrent edits, imports, admission, malformed peers, and interaction. Report live TURN testing separately from local direct-mode tests.
+Contributions use [Apache-2.0](LICENSE). Preserve copyright and license notices.
 
-## Licenses
+Use permissively licensed dependencies, including their transitive dependencies. Pin direct versions and update the relevant lockfile and [third-party notices](THIRD_PARTY_NOTICES.txt) together.
 
-Contributions are Apache-2.0. Confirm you have the rights to contributed code and assets, including copied or generated material, and preserve copyright and license notices.
+Be respectful. Preserve privacy defaults and keyboard access. Never commit secrets, invitations, private boards, or learner data.
 
-Application dependencies must offer a permissive license such as MIT, Apache-2.0, BSD, or ISC. Copyleft-only packages (including GPL, AGPL, LGPL, and MPL), proprietary terms, and unknown licenses are excluded. Inspect direct, transitive, development, optional, platform-specific, and bundled components; a package badge alone is insufficient. Review dual-license expressions and bundled notices against the actual terms.
-
-Pin direct versions, inspect lockfile diffs, and update `THIRD_PARTY_NOTICES.txt` when dependencies change. Python direct versions live in `backend/requirements.in`; regenerate `backend/requirements.txt` with `uv pip compile backend/requirements.in --universal --python-version 3.10 --generate-hashes --output-file backend/requirements.txt --no-header`. Review environment markers and bundled native-library dependencies as well as Python distributions. The production build includes the project license and third-party notices. License review is a contributor responsibility; there is no automated license gate. Standard infrastructure images are allowed under their own component licenses and are outside the application's permissive-only dependency rule.
-
-## Privacy and conduct
-
-Treat imported files and peer messages as untrusted. Preserve validation, resource limits, TURN-only defaults, opt-in local saving, keyboard access, and the Objects panel. Do not add analytics or remote assets without an explicit product decision. Never commit or log secrets, invitations, board content, or learner data.
-
-Be respectful. Harassment, discrimination, doxxing, and sharing personal learner data without permission are unacceptable. Maintainers may remove harmful content or restrict participation. Send sensitive concerns privately; security reporting and the current contact gap are described in [SECURITY.md](SECURITY.md).
+See [AGENTS.md](AGENTS.md) for the detailed repository rules.
