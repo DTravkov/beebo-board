@@ -1,5 +1,11 @@
 export function Icon({ name, size = 20 }: { name: string; size?: number }) {
   const paths: Record<string, React.ReactNode> = {
+    spinner: (
+      <>
+        <circle cx="12" cy="12" r="3" />
+        <path d="M8 5a8 8 0 0 1 11 2l2 3M21 5v5h-5M16 19a8 8 0 0 1-11-2l-2-3M3 19v-5h5" />
+      </>
+    ),
     save: (
       <>
         <path d="M5 3h12l4 4v14H3V3h2Z" />

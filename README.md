@@ -4,6 +4,8 @@ A privacy-first whiteboard for tutoring, study groups, and thinking together. Sk
 
 Boards stay in your browser unless you choose to save or export them.
 
+The **Spinner** button in the left rail opens a full-window break mode. All board content rotates over the usual stationary board background. Drag anywhere, including any corner, then release for long, gently slowing inertia. Use the mouse wheel to zoom in and out while spinning; offscreen objects remain available as you zoom out. Arrow keys spin, Space stops, and Escape returns to editing. Reduced-motion preferences disable inertia. Rotation and zoom stay local and do not change shared objects or your editing viewport.
+
 ## Quickstart
 
 ### Docker
