@@ -4,15 +4,6 @@ import { defineConfig } from 'vite';
 export default defineConfig({
   esbuild: { jsx: 'automatic' },
   plugins: [
-    {
-      name: 'distribution-notices',
-      apply: 'build',
-      async closeBundle() {
-        for (const name of ['LICENSE', 'THIRD_PARTY_NOTICES.txt']) {
-          await copyFile(`../${name}`, `dist/${name}`);
-        }
-      },
-    },
   ],
   server: {
     host: '127.0.0.1',
