@@ -317,6 +317,127 @@ button svg {
   overflow: hidden;
   background: #fafbf8;
 }
+.board-content {
+  height: 100%;
+}
+.spinner-paused {
+  visibility: hidden;
+}
+.spinner-toggle {
+  flex-shrink: 0;
+  flex-direction: column;
+  gap: 2px;
+  height: 48px;
+}
+.spinner-toggle span {
+  font-size: 9px;
+  font-weight: 650;
+}
+.spinner-mode {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  background-color: #fafbf8;
+  background-image: radial-gradient(#ccd6c4 0.8px, transparent 0.8px);
+  color: #34483e;
+  z-index: 10;
+}
+.spinner-heading {
+  position: absolute;
+  inset: 20px 24px auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  font-size: 13px;
+  z-index: 2;
+  pointer-events: none;
+}
+.spinner-heading > span,
+.spinner-heading button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.spinner-heading > span {
+  color: #577248;
+  background: #fffffff0;
+  padding: 9px 12px;
+  border-radius: 10px;
+}
+.spinner-heading button {
+  pointer-events: auto;
+  padding: 9px 12px;
+  background: #fffffff0;
+  border: 1px solid #dce3d5;
+  border-radius: 10px;
+}
+.spinner-heading kbd {
+  font-size: 10px;
+  color: #6c7861;
+}
+.spinner-content {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.spinner-gesture-zone {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  background: transparent;
+  border-radius: 12px;
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+}
+.spinner-gesture-zone:focus-visible {
+  outline-offset: -6px;
+}
+.spinner-gesture-zone:active {
+  cursor: grabbing;
+}
+.spinner-instructions {
+  position: absolute;
+  bottom: 20px;
+  left: 20px;
+  right: 20px;
+  text-align: center;
+  font-size: 13px;
+  line-height: 1.6;
+  pointer-events: none;
+  width: fit-content;
+  margin: 0 auto;
+  padding: 8px 14px;
+  border-radius: 10px;
+  background: #fffffff0;
+  z-index: 2;
+}
+.spinner-instructions span {
+  display: block;
+  color: #657656;
+  font-size: 11px;
+  margin-top: 5px;
+}
+.spinner-instructions output {
+  display: inline-block;
+  margin-top: 5px;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+@media (max-width: 600px) {
+  .spinner-heading {
+    inset: 16px 12px auto;
+    font-size: 11px;
+  }
+  .spinner-heading kbd {
+    display: none;
+  }
+  .spinner-instructions {
+    font-size: 12px;
+  }
+}
 .sr-only {
   position: absolute;
   width: 1px;

@@ -9,6 +9,7 @@ import { useBoardSaving } from './features/board/useBoardSaving';
 import { useServerConfig } from './features/room/useServerConfig';
 import { Dialog } from './components/Dialog';
 import { Icon } from './components/Icon';
+import { Spinner, type SpinnerPreview } from './components/Spinner';
 import { ObjectToolbar } from './components/ObjectToolbar';
 import { restyle } from './lib/text';
 import { imagePng, prepareImage } from './lib/image';
@@ -93,6 +94,8 @@ function download(name: string, data: Blob) {
 export default function App() {
   const { board, setBoard, shapes, revision } = useBoardDocument();
   const [tool, setTool] = useState<Tool>('select');
+  const [spinner, setSpinner] = useState<SpinnerPreview | null>(null);
+  const spinnerButton = useRef<HTMLButtonElement>(null);
   const [color, setColor] = useState(COLORS[0]);
   const [strokeWidth, setStrokeWidth] = useState(3);
   const [brushStyles, setBrushStyles] = useState(DEFAULT_STYLES);
@@ -140,6 +143,28 @@ export default function App() {
   const session = useRef<RoomSession | null>(null);
   const stage = useRef<Konva.Stage | null>(null);
   const fileInput = useRef<HTMLInputElement>(null);
+  function closeSpinner() {
+    setSpinner(null);
+    spinnerButton.current?.focus();
+  }
+  function toggleSpinner() {
+    if (spinner) {
+      closeSpinner();
+      return;
+    }
+    const current = stage.current;
+    if (!current) return;
+    setSpinner({
+      width: current.width(),
+      height: current.height(),
+      gridSize: 24 * view.scale,
+      gridX: view.x,
+      gridY: view.y,
+      scale: view.scale,
+      centerX: (current.width() / 2 - view.x) / view.scale,
+      centerY: (current.height() / 2 - view.y) / view.scale,
+    });
+  }
   const {
     localSaving,
     setLocalSaving,
@@ -219,6 +244,7 @@ export default function App() {
   }
   useEffect(() => {
     const keydown = (event: KeyboardEvent) => {
+      if (spinner) return;
       if (
         (event.target as HTMLElement).closest(
           'input, textarea, select, button, dialog, [contenteditable]',
@@ -299,10 +325,11 @@ export default function App() {
     };
     window.addEventListener('keydown', keydown);
     return () => window.removeEventListener('keydown', keydown);
-  }, [board, selected]);
+  }, [board, selected, spinner]);
   useEffect(() => {
     // Pictures pasted anywhere outside a text field land on the board.
     const paste = (event: ClipboardEvent) => {
+      if (spinner) return;
       const target = event.target as HTMLElement | null;
       if (
         target?.closest?.('input, textarea, [contenteditable]') ||
@@ -741,6 +768,17 @@ export default function App() {
             <span style={{ background: color }} />
           </label>
         </div>
+        <button
+          ref={spinnerButton}
+          className={`rail-button spinner-toggle ${spinner ? 'active' : ''}`}
+          aria-label="Spinner"
+          title="Spinner — take a little break"
+          aria-pressed={!!spinner}
+          onClick={toggleSpinner}
+        >
+          <Icon name="spinner" />
+          <span>Spinner</span>
+        </button>
         <div className="rail-bottom">
           <button
             className={`rail-button ${panel ? 'active' : ''}`}
@@ -769,6 +807,10 @@ export default function App() {
             event.preventDefault();
         }}
         onDrop={(event) => {
+          if (spinner) {
+            event.preventDefault();
+            return;
+          }
           const files = [...event.dataTransfer.files].filter((file) =>
             file.type.startsWith('image/'),
           );
@@ -781,250 +823,264 @@ export default function App() {
           });
         }}
       >
-        <Canvas
-          shapes={shapes}
-          tool={tool}
-          color={brushStyle?.color ?? color}
-          width={brushStyle?.width ?? strokeWidth}
-          partialEraserSize={partialEraserSize}
-          selected={selected}
-          view={view}
-          presence={people}
-          stageRef={stage}
-          onView={setView}
-          onSelect={setSelected}
-          onAdd={add}
-          onUpdate={update}
-          onMove={move}
-          onErase={erase}
-          onSplice={splice}
-          onToolDone={() => setTool('select')}
-          renderToolbar={(shape) => (
-            <ObjectToolbar
-              shape={shape}
-              onUpdate={(patch) => update(shape.id, restyle(shape, patch))}
-              onDelete={() => remove([shape.id])}
-              onExport={() => exportFrame(shape)}
-              onCopy={() => void copyImage(shape)}
-            />
-          )}
-          renderGroupToolbar={(group) => (
-            <div
-              className="object-toolbar"
-              role="toolbar"
-              aria-label="Selected objects"
-              onPointerDown={(event) => event.stopPropagation()}
-            >
-              <span className="toolbar-count">{group.length} selected</span>
-              <span className="toolbar-divider" />
-              <button
-                className="toolbar-button"
-                title="Delete selected objects (Delete)"
-                aria-label="Delete selected objects"
-                onClick={() => remove(group.map((shape) => shape.id))}
+        <div
+          className={`board-content${spinner ? ' spinner-paused' : ''}`}
+          inert={!!spinner}
+        >
+          <Canvas
+            shapes={shapes}
+            tool={tool}
+            color={brushStyle?.color ?? color}
+            width={brushStyle?.width ?? strokeWidth}
+            partialEraserSize={partialEraserSize}
+            selected={selected}
+            view={view}
+            presence={people}
+            stageRef={stage}
+            onView={setView}
+            onSelect={setSelected}
+            onAdd={add}
+            onUpdate={update}
+            onMove={move}
+            onErase={erase}
+            onSplice={splice}
+            onToolDone={() => setTool('select')}
+            renderToolbar={(shape) => (
+              <ObjectToolbar
+                shape={shape}
+                onUpdate={(patch) => update(shape.id, restyle(shape, patch))}
+                onDelete={() => remove([shape.id])}
+                onExport={() => exportFrame(shape)}
+                onCopy={() => void copyImage(shape)}
+              />
+            )}
+            renderGroupToolbar={(group) => (
+              <div
+                className="object-toolbar"
+                role="toolbar"
+                aria-label="Selected objects"
+                onPointerDown={(event) => event.stopPropagation()}
               >
-                <Icon name="trash" size={17} />
-              </button>
+                <span className="toolbar-count">{group.length} selected</span>
+                <span className="toolbar-divider" />
+                <button
+                  className="toolbar-button"
+                  title="Delete selected objects (Delete)"
+                  aria-label="Delete selected objects"
+                  onClick={() => remove(group.map((shape) => shape.id))}
+                >
+                  <Icon name="trash" size={17} />
+                </button>
+              </div>
+            )}
+            onCursor={(x, y) => session.current?.cursor(x, y)}
+          />
+          {penItem && (
+            <div
+              className="brush-panel"
+              role="toolbar"
+              aria-label="Pen tools"
+              aria-orientation="vertical"
+            >
+              {PEN_GROUP.map((item, index) => [
+                index === 2 && (
+                  <span key="eraser-divider" className="brush-divider" />
+                ),
+                <button
+                  key={item.id}
+                  className={`tool-button ${tool === item.id ? 'selected' : ''}`}
+                  aria-label={`${item.label} (${item.key})`}
+                  title={`${item.label} · ${item.key}`}
+                  aria-pressed={tool === item.id}
+                  onClick={() => setTool(item.id)}
+                >
+                  <Icon name={item.id} size={18} />
+                </button>,
+              ])}
+              {tool === 'eraser-partial' && (
+                <>
+                  <span className="brush-divider" />
+                  <EraserThickness
+                    size={partialEraserSize}
+                    onChange={setPartialEraserSize}
+                  />
+                </>
+              )}
+              {brush && (
+                <>
+                  <span className="brush-divider" />
+                  <BrushSize
+                    label={brush === 'pen' ? 'Pen size' : 'Highlighter size'}
+                    size={brushStyle!.width}
+                    onChange={(width) =>
+                      changeStyles(brush, (styles) =>
+                        styles.map((style, i) =>
+                          i === activeStyle[brush]
+                            ? { ...style, width }
+                            : style,
+                        ),
+                      )
+                    }
+                  />
+                  <span className="brush-divider" />
+                  <BrushStyles
+                    label={brush === 'pen' ? 'Pen' : 'Highlighter'}
+                    styles={brushStyles[brush]}
+                    active={activeStyle[brush]}
+                    customColors={customColors}
+                    onSelect={(index) =>
+                      setActiveStyle((all) => ({ ...all, [brush]: index }))
+                    }
+                    onChange={(index, next) =>
+                      changeStyles(brush, (styles) =>
+                        styles.map((item, i) => (i === index ? next : item)),
+                      )
+                    }
+                    onAdd={() => {
+                      const count = brushStyles[brush].length;
+                      if (count >= MAX_STYLES) return;
+                      changeStyles(brush, (styles) => [
+                        ...styles,
+                        { ...styles[activeStyle[brush]] },
+                      ]);
+                      setActiveStyle((all) => ({ ...all, [brush]: count }));
+                    }}
+                    onRemove={(index) => {
+                      changeStyles(brush, (styles) =>
+                        styles.length > 1
+                          ? styles.filter((_, i) => i !== index)
+                          : styles,
+                      );
+                      setActiveStyle((all) => ({ ...all, [brush]: 0 }));
+                    }}
+                    onAddColor={(value) =>
+                      setCustomColors((list) =>
+                        BASE_COLORS.includes(value) ||
+                        list.includes(value) ||
+                        BASE_COLORS.length + list.length >= MAX_COLORS
+                          ? list
+                          : [...list, value],
+                      )
+                    }
+                  />
+                </>
+              )}
             </div>
           )}
-          onCursor={(x, y) => session.current?.cursor(x, y)}
-        />
-        {penItem && (
+          {['rect', 'ellipse', 'arrow', 'text'].includes(tool) && (
+            <div className="style-bar" aria-label="Drawing style">
+              {COLORS.map((value) => (
+                <button
+                  key={value}
+                  className={`swatch ${color === value ? 'chosen' : ''}`}
+                  style={{ background: value }}
+                  aria-label={`Use color ${value}`}
+                  aria-pressed={color === value}
+                  onClick={() => setColor(value)}
+                />
+              ))}
+              <span className="style-divider" />
+              <label>
+                Width{' '}
+                <select
+                  aria-label="Stroke width"
+                  value={strokeWidth}
+                  onChange={(event) =>
+                    setStrokeWidth(Number(event.target.value))
+                  }
+                >
+                  <option value={2}>Fine</option>
+                  <option value={3}>Medium</option>
+                  <option value={6}>Bold</option>
+                </select>
+              </label>
+            </div>
+          )}
           <div
-            className="brush-panel"
-            role="toolbar"
-            aria-label="Pen tools"
-            aria-orientation="vertical"
+            className={`connection-pill ${status.state}${invite ? '' : ' sr-only'}`}
+            role="status"
           >
-            {PEN_GROUP.map((item, index) => [
-              index === 2 && (
-                <span key="eraser-divider" className="brush-divider" />
-              ),
+            <span className="connection-dot" />
+            <span>{status.message}</span>
+            {invite && (
               <button
-                key={item.id}
-                className={`tool-button ${tool === item.id ? 'selected' : ''}`}
-                aria-label={`${item.label} (${item.key})`}
-                title={`${item.label} · ${item.key}`}
-                aria-pressed={tool === item.id}
-                onClick={() => setTool(item.id)}
+                aria-label="Room connection settings"
+                onClick={() => setDialog('share')}
               >
-                <Icon name={item.id} size={18} />
-              </button>,
-            ])}
-            {tool === 'eraser-partial' && (
-              <>
-                <span className="brush-divider" />
-                <EraserThickness
-                  size={partialEraserSize}
-                  onChange={setPartialEraserSize}
-                />
-              </>
-            )}
-            {brush && (
-              <>
-                <span className="brush-divider" />
-                <BrushSize
-                  label={brush === 'pen' ? 'Pen size' : 'Highlighter size'}
-                  size={brushStyle!.width}
-                  onChange={(width) =>
-                    changeStyles(brush, (styles) =>
-                      styles.map((style, i) =>
-                        i === activeStyle[brush] ? { ...style, width } : style,
-                      ),
-                    )
-                  }
-                />
-                <span className="brush-divider" />
-                <BrushStyles
-                  label={brush === 'pen' ? 'Pen' : 'Highlighter'}
-                  styles={brushStyles[brush]}
-                  active={activeStyle[brush]}
-                  customColors={customColors}
-                  onSelect={(index) =>
-                    setActiveStyle((all) => ({ ...all, [brush]: index }))
-                  }
-                  onChange={(index, next) =>
-                    changeStyles(brush, (styles) =>
-                      styles.map((item, i) => (i === index ? next : item)),
-                    )
-                  }
-                  onAdd={() => {
-                    const count = brushStyles[brush].length;
-                    if (count >= MAX_STYLES) return;
-                    changeStyles(brush, (styles) => [
-                      ...styles,
-                      { ...styles[activeStyle[brush]] },
-                    ]);
-                    setActiveStyle((all) => ({ ...all, [brush]: count }));
-                  }}
-                  onRemove={(index) => {
-                    changeStyles(brush, (styles) =>
-                      styles.length > 1
-                        ? styles.filter((_, i) => i !== index)
-                        : styles,
-                    );
-                    setActiveStyle((all) => ({ ...all, [brush]: 0 }));
-                  }}
-                  onAddColor={(value) =>
-                    setCustomColors((list) =>
-                      BASE_COLORS.includes(value) ||
-                      list.includes(value) ||
-                      BASE_COLORS.length + list.length >= MAX_COLORS
-                        ? list
-                        : [...list, value],
-                    )
-                  }
-                />
-              </>
+                <Icon name="chevron" size={13} />
+              </button>
             )}
           </div>
-        )}
-        {['rect', 'ellipse', 'arrow', 'text'].includes(tool) && (
-          <div className="style-bar" aria-label="Drawing style">
-            {COLORS.map((value) => (
-              <button
-                key={value}
-                className={`swatch ${color === value ? 'chosen' : ''}`}
-                style={{ background: value }}
-                aria-label={`Use color ${value}`}
-                aria-pressed={color === value}
-                onClick={() => setColor(value)}
-              />
-            ))}
-            <span className="style-divider" />
-            <label>
-              Width{' '}
-              <select
-                aria-label="Stroke width"
-                value={strokeWidth}
-                onChange={(event) => setStrokeWidth(Number(event.target.value))}
-              >
-                <option value={2}>Fine</option>
-                <option value={3}>Medium</option>
-                <option value={6}>Bold</option>
-              </select>
-            </label>
-          </div>
-        )}
-        <div
-          className={`connection-pill ${status.state}${invite ? '' : ' sr-only'}`}
-          role="status"
-        >
-          <span className="connection-dot" />
-          <span>{status.message}</span>
-          {invite && (
+          <div className="zoom-controls">
             <button
-              aria-label="Room connection settings"
-              onClick={() => setDialog('share')}
+              className="icon-button"
+              aria-label="Zoom out"
+              onClick={() => zoom(-0.1)}
+              disabled={view.scale <= 0.2}
             >
-              <Icon name="chevron" size={13} />
+              <Icon name="minus" size={17} />
             </button>
+            <button
+              className="zoom-value"
+              aria-label="Reset zoom to 100 percent"
+              onClick={() => setView({ x: 0, y: 0, scale: 1 })}
+            >
+              {Math.round(view.scale * 100)}
+              <span>%</span>
+            </button>
+            <button
+              className="icon-button"
+              aria-label="Zoom in"
+              onClick={() => zoom(0.1)}
+              disabled={view.scale >= 3}
+            >
+              <Icon name="plus" size={17} />
+            </button>
+            <span className="zoom-divider" />
+            <button
+              className="icon-button"
+              aria-label="Fit board to screen"
+              title="Fit board"
+              onClick={fit}
+            >
+              <Icon name="fit" size={17} />
+            </button>
+          </div>
+          {panel && (
+            <ObjectsPanel
+              shapes={shapes}
+              selected={selected}
+              onSelect={(id, additive) =>
+                setSelected((chosen) =>
+                  additive
+                    ? chosen.includes(id)
+                      ? chosen.filter((chosenId) => chosenId !== id)
+                      : [...chosen, id]
+                    : [id],
+                )
+              }
+              onUpdate={update}
+              onRemove={remove}
+              onClose={() => setPanel(false)}
+              onAddNote={() =>
+                setEditor({
+                  kind: 'sticky',
+                  x:
+                    ((stage.current?.width() ?? 1000) / 2 - view.x) /
+                      view.scale -
+                    102.5,
+                  y:
+                    ((stage.current?.height() ?? 700) / 2 - view.y) /
+                      view.scale -
+                    87.5,
+                  text: '',
+                })
+              }
+            />
           )}
         </div>
-        <div className="zoom-controls">
-          <button
-            className="icon-button"
-            aria-label="Zoom out"
-            onClick={() => zoom(-0.1)}
-            disabled={view.scale <= 0.2}
-          >
-            <Icon name="minus" size={17} />
-          </button>
-          <button
-            className="zoom-value"
-            aria-label="Reset zoom to 100 percent"
-            onClick={() => setView({ x: 0, y: 0, scale: 1 })}
-          >
-            {Math.round(view.scale * 100)}
-            <span>%</span>
-          </button>
-          <button
-            className="icon-button"
-            aria-label="Zoom in"
-            onClick={() => zoom(0.1)}
-            disabled={view.scale >= 3}
-          >
-            <Icon name="plus" size={17} />
-          </button>
-          <span className="zoom-divider" />
-          <button
-            className="icon-button"
-            aria-label="Fit board to screen"
-            title="Fit board"
-            onClick={fit}
-          >
-            <Icon name="fit" size={17} />
-          </button>
-        </div>
-        {panel && (
-          <ObjectsPanel
-            shapes={shapes}
-            selected={selected}
-            onSelect={(id, additive) =>
-              setSelected((chosen) =>
-                additive
-                  ? chosen.includes(id)
-                    ? chosen.filter((chosenId) => chosenId !== id)
-                    : [...chosen, id]
-                  : [id],
-              )
-            }
-            onUpdate={update}
-            onRemove={remove}
-            onClose={() => setPanel(false)}
-            onAddNote={() =>
-              setEditor({
-                kind: 'sticky',
-                x:
-                  ((stage.current?.width() ?? 1000) / 2 - view.x) / view.scale -
-                  102.5,
-                y:
-                  ((stage.current?.height() ?? 700) / 2 - view.y) / view.scale -
-                  87.5,
-                text: '',
-              })
-            }
-          />
+        {spinner && (
+          <Spinner preview={spinner} shapes={shapes} onClose={closeSpinner} />
         )}
       </main>
       <input

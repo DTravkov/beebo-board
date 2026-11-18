@@ -20,6 +20,212 @@ const origin = `http://127.0.0.1:${port}`;
 const browserOptions = process.env.BROWSER_EXECUTABLE
   ? { executablePath: process.env.BROWSER_EXECUTABLE }
   : { channel: 'msedge' };
+
+test(
+  'spinner rotates locally, coasts, stops, and returns to the unchanged board',
+  { timeout: 60_000 },
+  async () => {
+    const app = createApp();
+    await app.listen({ port: port + 4, host: '127.0.0.1' });
+    const browser = await chromium.launch({
+      ...browserOptions,
+      headless: true,
+    });
+    try {
+      const page = await browser.newPage({
+        viewport: { width: 1440, height: 960 },
+      });
+      const errors: string[] = [];
+      page.on('pageerror', (error) => errors.push(error.message));
+      await page.goto(`http://127.0.0.1:${port + 4}`);
+      await waitForTitle(page, 'Board 1');
+      await page.locator('input[type="file"]').setInputFiles({
+        name: 'spinner.beebo.json',
+        mimeType: 'application/json',
+        buffer: Buffer.from(
+          JSON.stringify({
+            format: 'beebo-board',
+            version: 1,
+            title: 'Spinner board',
+            shapes: [
+              {
+                ...makeShape('sticky', 520, 320),
+                width: 200,
+                height: 160,
+                text: 'A little pause',
+                fill: '#f5e7a1',
+              },
+              {
+                ...makeShape('rect', 2400, 300),
+                width: 160,
+                height: 120,
+                fill: '#d7ed9f',
+              },
+            ],
+          }),
+        ),
+      });
+      await waitForTitle(page, 'Spinner board');
+      async function exported() {
+        const pending = page.waitForEvent('download');
+        await page
+          .getByRole('button', { name: 'Export board', exact: true })
+          .click();
+        const path = await (await pending).path();
+        assert.ok(path);
+        return JSON.parse(await readFile(path, 'utf8'));
+      }
+      const before = await exported();
+      const toggle = page.getByRole('button', { name: 'Spinner', exact: true });
+      await toggle.click();
+      const mode = page.getByRole('region', { name: 'Spinner break' });
+      assert.equal(
+        await mode.evaluate((node) => getComputedStyle(node).backgroundColor),
+        'rgb(250, 251, 248)',
+      );
+      const handle = page.getByRole('button', { name: /^Spin board:/ });
+      const grip = await handle.boundingBox();
+      const area = await mode.boundingBox();
+      assert.ok(grip && area);
+      assert.deepEqual(area, { x: 0, y: 0, width: 1440, height: 960 });
+      const card = await page.locator('.spinner-content').boundingBox();
+      assert.ok(
+        card && card.width >= area.width && card.height >= area.height,
+        'the board fills the window',
+      );
+      const x = grip.x + grip.width / 2;
+      const y = grip.y + grip.height / 2;
+      await page.mouse.move(x, y);
+      await page.mouse.down();
+      // A pull from the middle works without finding a handle.
+      await page.mouse.move(x, y - 320, { steps: 24 });
+      await page.mouse.up();
+      const transform = () =>
+        page.evaluate(() => {
+          const node = (
+            window as unknown as CursorTestWindow
+          ).Konva.stages.flatMap((stage) => stage.find('.spinner-content'))[0];
+          return {
+            angle: (node.rotation() * Math.PI) / 180,
+            scale: node.scaleX(),
+            objects: (node as import('konva').default.Group).getChildren()
+              .length,
+          };
+        });
+      const angle = async () => (await transform()).angle;
+      assert.equal(
+        (await transform()).objects,
+        2,
+        'includes objects outside the original viewport',
+      );
+      const released = await angle();
+      assert.ok(released > 2, 'a simple pull spins the board');
+      assert.deepEqual(
+        await handle.boundingBox(),
+        grip,
+        'the whole window remains available for dragging',
+      );
+      await page.waitForTimeout(150);
+      assert.ok(
+        (await angle()) > released + 0.05,
+        'board continues with inertia',
+      );
+      const beforeZoom = await transform();
+      const grid = await mode.evaluate(
+        (node) => (node as HTMLElement).style.backgroundSize,
+      );
+      await page.mouse.wheel(0, -350);
+      await page.waitForTimeout(300);
+      const zoomed = await transform();
+      assert.ok(
+        zoomed.scale > beforeZoom.scale * 1.5,
+        'wheel zooms in during rotation',
+      );
+      assert.ok(
+        zoomed.angle > beforeZoom.angle + 0.05,
+        'zoom does not stop rotation',
+      );
+      await page.mouse.wheel(0, 700);
+      await page.waitForTimeout(300);
+      assert.ok(
+        (await transform()).scale < beforeZoom.scale,
+        'wheel zooms out',
+      );
+      assert.equal(
+        await mode.evaluate(
+          (node) => (node as HTMLElement).style.backgroundSize,
+        ),
+        grid,
+        'the background stays stationary',
+      );
+      await mkdir('test-results', { recursive: true });
+      await page.screenshot({ path: 'test-results/spinner-desktop.png' });
+      await page.waitForTimeout(3000);
+      const coasting = await angle();
+      await page.waitForTimeout(250);
+      assert.ok(
+        (await angle()) > coasting + 0.1,
+        'the spinner is still visibly rotating after three seconds',
+      );
+      await handle.focus();
+      await page.keyboard.press('Space');
+      await page.waitForTimeout(100);
+      const stopped = await angle();
+      await page.waitForTimeout(100);
+      assert.ok(Math.abs((await angle()) - stopped) < 0.01);
+      await page.keyboard.press('Delete');
+      await page.keyboard.press('Escape');
+      await mode.waitFor({ state: 'detached' });
+      assert.equal(
+        await toggle.evaluate((node) => node === document.activeElement),
+        true,
+      );
+      assert.deepEqual(await exported(), before);
+      for (const point of [
+        { x: 8, y: 8 },
+        { x: 1432, y: 8 },
+        { x: 8, y: 952 },
+        { x: 1432, y: 952 },
+      ]) {
+        await toggle.click();
+        await page.mouse.move(point.x, point.y);
+        await page.mouse.down();
+        await page.mouse.move(point.x + (point.x < 720 ? 100 : -100), point.y, {
+          steps: 10,
+        });
+        await page.mouse.up();
+        await page.waitForTimeout(100);
+        assert.ok(
+          Math.abs(await angle()) > 0.4,
+          'every corner starts the spin',
+        );
+        await page.keyboard.press('Escape');
+      }
+      await page.setViewportSize({ width: 390, height: 844 });
+      await page.emulateMedia({ reducedMotion: 'reduce' });
+      await toggle.click();
+      await handle.focus();
+      await page.keyboard.press('ArrowRight');
+      await page.waitForTimeout(100);
+      const reduced = await angle();
+      await page.waitForTimeout(100);
+      assert.ok(reduced > 0);
+      assert.ok(
+        Math.abs((await angle()) - reduced) < 0.001,
+        'reduced motion has no inertia',
+      );
+      const mobileGrip = await handle.boundingBox();
+      assert.deepEqual(mobileGrip, { x: 0, y: 0, width: 390, height: 844 });
+      await mkdir('test-results', { recursive: true });
+      await page.screenshot({ path: 'test-results/spinner-mobile.png' });
+      await page.getByRole('button', { name: /Back to board/ }).click();
+      assert.deepEqual(errors, []);
+    } finally {
+      await browser.close();
+      await app.close();
+    }
+  },
+);
 async function waitForTitle(page: Page, value: string) {
   await page.waitForFunction(
     (title) =>
